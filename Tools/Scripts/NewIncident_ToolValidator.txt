@@ -1,0 +1,51 @@
+class ToolValidator(object):
+  """Class for validating a tool's parameter values and controlling
+  the behavior of the tool's dialog."""
+
+  def __init__(self):
+    """Setup arcpy and the list of tool parameters."""
+    import arcpy
+    import os, sys, arcgisscripting
+    self.GP = arcgisscripting.create()
+    self.params = arcpy.GetParameterInfo()
+
+  def initializeParameters(self):
+    """Refine the properties of a tool's parameters.  This method is
+    called when the tool is opened."""
+    self.params[2].filter.list = []
+    return
+
+  def updateParameters(self):
+    """Modify the values and properties of parameters before internal
+    validation is performed.  This method is called whenever a parameter
+    has been changed."""
+    desc = arcpy.Describe("c:/mapSAR_Ex/Template/SAR_Default.gdb/Base_Data")
+    from_sr = desc.spatialReference
+    extent =arcpy.Extent(-5120900, -9998100, 900714804574.009,900714804574.009)
+    self.params[2].filter.list = []
+    if self.params[1].value:
+        to_sr = self.params[1].value
+        fromsr=from_sr.name.replace("_", " ")
+        tosr=to_sr.name.replace("_", " ")
+        tlist=[]
+        try:
+            tlist = arcpy.ListTransformations(fromsr, tosr,extent)
+        except:
+            tlist = []
+        if len(tlist)> 0:
+            self.params[2].filter.list = tlist
+        else:
+            self.params[2].value = ""
+    return
+
+  def updateMessages(self):
+    """Modify the messages created by internal validation for each tool
+    parameter.  This method is called after internal validation."""
+    return
+
+
+
+
+
+
+

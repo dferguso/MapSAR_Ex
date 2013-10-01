@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Clues_Point" Layer="True" TOCField="Clue_Number" DatasetMode="0">
+	<DataSource Name="Clues_Point" BrowseName="Clues_Point" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="J:\GISData\Searches\SARMappingClass\CA_TableTop02\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="J:\GISData\Searches\SARMappingClass\CA_TableTop02\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="OBJECTID" SafeName="OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Clue_Number" SafeName="Clue_Number" Type="0" SortAsc="True" />
+		<Field Name="Assignment_Number" SafeName="Assignment_Number" Type="4" SortAsc="True" />
+		<Field Name="Object" SafeName="Object" Type="4" SortAsc="True" />
+		<Field Name="Description" SafeName="Description" Type="4" SortAsc="True" />
+		<Field Name="Relevancy" SafeName="Relevancy" Type="4" SortAsc="True" />
+		<Field Name="Source" SafeName="Source" Type="4" SortAsc="True" />
+		<Field Name="UTM_Easting" SafeName="UTM_Easting" Type="3" SortAsc="True" />
+		<Field Name="UTM_Northing" SafeName="UTM_Northing" Type="3" SortAsc="True" />
+		<Field Name="Latitude" SafeName="Latitude" Type="4" SortAsc="True" />
+		<Field Name="Longitude" SafeName="Longitude" Type="4" SortAsc="True" />
+		<Field Name="Comments" SafeName="Comments" Type="4" SortAsc="True" />
+		<Field Name="Display" SafeName="Display" Type="0" SortAsc="True" />
+		<Field Name="TimeSlider" SafeName="TimeSlider" Type="5" SortAsc="True" />
+		<Field Name="Name" SafeName="Name" Type="4" SortAsc="True" />
+		<Field Name="FileName" SafeName="FileName" Type="4" SortAsc="True" />
+		<Field Name="FileLocation" SafeName="FileLocation" Type="4" SortAsc="True" />
+		<Field Name="Clue_NumText" SafeName="Clue_NumText" Type="4" SortAsc="True" />
+		<Field Name="Probability" SafeName="Probability" Type="0" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Clue_Number" />
+		<Field Name="Assignment_Number" />
+		<Field Name="Object" />
+		<Field Name="Description" />
+		<Field Name="Relevancy" />
+		<Field Name="UTM_Easting" />
+		<Field Name="UTM_Northing" />
+		<Field Name="Comments" />
+		<Field Name="FileName" />
+		<Field Name="FileLocation" />
+		<Field Name="Probability" />
+	</ReportFields>
+	<SortFields>
+		<Field Name="Probability" />
+	</SortFields>
+	<ReportStyle Name="Havelock" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20.25" Style="Bold" Color="#575F6D">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="1" Lines="1" LinesColor="#FF7D26">
+			<Font Size="9" Style="Regular" Color="#000000">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="2" Lines="1" LinesColor="#000001">
+			<Font Size="9" Style="Bold" Color="#FF7D26">Century Schoolbook</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3" BackColor="LemonChiffon" AlternateColor="PapayaWhip">
+			<Font Size="9" Style="Regular" Color="#000000">Century Schoolbook</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8.25" Style="Bold" Color="DarkOrange">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="Gray">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="Gray">Century Schoolbook</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="782" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Left="0" Top="72" Width="3740" Height="640" Caption="Clue Log" Style="color: #575F6D; font-weight: bold; font-size: 20.25pt; font-family: Century Schoolbook; vertical-align: middle; " />
+				<Control Type="AR.Field" Name="TextBox1" Left="8640" Top="90" Width="1350" Height="630" Text="Report Date/Time:" Style="font-weight: bold; font-size: 12pt; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Left="10080" Top="90" Width="2520" Height="630" FormatString="{RunDateTime:M/d/yyyy h:mm tt}" Style="font-weight: bold; font-size: 12pt; " />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="810" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblClue_Number" Left="0" Top="14.4" Width="384.6078" Height="320" Caption="Clue Number" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblAssignment_Number" Left="360" Top="0" Width="1440" Height="720" Caption="Assignment Number" Style="color: #000000; text-align: center; font-size: 12pt; font-family: Century Schoolbook; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblObject" Left="1797.144" Top="14.4" Width="1410.229" Height="320" Caption="Object" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblDescription" Left="3208.527" Top="14.4" Width="1410.229" Height="320" Caption="Description" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRelevancy" Left="4619.91" Top="14.4" Width="1410.229" Height="320" Caption="Relevancy" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblUTM_Easting" Left="6031.292" Top="14.4" Width="1153.823" Height="320" Caption="UTM_Easting" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblUTM_Northing" Left="7186.27" Top="14.4" Width="1153.823" Height="320" Caption="UTM_Northing" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblComments" Left="8341.247" Top="14.4" Width="1410.229" Height="320" Caption="Comments" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblFileName" Left="9752.63" Top="14.4" Width="1410.229" Height="320" Caption="FileName" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblProbability" Left="12575.39" Top="14.4" Width="384.6078" Height="320" Caption="Probability" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Line" Name="styleLine1" X1="0" Y1="0" X2="12960" Y2="0" LineColor="2522623" />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="780" BackStyle="1" BackColor="13499135">
+				<Control Type="AR.Field" Name="txtClue_Number" DataField="Clue_Number" Left="0" Top="0" Width="384.6078" Height="320" Text="Clue_Number" Style="color: #000000; text-align: right; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtAssignment_Number" DataField="Assignment_Number" Left="385.7617" Top="0" Width="1410.229" Height="320" Text="Assignment_Number" Style="color: #000000; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtObject" DataField="Object" Left="1797.144" Top="0" Width="1410.229" Height="320" Text="Object" Style="color: #000000; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtDescription" DataField="Description" Left="3208.527" Top="0" Width="1410.229" Height="320" Text="Description" Style="color: #000000; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtRelevancy" DataField="Relevancy" Left="4619.91" Top="0" Width="1410.229" Height="320" Text="Relevancy" Style="color: #000000; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtUTM_Easting" DataField="UTM_Easting" Left="6031.292" Top="0" Width="1153.823" Height="320" Text="UTM_Easting" Style="color: #000000; text-align: right; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtUTM_Northing" DataField="UTM_Northing" Left="7186.27" Top="0" Width="1153.823" Height="320" Text="UTM_Northing" Style="color: #000000; text-align: right; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtComments" DataField="Comments" Left="8341.247" Top="0" Width="1410.229" Height="320" Text="Comments" Style="color: #000000; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtFileName" DataField="FileName" Left="9752.63" Top="0" Width="1410.229" Height="320" Text="FileName" Style="color: #000000; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtProbability" DataField="Probability" Left="12575.39" Top="0" Width="384.6078" Height="320" Text="Probability" Style="color: #000000; text-align: right; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: Gray; text-align: center; font-size: 8pt; font-family: Century Schoolbook; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

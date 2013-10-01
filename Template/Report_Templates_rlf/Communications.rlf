@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Communications" Layer="True" TOCField="Operational_Period" DatasetMode="0">
+	<DataSource Name="Communications" BrowseName="Comminications" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\New_Incident\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\New_Incident\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="OBJECTID" SafeName="OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Operational_Period" SafeName="Operational_Period" Type="0" SortAsc="True" />
+		<Field Name="System" SafeName="System" Type="4" SortAsc="True" />
+		<Field Name="Channel" SafeName="Channel" Type="4" SortAsc="True" />
+		<Field Name="Function" SafeName="Function" Type="4" SortAsc="True" />
+		<Field Name="Frequency" SafeName="Frequency" Type="4" SortAsc="True" />
+		<Field Name="Tone" SafeName="Tone" Type="4" SortAsc="True" />
+		<Field Name="Notes" SafeName="Notes" Type="4" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Operational_Period" />
+		<Field Name="System" />
+		<Field Name="Channel" />
+		<Field Name="Function" />
+		<Field Name="Frequency" />
+		<Field Name="Tone" />
+		<Field Name="Notes" />
+	</ReportFields>
+	<SortFields>
+		<Field Name="Operational_Period" />
+	</SortFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="763" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="3960" Height="620" Caption="Communications" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="10260" Top="90" Width="2610" Height="540" FormatString="{RunDateTime:M/d/yy h:mm tt}" Style="font-weight: bold; " />
+				<Control Type="AR.Field" Name="TextBox1" Tag="" Left="8730" Top="90" Width="1440" Height="285" Text="Report run on " Style="text-align: right; font-weight: bold; " SummaryDistinct="" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="299" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblOperational_Period" Tag="" Left="0" Top="0" Width="1080" Height="270" Caption="Period" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblSystem" Tag="" Left="1260" Top="0" Width="1740" Height="300" Caption="Radio System" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblChannel" Tag="" Left="2970" Top="0" Width="990" Height="270" Caption="Channel" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblFunction" Tag="" Left="4140" Top="0" Width="1740" Height="300" Caption="Function" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblFrequency" Tag="" Left="6750" Top="0" Width="1080" Height="270" Caption="Frequency" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTone" Tag="" Left="8010" Top="0" Width="2250" Height="270" Caption="Tone" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblNotes" Tag="" Left="9990" Top="0" Width="1740" Height="300" Caption="Notes" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="299" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtOperational_Period" DataField="Operational_Period" Left="180" Top="0" Width="630" Height="270" Text="Operational_Period" Style="color: #000000; text-align: center; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtSystem" DataField="System" Left="1260" Top="0" Width="1740" Height="300" Text="System" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtFunction" DataField="Function" Left="4140" Top="0" Width="2520" Height="270" Text="Function" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtFrequency" DataField="Frequency" Left="6750" Top="0" Width="1080" Height="270" Text="Frequency" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTone" DataField="Tone" Left="7920" Top="0" Width="1740" Height="300" Text="Tone" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtNotes" DataField="Notes" Left="9990" Top="0" Width="2790" Height="270" Text="Notes" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtChannel" DataField="Channel" Left="2970" Top="0" Width="990" Height="270" Text="Channel" Style="color: #000000; font-size: 9pt; " />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

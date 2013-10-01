@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Subject Information" Layer="True" TOCField="Name" DatasetMode="0">
+	<DataSource Name="Subject Information" BrowseName="Subject_Information" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="J:\GISData\Searches\SARMappingClass\CA_TableTop02\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="J:\GISData\Searches\SARMappingClass\CA_TableTop02\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="OBJECTID" SafeName="OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Subject_Number" SafeName="Subject_Number" Type="0" SortAsc="True" />
+		<Field Name="Name" SafeName="Name" Type="4" SortAsc="True" />
+		<Field Name="Category" SafeName="Category" Type="4" SortAsc="True" />
+		<Field Name="Group_Size" SafeName="Group_Size" Type="4" SortAsc="True" />
+		<Field Name="Missing_Since" SafeName="Missing_Since" Type="5" SortAsc="True" />
+		<Field Name="WhereLastSeen" SafeName="WhereLastSeen" Type="4" SortAsc="True" />
+		<Field Name="Age" SafeName="Age" Type="0" SortAsc="True" />
+		<Field Name="Gender" SafeName="Gender" Type="4" SortAsc="True" />
+		<Field Name="Race" SafeName="Race" Type="4" SortAsc="True" />
+		<Field Name="Height" SafeName="Height" Type="0" SortAsc="True" />
+		<Field Name="Weight" SafeName="Weight" Type="0" SortAsc="True" />
+		<Field Name="Build" SafeName="Build" Type="4" SortAsc="True" />
+		<Field Name="Complexion" SafeName="Complexion" Type="4" SortAsc="True" />
+		<Field Name="Hair" SafeName="Hair" Type="4" SortAsc="True" />
+		<Field Name="Eyes" SafeName="Eyes" Type="4" SortAsc="True" />
+		<Field Name="Other" SafeName="Other" Type="4" SortAsc="True" />
+		<Field Name="Shirt" SafeName="Shirt" Type="4" SortAsc="True" />
+		<Field Name="Pants" SafeName="Pants" Type="4" SortAsc="True" />
+		<Field Name="Jacket" SafeName="Jacket" Type="4" SortAsc="True" />
+		<Field Name="Hat" SafeName="Hat" Type="4" SortAsc="True" />
+		<Field Name="Footwear" SafeName="Footwear" Type="4" SortAsc="True" />
+		<Field Name="Info" SafeName="Info" Type="4" SortAsc="True" />
+		<Field Name="Cellphone" SafeName="Cellphone" Type="4" SortAsc="True" />
+		<Field Name="Photo_Available" SafeName="Photo_Available" Type="4" SortAsc="True" />
+		<Field Name="SHAPE_Length" SafeName="SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="SHAPE_Area" SafeName="SHAPE_Area" Type="3" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Subject_Number" />
+		<Field Name="Name" />
+		<Field Name="Category" />
+		<Field Name="Group_Size" />
+		<Field Name="Missing_Since" />
+		<Field Name="WhereLastSeen" />
+		<Field Name="Age" />
+		<Field Name="Gender" />
+		<Field Name="Race" />
+		<Field Name="Height" />
+		<Field Name="Weight" />
+		<Field Name="Build" />
+		<Field Name="Complexion" />
+		<Field Name="Hair" />
+		<Field Name="Eyes" />
+		<Field Name="Other" />
+		<Field Name="Shirt" />
+		<Field Name="Pants" />
+		<Field Name="Jacket" />
+		<Field Name="Hat" />
+		<Field Name="Footwear" />
+		<Field Name="Info" />
+		<Field Name="Cellphone" />
+		<Field Name="Photo_Available" />
+	</ReportFields>
+	<GroupFields>
+		<Field Name="Subject_Number" />
+	</GroupFields>
+	<ReportStyle Name="Havelock" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20.25" Style="Bold" Color="#575F6D">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="1" Lines="1" LinesColor="#FF7D26">
+			<Font Size="9" Style="Regular" Color="#000000">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="2" Lines="1" LinesColor="#000001">
+			<Font Size="9" Style="Bold" Color="#FF7D26">Century Schoolbook</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3" BackColor="LemonChiffon" AlternateColor="PapayaWhip">
+			<Font Size="9" Style="Regular" Color="#000000">Century Schoolbook</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8.25" Style="Bold" Color="DarkOrange">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="Gray">Century Schoolbook</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="Gray">Century Schoolbook</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12975" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="783" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="6100" Height="640" Caption="Subject Information" Style="color: #575F6D; font-weight: bold; font-size: 20.25pt; font-family: Century Schoolbook; vertical-align: middle; " />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="360" BackColor="16777215">
+				<Control Type="AR.Line" Name="styleLine1" Tag="" X1="0" Y1="0" X2="12960" Y2="0" LineColor="2522623" />
+			</Section>
+			<Section Type="GroupHeader" Name="ghSubject_Number" Height="585" DataField="Subject_Number" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtSubject_Number" DataField="Subject_Number" Left="1980" Top="90" Width="720" Height="360" Text="Subject_Number" Style="color: #FF7D26; text-align: center; font-weight: bold; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Line" Name="styleLine2" X1="0" Y1="0" X2="12960" Y2="0" LineColor="65536" />
+				<Control Type="AR.Label" Name="lblSubject_Number" Tag="" Left="0" Top="90" Width="2070" Height="360" Caption="Subject Number:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblName" Tag="" Left="3150" Top="90" Width="720" Height="360" Caption="Name:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Field" Name="txtName" DataField="Name" Left="3960" Top="90" Width="3513.6" Height="403.2" Text="Name" Style="color: #000000; text-align: center; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Field" Name="txtMissing_Since" DataField="Missing_Since" Left="9990" Top="90" Width="2880" Height="360" Text="Missing_Since" Style="color: #000000; text-align: center; background-color: LemonChiffon; font-size: 12pt; font-family: Century Schoolbook; " />
+				<Control Type="AR.Label" Name="lblMissing_Since" Tag="" Left="8280" Top="90" Width="1620" Height="360" Caption="Missing Since:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="6973" BackStyle="1" BackColor="13499135">
+				<Control Type="AR.Field" Name="txtCategory" DataField="Category" Left="6660" Top="0" Width="3420" Height="450" Text="Category" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtGroup_Size" DataField="Group_Size" Left="11520" Top="0" Width="1350" Height="360" Text="Group_Size" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtWhereLastSeen" DataField="WhereLastSeen" Left="90" Top="990" Width="12690" Height="1170" Text="WhereLastSeen" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtAge" DataField="Age" Left="720" Top="0" Width="630" Height="450" Text="Age" Style="color: #000000; ddo-char-set: 0; text-align: left; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtGender" DataField="Gender" Left="3150" Top="0" Width="1260" Height="360" Text="Gender" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtRace" DataField="Race" Left="810" Top="2700" Width="1620" Height="360" Text="Race" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtHeight" DataField="Height" Left="1980" Top="3330" Width="1440" Height="450" Text="Height" Style="color: #000000; ddo-char-set: 0; text-align: left; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtWeight" DataField="Weight" Left="5220" Top="3330" Width="1620" Height="450" Text="Weight" Style="color: #000000; ddo-char-set: 0; text-align: left; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtBuild" DataField="Build" Left="900" Top="3960" Width="1530" Height="540" Text="Build" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtComplexion" DataField="Complexion" Left="4320" Top="3960" Width="2520" Height="540" Text="Complexion" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtHair" DataField="Hair" Left="720" Top="4680" Width="1260" Height="540" Text="Hair" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtEyes" DataField="Eyes" Left="3240" Top="4680" Width="1080" Height="360" Text="Eyes" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtOther" DataField="Other" Left="900" Top="5490" Width="5940" Height="1170" Text="Other" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtShirt" DataField="Shirt" Left="8010" Top="2790" Width="4770" Height="360" Text="Shirt" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtPants" DataField="Pants" Left="8100" Top="3240" Width="4680" Height="450" Text="Pants" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtJacket" DataField="Jacket" Left="8190" Top="3780" Width="4590" Height="360" Text="Jacket" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtHat" DataField="Hat" Left="7920" Top="4320" Width="4860" Height="360" Text="Hat" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtFootwear" DataField="Footwear" Left="8640" Top="4860" Width="4104" Height="446.4" Text="Footwear" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtInfo" DataField="Info" Left="7920" Top="5490" Width="4824" Height="547.2" Text="Info" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtCellphone" DataField="Cellphone" Left="8550" Top="6210" Width="2430" Height="540" Text="Cellphone" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Field" Name="txtPhoto_Available" DataField="Photo_Available" Left="10890" Top="6480" Width="1440" Height="360" Text="Photo_Available" Style="color: #000000; ddo-char-set: 0; background-color: LemonChiffon; font-size: 12pt; font-family: Microsoft Sans Serif; " />
+				<Control Type="AR.Label" Name="lblCategory" Tag="" Left="4590" Top="0" Width="2070" Height="360" Caption="Subject Category:" Style="color: #000000; ddo-char-set: 0; font-size: 12pt; font-family: Microsoft Sans Serif; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblAge" Tag="" Left="90" Top="0" Width="540" Height="360" Caption="Age: " Style="color: #000000; ddo-char-set: 0; font-size: 12pt; font-family: Microsoft Sans Serif; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblBuild" Tag="" Left="90" Top="3960" Width="810" Height="360" Caption="Build:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblWhereLastSeen" Tag="" Left="90" Top="630" Width="4050" Height="360" Caption="Description of where last seen:" Style="color: #000000; font-weight: bold; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblGender" Tag="" Left="2070" Top="0" Width="1080" Height="360" Caption="Gender:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblGroup_Size" Tag="" Left="10170" Top="0" Width="1350" Height="360" Caption="Group Size:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRace" Tag="" Left="90" Top="2700" Width="641.5639" Height="320" Caption="Race:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblHeight" Tag="" Left="90" Top="3330" Width="1800" Height="360" Caption="Height (inches):" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblWeight" Tag="" Left="3780" Top="3330" Width="1440" Height="360" Caption="Weight (lbs):" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblComplexion" Tag="" Left="2790" Top="3960" Width="1530" Height="360" Caption="Complexion:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblHair" Tag="" Left="90" Top="4680" Width="641.5639" Height="320" Caption="Hair:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblEyes" Tag="" Left="2520" Top="4680" Width="641.5639" Height="320" Caption="Eyes:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblOther" Tag="" Left="90" Top="5490" Width="810" Height="360" Caption="Other:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Field" Name="TextBox1" Left="90" Top="2250" Width="3240" Height="450" Text="PHYSICAL DESCRIPTION" Style="font-weight: bold; font-size: 12pt; " />
+				<Control Type="AR.Field" Name="TextBox2" Left="7200" Top="2250" Width="3240" Height="450" Text="CLOTHING DESCRIPTION" Style="font-weight: bold; font-size: 12pt; " />
+				<Control Type="AR.Label" Name="lblShirt" Tag="" Left="7290" Top="2790" Width="641.5639" Height="320" Caption="Shirt:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblPants" Tag="" Left="7290" Top="3240" Width="720" Height="360" Caption="Pants: " Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblJacket" Tag="" Left="7290" Top="3780" Width="900" Height="360" Caption="Jacket:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblHat" Tag="" Left="7290" Top="4320" Width="641.5639" Height="320" Caption="Hat:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblFootwear" Tag="" Left="7290" Top="4860" Width="1350" Height="360" Caption="Footwear" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblInfo" Tag="" Left="7290" Top="5490" Width="641.5639" Height="320" Caption="Info:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblCellphone" Tag="" Left="7290" Top="6210" Width="1260" Height="360" Caption="Cellphone:" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblPhoto_Available" Tag="" Left="10890" Top="6120" Width="1890" Height="360" Caption="Photo_Available" Style="color: #000000; font-size: 12pt; font-family: Century Schoolbook; white-space: nowrap; " />
+			</Section>
+			<Section Type="GroupFooter" Name="gfSubject_Number" Height="0" BackColor="16777215" />
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: Gray; text-align: center; font-size: 8pt; font-family: Century Schoolbook; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="435" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

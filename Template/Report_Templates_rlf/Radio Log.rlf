@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Radio_Log" Layer="True" TOCField="Team" DatasetMode="0">
+	<DataSource Name="11 Radio_Log" BrowseName="Radio_Log" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\New_Incident\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\New_Incident\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="OBJECTID" SafeName="OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Date_Time" SafeName="Date_Time" Type="5" SortAsc="True" />
+		<Field Name="Team" SafeName="Team" Type="4" SortAsc="True" />
+		<Field Name="Message" SafeName="Message" Type="4" SortAsc="True" />
+		<Field Name="UTM_Easting" SafeName="UTM_Easting" Type="4" SortAsc="True" />
+		<Field Name="UTM_Northing" SafeName="UTM_Northing" Type="4" SortAsc="True" />
+		<Field Name="Latitude" SafeName="Latitude" Type="4" SortAsc="True" />
+		<Field Name="Longitude" SafeName="Longitude" Type="4" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Date_Time" />
+		<Field Name="Team" />
+		<Field Name="Message" />
+		<Field Name="UTM_Easting" />
+		<Field Name="UTM_Northing" />
+	</ReportFields>
+	<SortFields>
+		<Field Name="Date_Time" />
+	</SortFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="9360" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="762" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="2700" Height="620" Caption="Radio Log" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="6570" Top="90" Width="2610" Height="540" FormatString="{RunDateTime:M/d/yy h:mm tt}" Style="font-weight: bold; " />
+				<Control Type="AR.Field" Name="TextBox1" Tag="" Left="5040" Top="90" Width="1440" Height="285" Text="Report run on " Style="text-align: right; font-weight: bold; " SummaryDistinct="" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="299" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblDate_Time" Tag="" Left="0" Top="0" Width="1420" Height="300" Caption="Date Time" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeam" Tag="" Left="1421.44" Top="0" Width="1740" Height="300" Caption="Team" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblMessage" Tag="" Left="3150" Top="0" Width="3150" Height="270" Caption="Message" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblUTM_Easting" Tag="" Left="6390" Top="0" Width="1420" Height="300" Caption="UTM_Easting" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblUTM_Northing" Tag="" Left="7830" Top="0" Width="1420" Height="300" Caption="UTM_Northing" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="452" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtDate_Time" DataField="Date_Time" Left="0" Top="0" Width="1420" Height="453.9649" Text="Date_Time" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam" DataField="Team" Left="1421.44" Top="0" Width="1740" Height="300" Text="Team" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtMessage" DataField="Message" Left="3150" Top="0" Width="3150" Height="270" Text="Message" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtUTM_Easting" DataField="UTM_Easting" Left="6390" Top="0" Width="1420" Height="300" Text="UTM_Easting" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtUTM_Northing" DataField="UTM_Northing" Left="7830" Top="0" Width="1420" Height="300" Text="UTM_Northing" Style="color: #000000; font-size: 9pt; " />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="1" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

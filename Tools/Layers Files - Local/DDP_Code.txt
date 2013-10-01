@@ -1,0 +1,4 @@
+<BOL>Incident: <dyn type="page" property="Operation_Period.Incident_Name"> - Assignment # <dyn type="page" property="Assignments.Assignment_Number"/> - Team: <dyn type="page" property="Teams.Team_Name"/> - Radio Call Sign: <dyn type="page" property="Teams.Radio_Call_Sign"/></BOL> Communications: <dyn type="page" property="Operation_Period.Primary_Comms"> Emergency Traffic: <dyn type="page" property="Operation_Period.Emergency_Comms">
+<UND>Your Assignment:</UND> <dyn type="page" property="assignments.Description"/> 
+Weather: <dyn type="page" property="Operation_Period.weather"/>
+<BOL>Safety message: <dyn type="page" property="Operation_Period.safety_message"/></BOL>

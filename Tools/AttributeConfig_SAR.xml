@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Layers>
+  <Layer>
+    <Name>Clues_Point</Name>
+  </Layer>
+  <Layer>
+    <Name>Found/Suspension</Name>
+  </Layer>
+  <Layer>
+    <Name>Planning Point</Name>
+  </Layer>
+  <Layer>
+    <Name>Hasty_Line</Name>
+  </Layer>
+  <Layer>
+    <Name>Team_Status</Name>
+  </Layer>
+  <Layer>
+    <Name>Hasty_Points</Name>
+  </Layer>
+  <Layer>
+    <Name>Hasty_Segments</Name>
+  </Layer>
+  <Layer>
+    <Name>Probability Regions</Name>
+  </Layer>
+  <Layer>
+    <Name>Search Segments</Name>
+  </Layer>
+  <Layer>
+    <Name>Assets</Name>
+  </Layer>
+  <Layer>
+    <Name>DF_Bearing_All</Name>
+  </Layer>
+  <Layer>
+    <Name>Scratch_Point</Name>
+  </Layer>
+  <Layer>
+    <Name>Scratch_Lines</Name>
+  </Layer>
+</Layers>

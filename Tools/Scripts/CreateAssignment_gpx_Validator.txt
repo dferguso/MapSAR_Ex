@@ -1,0 +1,55 @@
+class ToolValidator:
+  """Class for validating a tool's parameter values and controlling
+  the behavior of the tool's dialog."""
+
+  def __init__(self):
+    """Setup arcpy and the list of tool parameters."""
+    import arcpy
+    import os, sys, arcgisscripting
+    self.GP = arcgisscripting.create()
+    self.params = arcpy.GetParameterInfo()
+
+  def initializeParameters(self):
+    """Refine the properties of a tool's parameters.  This method is
+    called when the tool is opened."""
+
+    try:
+        field1 = "Assignment_Number"
+        self.rows = self.GP.searchcursor("Assignments","","",field1, field1)
+        self.row = self.rows.Next()
+        self.names = []
+        if self.row.getvalue(field1):
+            while self.row:
+                self.names.append(self.row.getvalue(field1))
+                self.row = self.rows.Next()
+            self.params[1].filter.list = self.names
+            del self.row, self.rows
+
+        else:
+            field1 = "Planning_Number"
+            self.rows = self.GP.searchcursor("Assignments","","",field1, field1)
+            self.row = self.rows.Next()
+            self.names = []
+            while self.row:
+                self.names.append(self.row.getvalue(field1))
+                self.row = self.rows.Next()
+            self.params[1].filter.list = self.names
+            del self.row, self.rows
+
+    except:
+        self.params[1].filter.list=[]
+
+    return
+
+  def updateParameters(self):
+    """Modify the values and properties of parameters before internal
+    validation is performed.  This method is called whenever a parmater
+    has been changed."""
+    return
+
+  def updateMessages(self):
+    """Modify the messages created by internal validation for each tool
+    parameter.  This method is called after internal validation."""
+    if len(self.params[1].filter.list) == 0:
+        self.params[1].setErrorMessage("No Assignment Numbers or Planning Numbers provided")
+    return

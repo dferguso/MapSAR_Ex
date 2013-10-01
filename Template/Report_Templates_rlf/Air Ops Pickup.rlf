@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Air_Operations_Dropoff" Layer="True" TOCField="Air_Operations.Flight_Number" DatasetMode="0">
+	<DataSource Name="10 Air_Operations" BrowseName="Air_Operations" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\New_Incident\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\New_Incident\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="Air_Operations.OBJECTID" SafeName="Air_Operations_OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Air_Operations.Flight_Number" SafeName="Air_Operations_Flight_Number" Type="0" SortAsc="True" />
+		<Field Name="Air_Operations.Assignment_Number" SafeName="Air_Operations_Assignment_Number" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Team_Name" SafeName="Assignments_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Air_Operations.Name" SafeName="Air_Operations_Name" Type="4" SortAsc="True" />
+		<Field Name="Air_Operations.Dropoff_LZ" SafeName="Air_Operations_Dropoff_LZ" Type="4" SortAsc="True" />
+		<Field Name="Air_Operations.Pickup_LZ" SafeName="Air_Operations_Pickup_LZ" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Assignment_Number" SafeName="Assignments_Assignment_Number" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Display" SafeName="Assignments_Display" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Period" SafeName="Assignments_Period" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Status" SafeName="Assignments_Status" Type="4" SortAsc="True" />
+		<Field Name="Teams.Team_Type" SafeName="Teams_Team_Type" Type="4" SortAsc="True" />
+		<Field Name="Teams.Status" SafeName="Teams_Status" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Description" SafeName="Assignments_Description" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Area_Name" SafeName="Assignments_Area_Name" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.Area_Name" SafeName="Search_Segments_Area_Name" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.Status" SafeName="Search_Segments_Status" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.Area_Description" SafeName="Search_Segments_Area_Description" Type="4" SortAsc="True" />
+		<Field Name="Teams.Radio_Call_Sign" SafeName="Teams_Radio_Call_Sign" Type="4" SortAsc="True" />
+		<Field Name="Assignments.SHAPE_Length" SafeName="Assignments_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Assignments.OBJECTID" SafeName="Assignments_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Teams.Description" SafeName="Teams_Description" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Period" SafeName="Operation_Period_Period" Type="0" SortAsc="True" />
+		<Field Name="Assignments.SHAPE_Area" SafeName="Assignments_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Assignments.Division" SafeName="Assignments_Division" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.OBJECTID" SafeName="Operation_Period_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Operation_Period.Start_Date" SafeName="Operation_Period_Start_Date" Type="5" SortAsc="True" />
+		<Field Name="Operation_Period.End_Date" SafeName="Operation_Period_End_Date" Type="5" SortAsc="True" />
+		<Field Name="Operation_Period.SHAPE_Length" SafeName="Operation_Period_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Operation_Period.SHAPE_Area" SafeName="Operation_Period_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Operation_Period.PeriodText" SafeName="Operation_Period_PeriodText" Type="4" SortAsc="True" />
+		<Field Name="Teams.OBJECTID" SafeName="Teams_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Teams.Team_Name" SafeName="Teams_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Teams.SHAPE_Length" SafeName="Teams_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Teams.SHAPE_Area" SafeName="Teams_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Teams.Leader" SafeName="Teams_Leader" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.OBJECTID" SafeName="Search_Segments_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Search_Segments.SHAPE_Length" SafeName="Search_Segments_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Search_Segments.Searched" SafeName="Search_Segments_Searched" Type="0" SortAsc="True" />
+		<Field Name="Search_Segments.SHAPE_Area" SafeName="Search_Segments_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Search_Segments.Period_Optional" SafeName="Search_Segments_Period_Optional" Type="0" SortAsc="True" />
+		<Field Name="Search_Segments.Display" SafeName="Search_Segments_Display" Type="0" SortAsc="True" />
+		<Field Name="Assignments.TimeSlider" SafeName="Assignments_TimeSlider" Type="5" SortAsc="True" />
+		<Field Name="Operation_Period.Weather" SafeName="Operation_Period_Weather" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Incident_Name" SafeName="Operation_Period_Incident_Name" Type="4" SortAsc="True" />
+		<Field Name="Assignments.AssignNumText" SafeName="Assignments_AssignNumText" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Incident_Commander" SafeName="Operation_Period_Incident_Commander" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Planning_Chief" SafeName="Operation_Period_Planning_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Operations_Chief" SafeName="Operation_Period_Operations_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Logistics_Chief" SafeName="Operation_Period_Logistics_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Air_Operations_Chief" SafeName="Operation_Period_Air_Operations_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Transportation_Chief" SafeName="Operation_Period_Transportation_Chief" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.OBJECTID" SafeName="Team_Members_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Team_Members.Team_Name" SafeName="Team_Members_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Originating_Team" SafeName="Team_Members_Originating_Team" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Name" SafeName="Team_Members_Name" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Check_In" SafeName="Team_Members_Check_In" Type="5" SortAsc="True" />
+		<Field Name="Team_Members.Check_Out" SafeName="Team_Members_Check_Out" Type="5" SortAsc="True" />
+		<Field Name="Team_Members.Skills" SafeName="Team_Members_Skills" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Body_Weight" SafeName="Team_Members_Body_Weight" Type="2" SortAsc="True" />
+		<Field Name="Team_Members.Gear_Weight" SafeName="Team_Members_Gear_Weight" Type="2" SortAsc="True" />
+		<Field Name="Team_Members.Name_Unit" SafeName="Team_Members_Name_Unit" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Total_Weight" SafeName="Team_Members_Total_Weight" Type="2" SortAsc="True" />
+		<Field Name="Air_Operations.Comments" SafeName="Air_Operations_Comments" Type="4" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Air_Operations.Flight_Number" />
+		<Field Name="Air_Operations.Assignment_Number" />
+		<Field Name="Air_Operations.Name" />
+		<Field Name="Air_Operations.Dropoff_LZ" />
+		<Field Name="Team_Members.Body_Weight" />
+		<Field Name="Team_Members.Gear_Weight" />
+		<Field Name="Team_Members.Total_Weight" />
+	</ReportFields>
+	<GroupFields>
+		<Field Name="Air_Operations.Flight_Number" />
+	</GroupFields>
+	<SortFields>
+		<Field Name="Team_Members.Total_Weight" />
+	</SortFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="761" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="5640" Height="620" Caption="Air Operations Pick-up" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="10080" Top="180" Width="2610" Height="540" FormatString="{RunDateTime:M/d/yy h:mm tt}" Style="font-weight: bold; " />
+				<Control Type="AR.Field" Name="TextBox1" Tag="" Left="8550" Top="180" Width="1440" Height="285" Text="Report run on " Style="text-align: right; font-weight: bold; " SummaryDistinct="" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="0" BackColor="16777215" />
+			<Section Type="GroupHeader" Name="ghAir_Operations_Flight_Number" Height="883" DataField="Air_Operations_Flight_Number" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblAir_Operations_Flight_Number" Left="0" Top="0" Width="1260" Height="270" Caption="Flight Number" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Field" Name="txtAir_Operations_Flight_Number" DataField="Air_Operations_Flight_Number" Left="1260" Top="0" Width="450" Height="270" Text="Air_Operations_Flight_Number" Style="color: #000000; text-align: left; font-weight: bold; font-size: 9pt; font-family: Times New Roman; " />
+				<Control Type="AR.Label" Name="lblAir_Operations_Assignment_Number" Left="1080" Top="270" Width="1080" Height="540" Caption="Assignment Number" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblAir_Operations_Name" Left="2340" Top="270" Width="3060" Height="270" Caption="Passenger Name" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblAir_Operations_Dropoff_LZ" Left="5580" Top="270" Width="3420" Height="270" Caption="Pick-up LZ" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Body_Weight" Left="9180" Top="270" Width="810" Height="540" Caption="Body Weight" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Gear_Weight" Left="10080" Top="270" Width="810" Height="540" Caption="Gear Weight" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Total_Weight" Left="11070" Top="270" Width="810" Height="540" Caption="Total Weight" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="452" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtAir_Operations_Assignment_Number" DataField="Air_Operations_Assignment_Number" Left="1080" Top="0" Width="460" Height="453.9649" Text="Air_Operations_Assignment_Number" Style="color: #000000; text-align: right; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtAir_Operations_Name" DataField="Air_Operations_Name" Left="2430" Top="0" Width="3060" Height="270" Text="Air_Operations_Name" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtAir_Operations_Dropoff_LZ" DataField="Air_Operations_Pickup_LZ" Left="5670" Top="0" Width="2880" Height="270" Text="Air_Operations_Pickup_LZ" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Body_Weight" DataField="Team_Members_Body_Weight" Left="9270" Top="0" Width="780" Height="300" Text="Team_Members_Body_Weight" Style="color: #000000; text-align: right; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Gear_Weight" DataField="Team_Members_Gear_Weight" Left="10080" Top="0" Width="810" Height="270" Text="Team_Members_Gear_Weight" Style="color: #000000; text-align: right; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Total_Weight" DataField="Team_Members_Total_Weight" Left="11070" Top="0" Width="780" Height="300" Text="Team_Members_Total_Weight" Style="color: #000000; text-align: right; font-size: 9pt; " />
+			</Section>
+			<Section Type="GroupFooter" Name="gfAir_Operations_Flight_Number" Height="280" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblSumTeam_Members_Total_Weight" Left="8820" Top="0" Width="1820" Height="280" Caption="Sum Total Weight" Style="color: #000000; text-align: right; font-weight: bold; font-size: 8pt; " />
+				<Control Type="AR.Field" Name="txtSumTeam_Members_Total_Weight" DataField="Team_Members_Total_Weight" Left="10800" Top="0" Width="1260" Height="280" Text="Team_Members_Total_Weight" Style="color: #000000; font-weight: bold; font-size: 8pt; " SummaryType="3" SummaryGroup="ghAir_Operations_Flight_Number" />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

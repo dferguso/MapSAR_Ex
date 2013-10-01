@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Team_Members" Layer="True" TOCField="Team_Members.Name" DatasetMode="0">
+	<DataSource Name="Team_Members" BrowseName="Team_Members" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\Documents and Settings\Map User\Desktop\MapSAR\20110501_SMR_Pochter\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\Documents and Settings\Map User\Desktop\MapSAR\20110501_SMR_Pochter\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="Team_Members.OBJECTID" SafeName="Team_Members_OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Team_Members.Name" SafeName="Team_Members_Name" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Check_In" SafeName="Team_Members_Check_In" Type="5" SortAsc="True" />
+		<Field Name="Team_Members.Check_Out" SafeName="Team_Members_Check_Out" Type="5" SortAsc="True" />
+		<Field Name="Team_Members.Team_Name" SafeName="Team_Members_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Originating_Team" SafeName="Team_Members_Originating_Team" Type="4" SortAsc="True" />
+		<Field Name="Teams.Status" SafeName="Teams_Status" Type="4" SortAsc="True" />
+		<Field Name="Teams.Team_Type" SafeName="Teams_Team_Type" Type="4" SortAsc="True" />
+		<Field Name="Teams.SHAPE_Length" SafeName="Teams_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Teams.SHAPE_Area" SafeName="Teams_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Teams.Leader" SafeName="Teams_Leader" Type="4" SortAsc="True" />
+		<Field Name="Teams.Description" SafeName="Teams_Description" Type="4" SortAsc="True" />
+		<Field Name="Teams.Radio_Call_Sign" SafeName="Teams_Radio_Call_Sign" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Skills" SafeName="Team_Members_Skills" Type="4" SortAsc="True" />
+		<Field Name="Teams.OBJECTID" SafeName="Teams_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Teams.Team_Name" SafeName="Teams_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Body_Weight" SafeName="Team_Members_Body_Weight" Type="2" SortAsc="True" />
+		<Field Name="Team_Members.Gear_Weight" SafeName="Team_Members_Gear_Weight" Type="2" SortAsc="True" />
+		<Field Name="Team_Members.Name_Unit" SafeName="Team_Members_Name_Unit" Type="4" SortAsc="True" />
+		<Field Name="Team_Members.Total_Weight" SafeName="Team_Members_Total_Weight" Type="2" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Team_Members.Name" />
+		<Field Name="Team_Members.Check_In" />
+		<Field Name="Team_Members.Check_Out" />
+		<Field Name="Team_Members.Team_Name" />
+		<Field Name="Team_Members.Originating_Team" />
+	</ReportFields>
+	<SortFields>
+		<Field Name="Team_Members.Team_Name" />
+	</SortFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="763" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="3780" Height="620" Caption="Team_Members" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="9540" Top="180" Width="2430" Height="499.961" FormatString="{RunDateTime:M/d/yyyy h:mm tt}" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="299" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblTeam_Members_Name" Tag="" Left="0" Top="0" Width="1740" Height="300" Caption="Name" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Check_In" Tag="" Left="2430" Top="0" Width="1420" Height="300" Caption="Check In" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Check_Out" Tag="" Left="4500" Top="0" Width="1420" Height="300" Caption="Check Out" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Team_Name" Tag="" Left="7380" Top="0" Width="1740" Height="300" Caption="Field Team Name" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeam_Members_Originating_Team" Tag="" Left="10080" Top="0" Width="2430" Height="270" Caption="Originating SAR Team" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="299" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtTeam_Members_Name" DataField="Team_Members_Name" Left="0" Top="0" Width="1740" Height="300" Text="Team_Members_Name" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Check_In" DataField="Team_Members_Check_In" Left="2430" Top="0" Width="1420" Height="300" Text="Team_Members_Check_In" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Check_Out" DataField="Team_Members_Check_Out" Left="4500" Top="0" Width="1420" Height="300" Text="Team_Members_Check_Out" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Team_Name" DataField="Team_Members_Team_Name" Left="7380" Top="0" Width="1740" Height="300" Text="Team_Members_Team_Name" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtTeam_Members_Originating_Team" DataField="Team_Members_Originating_Team" Left="10080" Top="0" Width="1740" Height="300" Text="Team_Members_Originating_Team" Style="color: #000000; font-size: 9pt; " />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

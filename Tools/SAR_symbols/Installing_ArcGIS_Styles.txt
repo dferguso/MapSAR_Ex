@@ -1,0 +1,11 @@
+Installing a Style set in ArcMap -
+
+Within ArcMap's Tools Puldown menu, select Styles|Style Mangaer...
+
+Pull down the Styles pull-down menu then select the Add button
+
+Browse to the location of the Style.
+
+
+Note:
+If you are using the FIMT tools, you will need to manually change the symbols for Safety Zone, Mobile Fire Weather, point Aerial Hazard, and Fire Origin.

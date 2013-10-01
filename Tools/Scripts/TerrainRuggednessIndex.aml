@@ -1,0 +1,195 @@
+/*--------------------------------------------------------------------------------------
+/*  USDA Forest Service - Rocky Mountain Research Station - FSL. Moscow, ID
+/*--------------------------------------------------------------------------------------
+/*  Program: TRI.AML
+/*  Purpose: Caculates Topographic Ruggedness Index
+/*
+/*--------------------------------------------------------------------------------------
+/*  Usage: RUGGEDNESS <DEM> <OUTGRID> {CLASSIFY}
+/*
+/*  Arguments: DEM - Digital Elevtion Model
+/*             TRI - Output name of final TWI grid
+/*             CLASSIFY - Optional categorial reclass to the values below.
+/*--------------------------------------------------------------------------------------
+/*   Notes: Topographic Ruggedness Index
+/*   The topographic ruggedness index (TRI) is a measurement developed by Riley, et al. (1999)
+/*   to express the amount of elevation difference between adjacent cells of a digital elevation
+/*   grid. The process essentially calculates the difference in elevation values from a center
+/*   cell and the eight cells immediately surrounding it. Then it squares each of the eight
+/*   elevation difference values to make them all positive and averages the squares. The topographic
+/*   ruggedness index is then derived by taking the square root of this average, and corresponds
+/*   to average elevation change between any point on a grid and it’s surrounding area. The authors
+/*   of the TRI propose the following breakdown for the values obtained for the index where:
+/*
+/*   0-80 m is considered to represent a level terrain surface (1)
+/*   81-116 m represents nearly level surface (2)
+/*   117-161 m a slightly rugged surface (3)
+/*   162-239 m an intermediately rugged surface (4)
+/*   240-497 m a moderately rugged (5)
+/*   498-958 m a highly rugged (6)
+/*   959-5000 m an extremely rugged surface. (7)
+/*   (reclass values)
+/*
+/*   If you would like to retain the grid with the original standard differences
+/*   save %tmp1% grid.
+/*
+/*--------------------------------------------------------------------------------------
+/*  Required Input: <Digital Elevation Model> <OUTGRID>
+/*  Optional Input  (Standard Elevation Difference)
+/*  Output:         <Topographic Ruggedness Index>
+/*
+/*--------------------------------------------------------------------------------------
+/*  History: Jeffrey Evans - Landscape Ecologist
+/*           06/12/03 - Original coding
+/*           1221 South Main, Moscow, ID 83843
+/*           (208) 882-3557
+/*           jevans02@fs.fed.us
+/*======================================================================================
+/*  References:
+/*
+/*     Riley, S. J., S. D. DeGloria and R. Elliot (1999). A terrain ruggedness index
+/*     that quantifies topographic heterogeneity, Intermountain Journal of Sciences,
+/*     vol. 5, No. 1-4, 1999.
+/*
+/*     Blaszczynski, Jacek S., 1997. Landform characterization with Geographic Information
+/*     Systems, Photogrammetric Enginnering and Remote Sensing, vol. 63, no. 2, February
+/*     1997, pp. 183-191.
+/*
+/*======================================================================================
+/* Check Arguments
+/*======================================================================================
+&args dem outgrid class
+
+ &if [show PROGRAM] <> GRID &then
+  &do
+     grid
+       &type Can Only Be run From GRID
+          &type Starting GRID
+             &type Please re-run RUGGEDNESS
+     &end
+
+&if [NULL %dem%] = .TRUE. &then
+  &return &inform Usage: TRI <DEM> <TRI> {CLASSIFY}
+
+&if [NULL %outgrid%] = .TRUE. &then
+  &return &inform Usage: TRI <DEM> <TRI> {CLASSIFY}
+
+&if [exists %dem% -grid] = .FALSE. &then
+  &return &inform Grid [upcase %dem%] does not exist!
+
+&if [exists %outgrid% -grid] = .TRUE. &then
+  &return &inform Grid [upcase %outgrid%] already exist!
+
+/*======================================================================================
+/* MAIN
+/*======================================================================================
+
+&s tmp1 [scratchname -prefix xx1]
+
+setwindow %dem% %dem%
+setcell %dem%
+
+&type /& Caculating Standard Elevation Differences /&
+
+DOCELL
+  %tmp1% = ( ( sqr ( %dem%(0,0) - %dem%(-1,-1) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(0,-1) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(1,-1) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(1,0) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(1,1) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(0,1) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(-1,1) ) ) ~
+  + ( sqr ( %dem%(0,0) - %dem%(-1,0) ) ) )
+END
+
+/*======================================================================================
+/* Cleaning Up
+/*======================================================================================
+
+&if [NULL %class%] = .TRUE. &then
+  &do
+
+&type /& Caculating the Topographic Ruggedness Index /&
+
+%outgrid% = sqrt(%tmp1%)
+
+&messages &off
+kill %tmp1% all
+&messages &on
+
+&type /& Topographic Ruggedness Index GRID written to [upcase %outgrid%] /&
+
+&end
+
+/*======================================================================================
+/* Reclassifying
+/*======================================================================================
+
+  &else &do
+
+&s tmp2 [scratchname -prefix xx2]
+
+&type /& Reclassifying Topographic Ruggedness Index /&
+
+&type 0-80     (1) Represents a level terrain surface.
+&type 81-116   (2) Represents nearly level surface.
+&type 117-161  (3) Represents a slightly rugged surface.
+&type 162-239  (4) Represents an intermediately rugged surface.
+&type 240-497  (5) Represents a moderately rugged surface.
+&type 498-958  (6) Represents a highly rugged surface.
+&type >959     (7) Represents an extremely rugged surface. /&
+
+%outgrid% = sqrt( %tmp1% ) * 10
+%tmp2% = int ( sqrt( %tmp1% ) * 10 )
+
+%class% = con(%tmp2% >= 0 && %tmp2% <= 80, 1, ~
+              %tmp2% >= 81 && %tmp2% <=  116, 2, ~
+              %tmp2% >= 117 && %tmp2% <= 161, 3, ~
+              %tmp2% >= 162 && %tmp2% <= 239, 4, ~
+              %tmp2% >= 240 && %tmp2% <= 497, 5, ~
+              %tmp2% >= 498 && %tmp2% <= 958, 6, ~
+              %tmp2% >= 959, 7)
+
+ARC TABLES
+
+ADDITEM %class%.vat TRI 50 50 C
+
+SEL %class%.vat
+
+RESEL value = 1
+move '0-80 Level terrain surface' to TRI
+
+ASEL
+RESEL value = 2
+move '81-116 Nearly level surface' to TRI
+
+ASEL
+RESEL value = 3
+move '117-161 Slightly rugged surface' to TRI
+
+ASEL
+RESEL value = 4
+move '162-239 Intermediately rugged surface' to TRI
+
+ASEL
+RESEL value = 5
+move '240-497 Moderately rugged surface' to TRI
+
+ASEL
+RESEL value = 6
+move '498-958 Highly rugged surface' to TRI
+
+ASEL
+RESEL value = 7
+move '>959 Extremely rugged surface' to TRI
+
+QUIT
+
+&messages &off
+kill (!%tmp1% %tmp2%!) all
+&messages &on
+
+&type /& Topographic Ruggedness Index GRID written to [upcase %outgrid%] /&
+&type /& Classified Topographic Ruggedness Index GRID written to [upcase %class%] /&
+
+&end

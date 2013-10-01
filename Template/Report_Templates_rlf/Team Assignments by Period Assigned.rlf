@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Team Assigments by Period" Layer="True" TOCField="Assignments.Team_Name" DatasetMode="2" DefExpression="&quot;Assignments.Status&quot; = 'Assigned'">
+	<DataSource Name="Assigments" BrowseName="Assignments" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\20110501_SMR_Pochter\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\20110501_SMR_Pochter\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="Assignments.SHAPE_Length" SafeName="Assignments_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Assignments.Mileage" SafeName="Assignments_Mileage" Type="3" SortAsc="True" />
+		<Field Name="Assignments.Assignment_Number" SafeName="Assignments_Assignment_Number" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Display" SafeName="Assignments_Display" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Period" SafeName="Assignments_Period" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Status" SafeName="Assignments_Status" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Team_Name" SafeName="Assignments_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Teams.Team_Type" SafeName="Teams_Team_Type" Type="4" SortAsc="True" />
+		<Field Name="Teams.Status" SafeName="Teams_Status" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Description" SafeName="Assignments_Description" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Area_Name" SafeName="Assignments_Area_Name" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.Area_Name" SafeName="Search_Segments_Area_Name" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.Status" SafeName="Search_Segments_Status" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.Area_Description" SafeName="Search_Segments_Area_Description" Type="4" SortAsc="True" />
+		<Field Name="Teams.Radio_Call_Sign" SafeName="Teams_Radio_Call_Sign" Type="4" SortAsc="True" />
+		<Field Name="Assignments.OBJECTID" SafeName="Assignments_OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Teams.Description" SafeName="Teams_Description" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Period" SafeName="Operation_Period_Period" Type="0" SortAsc="True" />
+		<Field Name="Assignments.SHAPE_Area" SafeName="Assignments_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Assignments.Division" SafeName="Assignments_Division" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.OBJECTID" SafeName="Operation_Period_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Operation_Period.Start_Date" SafeName="Operation_Period_Start_Date" Type="5" SortAsc="True" />
+		<Field Name="Operation_Period.End_Date" SafeName="Operation_Period_End_Date" Type="5" SortAsc="True" />
+		<Field Name="Operation_Period.SHAPE_Length" SafeName="Operation_Period_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Operation_Period.SHAPE_Area" SafeName="Operation_Period_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Operation_Period.PeriodText" SafeName="Operation_Period_PeriodText" Type="4" SortAsc="True" />
+		<Field Name="Teams.OBJECTID" SafeName="Teams_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Teams.Team_Name" SafeName="Teams_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Teams.SHAPE_Length" SafeName="Teams_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Teams.SHAPE_Area" SafeName="Teams_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Teams.Leader" SafeName="Teams_Leader" Type="4" SortAsc="True" />
+		<Field Name="Search_Segments.OBJECTID" SafeName="Search_Segments_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Search_Segments.SHAPE_Length" SafeName="Search_Segments_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Search_Segments.Searched" SafeName="Search_Segments_Searched" Type="0" SortAsc="True" />
+		<Field Name="Search_Segments.SHAPE_Area" SafeName="Search_Segments_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Search_Segments.Period_Optional" SafeName="Search_Segments_Period_Optional" Type="0" SortAsc="True" />
+		<Field Name="Search_Segments.Display" SafeName="Search_Segments_Display" Type="0" SortAsc="True" />
+		<Field Name="Assignments.TimeSlider" SafeName="Assignments_TimeSlider" Type="5" SortAsc="True" />
+		<Field Name="Operation_Period.Weather" SafeName="Operation_Period_Weather" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Incident_Name" SafeName="Operation_Period_Incident_Name" Type="4" SortAsc="True" />
+		<Field Name="Assignments.AssignNumText" SafeName="Assignments_AssignNumText" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Incident_Commander" SafeName="Operation_Period_Incident_Commander" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Planning_Chief" SafeName="Operation_Period_Planning_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Operations_Chief" SafeName="Operation_Period_Operations_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Logistics_Chief" SafeName="Operation_Period_Logistics_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Air_Operations_Chief" SafeName="Operation_Period_Air_Operations_Chief" Type="4" SortAsc="True" />
+		<Field Name="Operation_Period.Transportation_Chief" SafeName="Operation_Period_Transportation_Chief" Type="4" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Assignments.Assignment_Number" />
+		<Field Name="Assignments.Period" />
+		<Field Name="Assignments.Status" />
+		<Field Name="Assignments.Team_Name" />
+		<Field Name="Teams.Team_Type" />
+		<Field Name="Teams.Status" />
+		<Field Name="Assignments.Description" />
+		<Field Name="Assignments.Area_Name" />
+		<Field Name="Search_Segments.Status" />
+		<Field Name="Search_Segments.Area_Description" />
+		<Field Name="Teams.Description" />
+		<Field Name="Teams.Radio_Call_Sign" />
+	</ReportFields>
+	<GroupFields>
+		<Field Name="Assignments.Period" />
+		<Field Name="Assignments.Status" />
+	</GroupFields>
+	<SortFields>
+		<Field Name="Assignments.Team_Name" />
+	</SortFields>
+	<ReportStyle Name="Simple" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Microsoft Sans Serif</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="11" Style="Regular" Color="#000000">Microsoft Sans Serif</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="11" Style="Bold" Color="#000000">Microsoft Sans Serif</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="11" Style="Regular" Color="#000000">Microsoft Sans Serif</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="11" Style="Regular" Color="#000000">Microsoft Sans Serif</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="11" Style="Regular" Color="#000000">Microsoft Sans Serif</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="11" Style="Regular" Color="#000000">Microsoft Sans Serif</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; ddo-char-set: 204; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="804" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="90" Width="8190" Height="630" Caption="Team Assignments by Period - Assigned" Style="color: #000000; font-size: 20pt; font-family: Calibri; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="10170" Top="180" Width="2610" Height="540" FormatString="{RunDateTime:M/d/yy h:mm tt}" Style="font-weight: bold; " />
+				<Control Type="AR.Field" Name="TextBox1" Tag="" Left="8640" Top="180" Width="1440" Height="285" Text="Report run on " Style="text-align: right; font-weight: bold; " SummaryDistinct="" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="0" BackColor="16777215" />
+			<Section Type="GroupHeader" Name="ghAssignments_Period" Height="360" DataField="Assignments_Period" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblAssignments_Period" Left="0" Top="0" Width="2340" Height="360" Caption="Operational Period" Style="color: #000000; font-weight: bold; font-size: 11pt; font-family: Calibri; white-space: nowrap; " />
+				<Control Type="AR.Field" Name="txtAssignments_Period" DataField="Assignments_Period" Left="2430" Top="0" Width="480" Height="360" Text="Assignments_Period" Style="color: #000000; text-align: left; font-weight: bold; font-size: 11pt; font-family: Calibri; " />
+			</Section>
+			<Section Type="GroupHeader" Name="ghAssignments_Status" Height="1185" DataField="Assignments_Status" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblTeams_Status" Tag="" Left="5670" Top="360" Width="1620" Height="360" Caption="Team Status" Style="color: #000000; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblAssignments_Team_Name" Tag="" Left="720" Top="360" Width="2070" Height="360" Caption="Team Name" Style="color: #000000; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblAssignments_Assignment_Number" Tag="" Left="180" Top="360" Width="336.3875" Height="360" Caption="#" Style="color: #000000; text-align: center; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblTeams_Radio_Call_Sign" Tag="" Left="11430" Top="360" Width="1260" Height="630" Caption="Radio Call Sign" Style="color: #000000; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblAssignments_Description" Tag="" Left="7470" Top="360" Width="2070" Height="720" Caption="Assignment Description" Style="color: #000000; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblTeams_Team_Type" Tag="" Left="3600" Top="360" Width="1890" Height="360" Caption="Team Type" Style="color: #000000; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: nowrap; " />
+				<Control Type="AR.Field" Name="txtAssignments_Status" DataField="Assignments_Status" Tag="" Left="2070" Top="0" Width="1760" Height="360" Text="Assignments_Status" Style="color: #000000; text-align: left; font-weight: bold; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+				<Control Type="AR.Label" Name="lblAssignments_Status" Tag="" Left="270" Top="0" Width="1760" Height="360" Caption="Assignment Status" Style="color: #000000; font-weight: bold; font-size: 10pt; font-family: Calibri; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="1890" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtAssignments_Assignment_Number" DataField="Assignments_Assignment_Number" Tag="" Left="180" Top="0" Width="336.3875" Height="360" Text="Assignments_Assignment_Number" Style="color: #000000; text-align: right; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+				<Control Type="AR.Field" Name="txtAssignments_Team_Name" DataField="Assignments_Team_Name" Tag="" Left="810" Top="0" Width="1890" Height="360" Text="Assignments_Team_Name" Style="color: #000000; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+				<Control Type="AR.Field" Name="txtTeams_Status" DataField="Teams_Status" Tag="" Left="5760" Top="0" Width="1620" Height="360" Text="Teams_Status" Style="color: #000000; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+				<Control Type="AR.Field" Name="txtAssignments_Description" DataField="Assignments_Description" Tag="" Left="7560" Top="0" Width="3690" Height="1890" Text="Assignments_Description" Style="color: #000000; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+				<Control Type="AR.Field" Name="txtTeams_Radio_Call_Sign" DataField="Teams_Radio_Call_Sign" Tag="" Left="11430" Top="0" Width="1233.421" Height="360" Text="Teams_Radio_Call_Sign" Style="color: #000000; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+				<Control Type="AR.Field" Name="txtTeams_Team_Type" DataField="Teams_Team_Type" Tag="" Left="3690" Top="0" Width="1800" Height="540" Text="Teams_Team_Type" Style="color: #000000; font-size: 10pt; font-family: Calibri; " SummaryDistinct="" />
+			</Section>
+			<Section Type="GroupFooter" Name="gfAssignments_Status" Height="0" BackColor="16777215" />
+			<Section Type="GroupFooter" Name="gfAssignments_Period" Height="360" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblSumAssignments_Assignment_Number" Tag="" Left="0" Top="0" Width="2080" Height="360" Caption="Count Assignment #" Style="color: #000000; font-size: 11pt; font-family: Calibri; " />
+				<Control Type="AR.Field" Name="txtSumAssignments_Assignment_Number" DataField="Assignments_Assignment_Number" Tag="" Left="2081.44" Top="0" Width="1440" Height="360" Text="Assignments_Assignment_Number" Style="color: #000000; font-size: 11pt; font-family: Calibri; " SummaryType="3" SummaryFunc="2" SummaryGroup="ghAssignments_Period" SummaryDistinct="" />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="319" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="308.5547" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 11pt; font-family: Calibri; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="360" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblSumAssignments_Assignment_Number1" Tag="" Left="0" Top="0" Width="2080" Height="360" Caption="Count Assignment #" Style="color: #000000; font-size: 11pt; font-family: Calibri; " />
+				<Control Type="AR.Field" Name="txtSumAssignments_Assignment_Number1" DataField="Assignments_Assignment_Number" Tag="" Left="2081.44" Top="0" Width="1440" Height="360" Text="Assignments_Assignment_Number" Style="color: #000000; font-size: 11pt; font-family: Calibri; " SummaryType="1" SummaryFunc="2" SummaryRunning="2" SummaryGroup="" SummaryDistinct="" />
+			</Section>
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings LeftMargin="720" RightMargin="720" TopMargin="720" PaperSize="0" PaperWidth="12240" PaperHeight="15840" PaperName="Custom 1:  8.5  x  11 in." Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

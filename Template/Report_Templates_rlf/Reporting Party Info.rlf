@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Reporting_Party_Information" Layer="True" TOCField="RP.Name" DatasetMode="0">
+	<DataSource Name="Reporting_Party_Information" BrowseName="RP" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\New_Incident\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\New_Incident\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="RP.OBJECTID" SafeName="RP_OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="RP.Date_Time" SafeName="RP_Date_Time" Type="5" SortAsc="True" />
+		<Field Name="RP.Name" SafeName="RP_Name" Type="4" SortAsc="True" />
+		<Field Name="RP.Cell_Phone" SafeName="RP_Cell_Phone" Type="4" SortAsc="True" />
+		<Field Name="RP.Land_Line" SafeName="RP_Land_Line" Type="4" SortAsc="True" />
+		<Field Name="RP.email" SafeName="RP_email" Type="4" SortAsc="True" />
+		<Field Name="RP.Relationship" SafeName="RP_Relationship" Type="4" SortAsc="True" />
+		<Field Name="RP.Notes" SafeName="RP_Notes" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.OBJECTID" SafeName="Clues_Point_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Clues_Point.Assignment" SafeName="Clues_Point_Assignment" Type="0" SortAsc="True" />
+		<Field Name="RP.Clue_Number" SafeName="RP_Clue_Number" Type="0" SortAsc="True" />
+		<Field Name="Clues_Point.Object" SafeName="Clues_Point_Object" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Location" SafeName="Clues_Point_Location" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Verbal_Description" SafeName="Clues_Point_Verbal_Description" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Relevancy" SafeName="Clues_Point_Relevancy" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Date" SafeName="Clues_Point_Date" Type="5" SortAsc="True" />
+		<Field Name="Clues_Point.Source" SafeName="Clues_Point_Source" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Lat_WGS84" SafeName="Clues_Point_Lat_WGS84" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.Lon_WGS84" SafeName="Clues_Point_Lon_WGS84" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.UTM_Easting" SafeName="Clues_Point_UTM_Easting" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.UTM_Northing" SafeName="Clues_Point_UTM_Northing" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.Comments" SafeName="Clues_Point_Comments" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Display" SafeName="Clues_Point_Display" Type="0" SortAsc="True" />
+		<Field Name="Clues_Point.TimeSlider" SafeName="Clues_Point_TimeSlider" Type="5" SortAsc="True" />
+		<Field Name="Clues_Point.Name" SafeName="Clues_Point_Name" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.FileName" SafeName="Clues_Point_FileName" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.FileLocation" SafeName="Clues_Point_FileLocation" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Clue_Number" SafeName="Clues_Point_Clue_Number" Type="0" SortAsc="True" />
+		<Field Name="Clues_Point.Clue_NumText" SafeName="Clues_Point_Clue_NumText" Type="4" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="RP.Date_Time" />
+		<Field Name="RP.Name" />
+		<Field Name="RP.Cell_Phone" />
+		<Field Name="RP.Land_Line" />
+		<Field Name="RP.email" />
+		<Field Name="RP.Relationship" />
+		<Field Name="RP.Notes" />
+		<Field Name="RP.Clue_Number" />
+	</ReportFields>
+	<SortFields>
+		<Field Name="RP.Date_Time" />
+	</SortFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="13140" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="930" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="6700" Height="620" Caption="Reporting_Party_Information" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="10440" Top="360" Width="2610" Height="540" FormatString="{RunDateTime:M/d/yy h:mm tt}" Style="font-weight: bold; " />
+				<Control Type="AR.Field" Name="TextBox1" Tag="" Left="8910" Top="360" Width="1440" Height="285" Text="Report run on " Style="text-align: right; font-weight: bold; " SummaryDistinct="" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="914" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblRP_Date_Time" Tag="" Left="0" Top="0" Width="1260" Height="540" Caption="Date &amp; Time Reported" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblRP_Name" Tag="" Left="1421.44" Top="0" Width="1740" Height="300" Caption="Name" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRP_Cell_Phone" Tag="" Left="3162.88" Top="0" Width="1740" Height="300" Caption="Cell Phone" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRP_Land_Line" Tag="" Left="4904.32" Top="0" Width="1740" Height="300" Caption="Land Line" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRP_email" Tag="" Left="6645.76" Top="0" Width="1740" Height="300" Caption="email" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRP_Relationship" Tag="" Left="8387.2" Top="0" Width="1740" Height="300" Caption="Relationship" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRP_Notes" Tag="" Left="10128.64" Top="0" Width="1740" Height="300" Caption="Notes" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblRP_Clue_Number" Tag="" Left="11880" Top="0" Width="900" Height="270" Caption="Clue #" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="453" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtRP_Date_Time" DataField="RP_Date_Time" Left="0" Top="0" Width="1420" Height="453.9649" Text="RP_Date_Time" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_Name" DataField="RP_Name" Left="1421.44" Top="0" Width="1740" Height="300" Text="RP_Name" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_Cell_Phone" DataField="RP_Cell_Phone" Left="3162.88" Top="0" Width="1740" Height="300" Text="RP_Cell_Phone" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_Land_Line" DataField="RP_Land_Line" Left="4904.32" Top="0" Width="1740" Height="300" Text="RP_Land_Line" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_email" DataField="RP_email" Left="6645.76" Top="0" Width="1740" Height="300" Text="RP_email" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_Relationship" DataField="RP_Relationship" Left="8387.2" Top="0" Width="1740" Height="300" Text="RP_Relationship" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_Notes" DataField="RP_Notes" Left="10128.64" Top="0" Width="1740" Height="300" Text="RP_Notes" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtRP_Clue_Number" DataField="RP_Clue_Number" Left="11870.08" Top="0" Width="460" Height="453.9649" Text="RP_Clue_Number" Style="color: #000000; text-align: right; font-size: 9pt; " />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

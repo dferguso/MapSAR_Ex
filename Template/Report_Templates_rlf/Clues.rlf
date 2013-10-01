@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="Clues_All" Layer="True" TOCField="Clues_Point.Clue_Number" DatasetMode="0">
+	<DataSource Name="4 Clues_All" BrowseName="Clues_Point" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\New_Incident\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\New_Incident\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="Clues_Point.OBJECTID" SafeName="Clues_Point_OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Clues_Point.Assignment" SafeName="Clues_Point_Assignment" Type="0" SortAsc="True" />
+		<Field Name="Clues_Point.Display" SafeName="Clues_Point_Display" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Period" SafeName="Assignments_Period" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Team_Name" SafeName="Assignments_Team_Name" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Clue_Number" SafeName="Clues_Point_Clue_Number" Type="0" SortAsc="True" />
+		<Field Name="Clues_Point.Date" SafeName="Clues_Point_Date" Type="5" SortAsc="True" />
+		<Field Name="Clues_Point.Object" SafeName="Clues_Point_Object" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Location" SafeName="Clues_Point_Location" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Verbal_Description" SafeName="Clues_Point_Verbal_Description" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Relevancy" SafeName="Clues_Point_Relevancy" Type="4" SortAsc="True" />
+		<Field Name="Assignments.OBJECTID" SafeName="Assignments_OBJECTID" Type="1" SortAsc="True" />
+		<Field Name="Assignments.Assignment_Number" SafeName="Assignments_Assignment_Number" Type="0" SortAsc="True" />
+		<Field Name="Assignments.Area_Name" SafeName="Assignments_Area_Name" Type="4" SortAsc="True" />
+		<Field Name="Assignments.SHAPE_Length" SafeName="Assignments_SHAPE_Length" Type="3" SortAsc="True" />
+		<Field Name="Assignments.SHAPE_Area" SafeName="Assignments_SHAPE_Area" Type="3" SortAsc="True" />
+		<Field Name="Assignments.Description" SafeName="Assignments_Description" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Status" SafeName="Assignments_Status" Type="4" SortAsc="True" />
+		<Field Name="Assignments.Division" SafeName="Assignments_Division" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Source" SafeName="Clues_Point_Source" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Comments" SafeName="Clues_Point_Comments" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Lat_WGS84" SafeName="Clues_Point_Lat_WGS84" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.Lon_WGS84" SafeName="Clues_Point_Lon_WGS84" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.UTM_Easting" SafeName="Clues_Point_UTM_Easting" Type="3" SortAsc="True" />
+		<Field Name="Clues_Point.UTM_Northing" SafeName="Clues_Point_UTM_Northing" Type="3" SortAsc="True" />
+		<Field Name="Assignments.Display" SafeName="Assignments_Display" Type="0" SortAsc="True" />
+		<Field Name="Clues_Point.TimeSlider" SafeName="Clues_Point_TimeSlider" Type="5" SortAsc="True" />
+		<Field Name="Assignments.TimeSlider" SafeName="Assignments_TimeSlider" Type="5" SortAsc="True" />
+		<Field Name="Clues_Point.Name" SafeName="Clues_Point_Name" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.FileName" SafeName="Clues_Point_FileName" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.FileLocation" SafeName="Clues_Point_FileLocation" Type="4" SortAsc="True" />
+		<Field Name="Assignments.AssignNumText" SafeName="Assignments_AssignNumText" Type="4" SortAsc="True" />
+		<Field Name="Clues_Point.Clue_NumText" SafeName="Clues_Point_Clue_NumText" Type="4" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Clues_Point.Clue_Number" />
+		<Field Name="Clues_Point.Date" />
+		<Field Name="Clues_Point.Relevancy" />
+		<Field Name="Assignments.Team_Name" />
+		<Field Name="Clues_Point.Assignment" />
+		<Field Name="Clues_Point.Object" />
+		<Field Name="Clues_Point.Location" />
+		<Field Name="Clues_Point.Verbal_Description" />
+	</ReportFields>
+	<GroupFields>
+		<Field Name="Clues_Point.Relevancy" />
+	</GroupFields>
+	<SortFields>
+		<Field Name="Clues_Point.Date" />
+	</SortFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="762" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="2500" Height="620" Caption="Clues_All" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="10260" Top="90" Width="2610" Height="540" FormatString="{RunDateTime:M/d/yy h:mm tt}" Style="font-weight: bold; " />
+				<Control Type="AR.Field" Name="TextBox1" Tag="" Left="8730" Top="90" Width="1440" Height="285" Text="Report run on " Style="text-align: right; font-weight: bold; " SummaryDistinct="" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="0" BackColor="16777215" />
+			<Section Type="GroupHeader" Name="ghClues_Point_Relevancy" Height="1260" DataField="Clues_Point_Relevancy" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblClues_Point_Relevancy" Left="0" Top="90" Width="1740" Height="300" Caption="Relevancy of clue" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Field" Name="txtClues_Point_Relevancy" DataField="Clues_Point_Relevancy" Left="1710" Top="90" Width="1740" Height="300" Text="Clues_Point_Relevancy" Style="color: #000000; text-align: left; font-weight: bold; font-size: 9pt; font-family: Times New Roman; " />
+				<Control Type="AR.Label" Name="lblClues_Point_Clue_Number" Left="270" Top="450" Width="720" Height="720" Caption="Clue Number" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblClues_Point_Date" Left="1170" Top="450" Width="1800" Height="360" Caption="Date &amp; Time found" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblAssignments_Team_Name" Left="3060" Top="450" Width="1980" Height="360" Caption="Team Name" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblClues_Point_Assignment" Left="5130" Top="450" Width="990" Height="540" Caption="Assignment Number" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblClues_Point_Object" Left="6210" Top="450" Width="1260" Height="810" Caption="Clue Found (What was it?)" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblClues_Point_Location" Left="8190" Top="450" Width="2070" Height="630" Caption="Verbal Location of clue (Where was it?)" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+				<Control Type="AR.Label" Name="lblClues_Point_Verbal_Description" Left="10440" Top="450" Width="2340" Height="630" Caption="Verbal Description of clue (What did it look like?)" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: inherit; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="644" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtClues_Point_Clue_Number" DataField="Clues_Point_Clue_Number" Left="360" Top="0" Width="460" Height="300" Text="Clues_Point_Clue_Number" Style="color: #000000; text-align: right; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtClues_Point_Date" DataField="Clues_Point_Date" Left="1080" Top="0" Width="1890" Height="450" Text="Clues_Point_Date" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtAssignments_Team_Name" DataField="Assignments_Team_Name" Left="3060" Top="0" Width="1740" Height="300" Text="Assignments_Team_Name" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtClues_Point_Assignment" DataField="Clues_Point_Assignment" Left="5310" Top="0" Width="630" Height="540" Text="Clues_Point_Assignment" Style="color: #000000; text-align: right; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtClues_Point_Object" DataField="Clues_Point_Object" Left="6210" Top="0" Width="1800" Height="540" Text="Clues_Point_Object" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtClues_Point_Location" DataField="Clues_Point_Location" Left="8190" Top="0" Width="1980" Height="540" Text="Clues_Point_Location" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtClues_Point_Verbal_Description" DataField="Clues_Point_Verbal_Description" Left="10440" Top="0" Width="2250" Height="540" Text="Clues_Point_Verbal_Description" Style="color: #000000; font-size: 9pt; " />
+			</Section>
+			<Section Type="GroupFooter" Name="gfClues_Point_Relevancy" Height="0" BackColor="16777215" />
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>

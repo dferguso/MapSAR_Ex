@@ -1,0 +1,15 @@
+
+
+Filename - task number trk or wpt 
+
+
+track = trk
+waypoint = wpt
+
+examples
+
+T0105_wpt.gpx
+
+T0105_trk.gpx
+
+T0303_trk.gpx

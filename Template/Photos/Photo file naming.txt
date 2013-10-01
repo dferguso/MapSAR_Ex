@@ -1,0 +1,14 @@
+
+
+Filename - yyyymmdd incident name content type
+
+
+type = clue type, person, CDL etc.
+
+examples:
+
+20101218_DohertySearch_footprint.jpg
+
+20101218_DohertySearch_person.jpg
+
+20101218_DohertySearch_CDL.jpg

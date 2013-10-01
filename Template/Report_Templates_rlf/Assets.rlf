@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report Version="1.0" Name="2 Incident_Assets" Layer="True" TOCField="Operational_Period" DatasetMode="0">
+	<DataSource Name="2 Incident_Assets" BrowseName="Assets" Type="5" FullName="">
+		<Workspace WorkspaceType="1" PathName="C:\MapSAR\20110501_SMR_Pochter\SAR_Default.gdb">
+			<Property Name="DATABASE" Value="C:\MapSAR\20110501_SMR_Pochter\SAR_Default.gdb" />
+		</Workspace>
+	</DataSource>
+	<SourceFields>
+		<Field Name="OBJECTID" SafeName="OBJECTID" Type="6" SortAsc="True" />
+		<Field Name="Operational_Period" SafeName="Operational_Period" Type="0" SortAsc="True" />
+		<Field Name="Assets" SafeName="Assets" Type="0" SortAsc="True" />
+		<Field Name="Display" SafeName="Display" Type="0" SortAsc="True" />
+		<Field Name="Date" SafeName="Date" Type="5" SortAsc="True" />
+		<Field Name="Description" SafeName="Description" Type="4" SortAsc="True" />
+		<Field Name="TimeSlider" SafeName="TimeSlider" Type="5" SortAsc="True" />
+	</SourceFields>
+	<ReportFields>
+		<Field Name="Operational_Period" />
+		<Field Name="Assets" />
+		<Field Name="Date" />
+		<Field Name="Description" />
+	</ReportFields>
+	<ReportStyle Name="Monaco" UserStyle="False">
+		<SectionStyle Type="0">
+			<Font Size="20" Style="Regular" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="1">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<SectionStyle Type="2">
+			<Font Size="9" Style="Bold" Color="#000000">Times New Roman</Font>
+		</SectionStyle>
+		<DetailSectionStyle Type="3">
+			<Font Size="9" Style="Regular" Color="#000000">Arial</Font>
+		</DetailSectionStyle>
+		<SectionStyle Type="4">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="5">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+		<SectionStyle Type="6">
+			<Font Size="8" Style="Regular" Color="#000000">Arial</Font>
+		</SectionStyle>
+	</ReportStyle>
+	<ActiveReportsLayout Version="3.1" PrintWidth="12960" DocumentName="ARNet Document" ScriptLang="C#" MasterReport="0">
+		<StyleSheet>
+			<Style Name="Normal" Value="font-family: Arial; font-style: normal; text-decoration: none; font-weight: normal; font-size: 10pt; color: Black; " />
+			<Style Name="Heading1" Value="font-size: 16pt; font-weight: bold; " />
+			<Style Name="Heading2" Value="font-family: Times New Roman; font-size: 14pt; font-weight: bold; font-style: italic; " />
+			<Style Name="Heading3" Value="font-size: 13pt; font-weight: bold; " />
+		</StyleSheet>
+		<Sections>
+			<Section Type="ReportHeader" Name="ReportHeader" Height="763" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblReportTitle" Tag="" Left="0" Top="72" Width="4140" Height="620" Caption="Incident_Assets" Style="color: #000000; font-size: 20pt; font-family: Times New Roman; vertical-align: middle; " />
+				<Control Type="AR.ReportInfo" Name="ReportInfo1" Tag="" Left="9810" Top="180" Width="2700" Height="499.961" FormatString="{RunDateTime:M/d/yyyy h:mm tt}" />
+			</Section>
+			<Section Type="PageHeader" Name="pageHeader" Height="299" BackColor="16777215">
+				<Control Type="AR.Label" Name="lblOperational_Period" Tag="" Left="0" Top="0" Width="630" Height="270" Caption="Period" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblAssets" Tag="" Left="810" Top="0" Width="1890" Height="270" Caption="Asset" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblDate" Tag="" Left="2790" Top="0" Width="1420" Height="300" Caption="Date" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+				<Control Type="AR.Label" Name="lblDescription" Tag="" Left="5310" Top="0" Width="1740" Height="300" Caption="Description" Style="color: #000000; font-weight: bold; font-size: 9pt; font-family: Times New Roman; white-space: nowrap; " />
+			</Section>
+			<Section Type="Detail" Name="detail" Height="464" BackColor="16777215">
+				<Control Type="AR.Field" Name="txtOperational_Period" DataField="Operational_Period" Left="90" Top="0" Width="460" Height="300" Text="Operational_Period" Style="color: #000000; text-align: right; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtAssets" DataField="Assets" Left="810" Top="0" Width="1800" Height="270" Text="Assets" Style="color: #000000; text-align: left; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtDate" DataField="Date" Left="2790" Top="0" Width="1420" Height="300" Text="Date" Style="color: #000000; font-size: 9pt; " />
+				<Control Type="AR.Field" Name="txtDescription" DataField="Description" Left="5310" Top="0" Width="7380" Height="270" Text="Description" Style="color: #000000; font-size: 9pt; " />
+			</Section>
+			<Section Type="PageFooter" Name="pageFooter" Height="299" BackColor="16777215">
+				<Control Type="AR.ReportInfo" Name="rptInfoPgNo" Tag="" Left="1980" Top="0" Width="5400" Height="288" FormatString="Page {PageNumber} of {PageCount}" Style="color: #000000; text-align: center; font-size: 8pt; " />
+			</Section>
+			<Section Type="ReportFooter" Name="ReportFooter" Height="0" BackColor="16777215" />
+		</Sections>
+		<ReportComponentTray />
+		<PageSettings TopMargin="720" Orientation="2" />
+		<Parameters />
+	</ActiveReportsLayout>
+</Report>
