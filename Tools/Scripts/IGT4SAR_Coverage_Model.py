@@ -80,8 +80,9 @@ row1 = rows1.next()
 
 while row1:
     # you need to insert correct field names in your getvalue function
-    AssignNumber = row1.Assignment_Number
-    where2 = '"Assignment_Number" = ' + "'" + str(AssignNumber) + "'"
+## Ensure "AssignNumber" is a string - DHF, Oct 02, 2013
+    AssignNumber = str(row1.Assignment_Number)
+    where2 = '"Assignment_Number" = ' + "'" + AssignNumber + "'"
     rows2 = arcpy.SearchCursor(fc2, where2)
     row2 = rows2.next()
 
@@ -163,14 +164,15 @@ row2 = rows2.next()
 Cover = 0.0
 
 while row2:
-    AreaName = row2.Area_Name
+## Ensure AreaName is a string - DHF, Oct 02, 2013
+    AreaName = str(row2.Area_Name)
     AreaSeg = row2.Area_seg
     where3 = '"Area_Name" = ' + "'" + AreaName + "'"
 
     if AreaSeg == None:
-        arcpy.AddMessage("Segment: " +AreaName + ", area is Null")
+        arcpy.AddMessage("Segment: " + AreaName + ", area is Null")
     elif AreaSeg == 0.0:
-        arcpy.AddMessage("Segment: " +AreaName + ", area is zero")
+        arcpy.AddMessage("Segment: " + AreaName + ", area is zero")
     else:
         AreaCov = 0.0
         rows3 = arcpy.SearchCursor(fc5,where3)
