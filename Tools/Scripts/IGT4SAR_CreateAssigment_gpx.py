@@ -135,6 +135,7 @@ for AssNum in AssignNum:
     while row:
         # you need to insert correct field names in your getvalue function
         TaskInstruct = checkNoneType(row.getValue("Description"))
+        TaskInstruct = "\n".join(TaskInstruct.splitlines()) # os-specific newline conversion
         PlanNo = row.getValue("Planning_Number")
         if not PlanNo:
             PlanNo = " "
@@ -183,6 +184,7 @@ for AssNum in AssignNum:
 
         Notes = "Specific Safety: " + str(Assign_Safety) + "     General Safety: " + \
             str(Op_Safety)
+        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
     ################
         PrepBy = row.getValue("Prepared_By")
         del Assign_Safety
