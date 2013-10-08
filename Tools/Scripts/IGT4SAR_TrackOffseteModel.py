@@ -152,7 +152,6 @@ arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
 arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
 arcpy.CalculateField_management(fcClip, fieldName1, expression2)
 
-
 #Streams
 expression2 = '"DRAINAGE"'
 fcname = pStreams
