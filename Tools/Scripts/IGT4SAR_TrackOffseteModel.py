@@ -128,9 +128,11 @@ if gp.GetCount_management(fcname) == 0:
     arcpy.AddMessage(fcNoMess)
 else:
     arcpy.AddMessage(fcProcessMess)
-    arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
-    arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
-    arcpy.CalculateField_management(fcClip, fieldName1, expression2)
+## Corrected an error that would not run script if Trails data layer was empty
+## DHF - Oct 04, 2013
+arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
+arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
+arcpy.CalculateField_management(fcClip, fieldName1, expression2)
 
 
 #Roads
@@ -144,9 +146,11 @@ if gp.GetCount_management(fcname) == 0:
     arcpy.AddMessage(fcNoMess)
 else:
     arcpy.AddMessage(fcProcessMess)
-    arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
-    arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
-    arcpy.CalculateField_management(fcClip, fieldName1, expression2)
+## Corrected an error that would not run script if Roads data layer was empty
+## DHF - Oct 04, 2013
+arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
+arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
+arcpy.CalculateField_management(fcClip, fieldName1, expression2)
 
 
 #Streams
@@ -160,9 +164,11 @@ if gp.GetCount_management(fcname) == 0:
     arcpy.AddMessage(fcNoMess)
 else:
     arcpy.AddMessage(fcProcessMess)
-    arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
-    arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
-    arcpy.CalculateField_management(fcClip, fieldName1, expression2)
+## Corrected an error that would not run script if Streams data layer was empty
+## DHF - Oct 04, 2013
+arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
+arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
+arcpy.CalculateField_management(fcClip, fieldName1, expression2)
 
 
 #Utility Right of Way
@@ -176,9 +182,11 @@ if gp.GetCount_management(fcname) == 0:
     arcpy.AddMessage(fcNoMess)
 else:
     arcpy.AddMessage(fcProcessMess)
-    arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
-    arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
-    arcpy.CalculateField_management(fcClip, fieldName1, expression2)
+## Corrected an error that would not run script if Powerlines data layer was empty
+## DHF - Oct 04, 2013
+arcpy.Clip_analysis(fcname, IPP_dist, fcClip, "")
+arcpy.AddField_management(fcClip, fieldName1, "TEXT", "", "", "10")
+arcpy.CalculateField_management(fcClip, fieldName1, expression2)
 
 arcpy.Delete_management(IPP_dist)
 
