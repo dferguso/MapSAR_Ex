@@ -27,6 +27,7 @@
 import arcpy, time
 from arcpy import env
 from types import *
+import subprocess
 
 def checkNoneType(variable):
     if type(variable) is NoneType:
@@ -43,6 +44,12 @@ output = arcpy.GetParameterAsText(0)
 AssignNumber = arcpy.GetParameterAsText(1)
 
 output = output.replace("'\'","/")
+
+# Initialize startupinfo for subprocess.call()
+startupInfo = subprocess.STARTUPINFO()
+startupInfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+startupInfo.wShowWindow = 0
+installDirectory = 'C:/MapSAR_Ex'
 
 #######
 #Automate map production - July 27, 2012
@@ -282,6 +289,16 @@ for AssNum in AssignNum:
         txt.write("<</Root 1 0 R>>\n")
         txt.write("%%EO\n")
         txt.close ()
+
+        # Convert .fdf to .pdf and flatten formpy.
+        arcpy.AddMessage('Creating flattened PDF TAF for ' + AssNum)
+        try:
+            if 0 != subprocess.call([installDirectory + '/Tools/pdftk/bin/pdftk', output + '/TAF_Page1_Task.pdf',
+                                     'fill_form', filename, 'output', filename[:-4] + '.pdf', 'flatten', 'drop_xfa'],
+                                    startupinfo=startupInfo):
+                raise Exception
+        except:
+            arcpy.AddWarning('Could not create flattened TAF PDF for ' + AssNum)
 
 ######
         del TaskInstruct
