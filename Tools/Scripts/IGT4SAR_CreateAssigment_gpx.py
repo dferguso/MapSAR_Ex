@@ -30,13 +30,6 @@ from types import *
 import subprocess
 import igt4sar.fdf
 
-def checkNoneType(variable):
-    if type(variable) is NoneType:
-        result = " "
-    else:
-        result = variable
-    return result
-
 # Global constants
 installDirectory = 'C:/MapSAR_Ex'
 TAFFormName = 'TAF_Page1_Task.pdf'
@@ -91,12 +84,12 @@ try:
     while row:
         zk+=1
         # you need to insert correct field names in your getvalue function
-        Incident_Name = checkNoneType(row.getValue("Incident_Name"))
-        MapDatum = checkNoneType(row.getValue("MapDatum"))
-        MagDec = checkNoneType(row.getValue("MagDec"))
-        MapCoord = checkNoneType(row.getValue("MapCoord"))
-        Base_Phone = checkNoneType(row.getValue("Base_PhoneNumber"))
-        Base_Freq = checkNoneType(row.getValue("Comms_Freq"))
+        Incident_Name = row.getValue("Incident_Name")
+        MapDatum = row.getValue("MapDatum")
+        MagDec = row.getValue("MagDec")
+        MapCoord = row.getValue("MapCoord")
+        Base_Phone = row.getValue("Base_PhoneNumber")
+        Base_Freq = row.getValue("Comms_Freq")
         row = rows.next()
     del rows
     del row
@@ -144,21 +137,20 @@ for AssNum in AssignNum:
     row = rows.next()
     while row:
         # you need to insert correct field names in your getvalue function
-        TaskInstruct = checkNoneType(row.getValue("Description"))
-        TaskInstruct = "\n".join(TaskInstruct.splitlines()) # os-specific newline conversion
+        TaskInstruct = row.getValue("Description")
         PlanNo = row.getValue("Planning_Number")
         if not PlanNo:
             PlanNo = " "
-        ResourceType = checkNoneType(row.getValue("Resource_Type"))
+        ResourceType = row.getValue("Resource_Type")
         try:
-            Priority = checkNoneType(row.getValue("Priority"))
+            Priority = row.getValue("Priority")
         except:
             Priority = "High"
 
         TaskNo = row.getValue("Assignment_Number")
         if not TaskNo:
             TaskNo = " "
-        PreSearch = checkNoneType(row.getValue("Previous_Search"))
+        PreSearch = row.getValue("Previous_Search")
         TaskMap = row.getValue("Area_Name")
 
         if fname == True:
@@ -176,7 +168,7 @@ for AssNum in AssignNum:
     ################
     ## Added a joint safety note for the TAF that includes Safety note from Op
     ## Period and any specific safety note from Assignment
-        Assign_Safety = checkNoneType(row.getValue("Safety_note"))
+        Assign_Safety = row.getValue("Safety_note")
 
         try:
             OpPeriod = row.getValue("Period")
@@ -184,7 +176,7 @@ for AssNum in AssignNum:
             rows3 = arcpy.SearchCursor(fc3, where3)
             row3 = rows3.next()
             while row3:
-                Op_Safety = checkNoneType(row3.getValue("Safety_Message"))
+                Op_Safety = row3.getValue("Safety_Message")
                 row3 = rows3.next()
             del row3
             del rows3
@@ -194,7 +186,6 @@ for AssNum in AssignNum:
 
         Notes = "Specific Safety: " + str(Assign_Safety) + "     General Safety: " + \
             str(Op_Safety)
-        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
     ################
         PrepBy = row.getValue("Prepared_By")
         del Assign_Safety
