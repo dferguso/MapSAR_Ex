@@ -28,6 +28,7 @@ import arcpy, time
 from arcpy import env
 from types import *
 import subprocess
+import igt4sar.fdf
 
 def checkNoneType(variable):
     if type(variable) is NoneType:
@@ -36,6 +37,9 @@ def checkNoneType(variable):
         result = variable
     return result
 
+# Global constants
+installDirectory = 'C:/MapSAR_Ex'
+TAFFormName = 'TAF_Page1_Task.pdf'
 
 # Set overwrite option
 arcpy.env.overwriteOutput = True
@@ -49,7 +53,6 @@ output = output.replace("'\'","/")
 startupInfo = subprocess.STARTUPINFO()
 startupInfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 startupInfo.wShowWindow = 0
-installDirectory = 'C:/MapSAR_Ex'
 
 #######
 #Automate map production - July 27, 2012
@@ -204,30 +207,24 @@ for AssNum in AssignNum:
             filename = output + "/" + str(PlanNo) + ".fdf"
         #
 
-        txt= open (filename, "w")
-        txt.write("%FDF-1.2\n")
-        txt.write("%????\n")
-        txt.write("1 0 obj<</FDF<</F(TAF_Page1_Task.pdf)/Fields 2 0 R>>>>\n")
-        txt.write("endobj\n")
-        txt.write("2 0 obj[\n")
-        txt.write ("\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].MissNo[0])/V(" + str(Incident_Name) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].TeamFreq[0])/V(" + str(Base_Freq) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].MagDec[0])/V(" + str(MagDec) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].TaskInstruct[0])/V(" + str(TaskInstruct) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].PlanNo[0])/V(" + str(PlanNo) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].MapDatum[0])/V(" + str(MapDatum) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].MapCoord[0])/V(" + str(MapCoord) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].ResourceType[0])/V(" + str(ResourceType) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].Priority[0])/V(" + str(Priority) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].TaskNo[0])/V(" + str(TaskNo) + ")>>\n")
-
+        TAFfields = {
+            'MissNo': Incident_Name,
+            'TeamFreq': Base_Freq,
+            'MagDec': MagDec,
+            'TaskInstruct': TaskInstruct,
+            'PlanNo': PlanNo,
+            'MapDatum': MapDatum,
+            'MapCoord': MapCoord,
+            'ResourceType': ResourceType,
+            'Priority': Priority,
+            'TaskNo': TaskNo
+        }
 
     ################
     ## Added team names
         TeamID = row.getValue("Team")
         if TeamID:
-            txt.write("<</T(topmostSubform[0].Page1[0].TeamId[0])/V(" + str(TeamID) + ")>>\n")
+            TAFfields['TeamId'] = TeamID
 
             where8 = '"Team_Name" = ' + "'" + TeamID + "'"
             rows3 = arcpy.SearchCursor(fc8, where8)
@@ -239,8 +236,10 @@ for AssNum in AssignNum:
             del row3
             del rows3
 
-            txt.write("<</T(topmostSubform[0].Page1[0].TeamLead[0])/V(" + str(TeamLead) + ")>>\n")
-            txt.write("<</T(topmostSubform[0].Page1[0].Medic[0])/V(" + str(Medic) + ")>>\n")
+            TAFfields.update({
+                'TeamLead': TeamLead,
+                'Medic': Medic
+            })
 
             rows4 = arcpy.SearchCursor(fc9, where8)
             row4 = rows4.next()
@@ -250,12 +249,14 @@ for AssNum in AssignNum:
                     Respond = row4.getValue("Name")
                     SARTeam =row4.getValue("Originating_Team")
                     if Respond == TeamLead:
-                        txt.write("<</T(topmostSubform[0].Page1[0].TeamLeadAg[0])/V(" + str(SARTeam) + ")>>\n")
+                        TAFfields['TeamLeadAg'] = SARTeam
                     elif Respond == Medic:
-                        txt.write("<</T(topmostSubform[0].Page1[0].MedicAg[0])/V(" + str(SARTeam) + ")>>\n")
+                        TAFfields['MedicAg'] = SARTeam
                     else:
-                        txt.write("<</T(topmostSubform[0].Page1[0].Respond" + str(k) + "[0])/V(" + str(Respond) + ")>>\n")
-                        txt.write("<</T(topmostSubform[0].Page1[0].Respond" + str(k) + "Ag[0])/V(" + str(SARTeam) + ")>>\n")
+                        TAFfields.update({
+                            'Respond%d' % (k): Respond,
+                            'Respond%dAg' % (k): SARTeam
+                        })
                         k+=1
                     del Respond
                     del SARTeam
@@ -269,31 +270,34 @@ for AssNum in AssignNum:
             del Medic
             del k
 
+        TAFfields.update({
+            'TaskMap': TaskMap,
+            'PreSearch': PreSearch,
+            'Phone_Base': Base_Phone,
+            'Notes': Notes,
+            'PrepBy': PrepBy,
+        })
 
-        txt.write("<</T(topmostSubform[0].Page1[0].TaskMap[0])/V(" + str(TaskMap) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].PreSearch[0])/V(" + str(PreSearch) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].Phone_Base[0])/V(" + str(Base_Phone) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].Notes[0])/V(" + str(Notes) + ")>>\n")
-        txt.write("<</T(topmostSubform[0].Page1[0].PrepBy[0])/V(" + str(PrepBy) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].Table2[0].Row1[1].TactFreq1[0])/V(" + str(TactFreq1) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].EquipIssued[0])/V(" + str(EquipIssued) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].Phone_Team[0])/V(" + str(Phone_Team) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].GPSIdOut[0])/V(" + str(GPSIdOut) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].BriefBy[0])/V(" + str(BriefBy) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].DateOut[0])/V(" + str(DateOut) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].TimeOut[0])/V(" + str(TimeOut) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].GPSDatumOut[0])/V(" + str(GPSDatumOut) + ")>>\n")
-        txt.write("]\n")
-        txt.write("endobj\n")
-        txt.write("trailer\n")
-        txt.write("<</Root 1 0 R>>\n")
-        txt.write("%%EO\n")
-        txt.close ()
+        '''
+        Other TAF fields:
+
+        TactFreq1
+        EquipIssued
+        Phone_Team
+        GPSIdOut
+        BriefBy
+        DateOut
+        TimeOut
+        GPSDatumOut
+        '''
+
+        # Create .fdf
+        igt4sar.fdf.create_fdf(filename, TAFFormName, TAFfields)
 
         # Convert .fdf to .pdf and flatten formpy.
         arcpy.AddMessage('Creating flattened PDF TAF for ' + AssNum)
         try:
-            if 0 != subprocess.call([installDirectory + '/Tools/pdftk/bin/pdftk', output + '/TAF_Page1_Task.pdf',
+            if 0 != subprocess.call([installDirectory + '/Tools/pdftk/bin/pdftk', output + '/' + TAFFormName,
                                      'fill_form', filename, 'output', filename[:-4] + '.pdf', 'flatten', 'drop_xfa'],
                                     startupinfo=startupInfo):
                 raise Exception
