@@ -116,7 +116,7 @@ arcpy.Compact_management(templ)
 arcpy.Compact_management(wrkspc)
 
 
-mxd_nA = out_fc + '\\IGT4SAR.mxd'
+mxd_nA = out_fc + '\\IncidentNo.mxd'
 
 ##mxd_nB = "%r"%mxd_nA
 ##mxd_name = mxd_nB[2:-1]
