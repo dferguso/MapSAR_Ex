@@ -212,8 +212,9 @@ arcpy.Delete_management(Electric_Clipped)
 
 pDist=[]
 for x in Distances:
-    pDist.append(round(x * mult,2))
-
+### - Commented Jan 29, 2014 - x should always be in meters so no reason for mult
+#    pDist.append(round(x * mult,2))
+    pDist.append(round(x,2))
 arcpy.AddMessage(pDist)
 
 ##try:

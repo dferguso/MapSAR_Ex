@@ -56,42 +56,51 @@ Assignments = "Assignments"
 Clues_Point = "Clues_Point"
 
 # Process: Table To Domain (1)
-cLead=arcpy.GetCount_management(Lead_Agency)
-if int(cLead.getOutput(0)) > 0:
-    arcpy.AddMessage("update Lead Agency domain")
-    arcpy.TableToDomain_management(Lead_Agency, "Lead_Agency", "Lead_Agency", Workspace, "Lead_Agency", "Lead_Agency", "REPLACE")
-    try:
-        arcpy.SortCodedValueDomain_management(Workspace, "Lead_Agency", "DESCRIPTION", "ASCENDING")
-    except:
-        pass
-else:
+try:
+    cLead=arcpy.GetCount_management(Lead_Agency)
+    if int(cLead.getOutput(0)) > 0:
+        arcpy.AddMessage("update Lead Agency domain")
+        arcpy.TableToDomain_management(Lead_Agency, "Lead_Agency", "Lead_Agency", Workspace, "Lead_Agency", "Lead_Agency", "REPLACE")
+        try:
+            arcpy.SortCodedValueDomain_management(Workspace, "Lead_Agency", "DESCRIPTION", "ASCENDING")
+        except:
+            pass
+    else:
+        arcpy.AddMessage("No Lead Agency information to update")
+except:
     arcpy.AddMessage("No Lead Agency information to update")
 
 # Process: Table To Domain (2)
-cIncident=arcpy.GetCount_management(Incident_Information)
-if int(cIncident.getOutput(0)) > 0:
-    arcpy.AddMessage("update Incident Information domain")
-    arcpy.TableToDomain_management(Incident_Information, "Incident_Name", "Incident_Name", Workspace, "Incident_Name", "Incident_Name", "REPLACE")
-    try:
-        arcpy.SortCodedValueDomain_management(Workspace, "Incident_Name", "DESCRIPTION", "ASCENDING")
-    except:
-        pass
-else:
+try:
+    cIncident=arcpy.GetCount_management(Incident_Information)
+    if int(cIncident.getOutput(0)) > 0:
+        arcpy.AddMessage("update Incident Information domain")
+        arcpy.TableToDomain_management(Incident_Information, "Incident_Name", "Incident_Name", Workspace, "Incident_Name", "Incident_Name", "REPLACE")
+        try:
+            arcpy.SortCodedValueDomain_management(Workspace, "Incident_Name", "DESCRIPTION", "ASCENDING")
+        except:
+            pass
+    else:
+        arcpy.AddMessage("No Incident information to update")
+except:
     arcpy.AddMessage("No Incident information to update")
 
-cOpPeriod=arcpy.GetCount_management(Operation_Period)
-if int(cOpPeriod.getOutput(0)) > 0:
-    # Process: Calculate Field
-    arcpy.CalculateField_management(Operation_Period, "Period_Text", "!Period!", "PYTHON_9.3", "")
+try:
+    cOpPeriod=arcpy.GetCount_management(Operation_Period)
+    if int(cOpPeriod.getOutput(0)) > 0:
+        # Process: Calculate Field
+        arcpy.CalculateField_management(Operation_Period, "Period_Text", "!Period!", "PYTHON_9.3", "")
 
-    # Process: Table To Domain (3)
-    arcpy.AddMessage("update Operation Period domain")
-    arcpy.TableToDomain_management(Operation_Period, "Period", "Period_Text", Workspace, "Period", "Period_Text", "REPLACE")
-    try:
-        arcpy.SortCodedValueDomain_management(Workspace, "Period", "DESCRIPTION", "ASCENDING")
-    except:
-        pass
-else:
+        # Process: Table To Domain (3)
+        arcpy.AddMessage("update Operation Period domain")
+        arcpy.TableToDomain_management(Operation_Period, "Period", "Period_Text", Workspace, "Period", "Period_Text", "REPLACE")
+        try:
+            arcpy.SortCodedValueDomain_management(Workspace, "Period", "DESCRIPTION", "ASCENDING")
+        except:
+            pass
+    else:
+        arcpy.AddMessage("No Operations Period information to update")
+except:
     arcpy.AddMessage("No Operations Period information to update")
 
 # Process: Table To Domain (4)

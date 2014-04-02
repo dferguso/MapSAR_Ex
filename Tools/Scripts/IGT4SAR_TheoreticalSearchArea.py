@@ -70,13 +70,12 @@ walkspd_kph = "walkspd_kph"
 Travspd_spm = "TravSpd_spm"
 PthDis_travsp = "PthDis_travsp"
 blnk_travsppd = "blnk_travsppd"
-Travspd_kph = "TravSpd_kph"
+Travspd_kph = "Travspd_kph"
 Travspd_mph = "Travspd_mph"
+Travspd_Layer = "Travspd_Layer"
 Sloper = "Slope"
 Impedance = "Impedance"
-##Impedance = "imped"
 
-##Travspd_kph = "TravSpd_clip"
 TravTime_hrs = "TravTime_hrs"
 travtimhr_rcl = "Travtimhr_rcl"
 traveltime_hrs_poly = "traveltime_hrs_poly"
@@ -102,12 +101,12 @@ cellSize = XCell
 
 ############################
 if bufferUnit =='kilometers':
-    mult = 1.6093472
-    deSiredSpd = float(deSiredSpdA)
-else:
+    bufferUnit='Kilometers'
     mult = 1.0
-    deSiredSpd = 1.6093472 * float(deSiredSpdA)
+else:
+    mult = 1.6093472
 
+deSiredSpd = mult * float(deSiredSpdA)
 arcpy.AddMessage("Desired Speed Raster")
 outDivide = CreateConstantRaster(deSiredSpd, "FLOAT", cellSize, extent)
 outDivide.save(walkspd_kph)
@@ -115,20 +114,37 @@ outDivide.save(walkspd_kph)
 arcpy.DefineProjection_management(walkspd_kph, spatialRef)
 del outDivide
 
+# This Raster Calculator function determines locations in which the Impedance is
+# excessively high (Imp > 98%).  When the Impedance meets this criteria, the
+# raster cell at this location used to represent travel speed (kph) is assigned
+# a value of zero becuase the impedance is too high for nominal foot travel.
+# If the Impdeance is below this thresold the raster cell is assigna value of
+#
+# Travspd_kph = Raster(walkspd_kph)/Exp(0.0212*Float(Raster(Impedance)))
+
+try:
+    arcpy.Delete_management(wrkspc + '\\' + Travspd_kph)
+except:
+    pass
+
 arcpy.AddMessage("Traveling Speed - kph")
 outDivide = Con(Exp(0.0212*Float(Raster(Impedance))) > Exp(0.0212*98.0),0.0,Raster(walkspd_kph)/Exp(0.0212*Float(Raster(Impedance))))
 outDivide.save(Travspd_kph)
 del outDivide
 
 ##arcpy.Delete_management(wrkspc + '\\' + Impedance)
-arcpy.Delete_management(wrkspc + '\\' + walkspd_kph)
+##arcpy.Delete_management(wrkspc + '\\' + walkspd_kph)
 
-if bufferUnit =='kilometers':
+if bufferUnit =='Kilometers':
+    arcpy.MakeRasterLayer_management(Travspd_kph, Travspd_Layer)
     Travspd_Layer=arcpy.mapping.Layer(Travspd_kph)
+
 else:
     outSpeed = Raster(Travspd_kph)/1.6093472
     outSpeed.save(Travspd_mph)
-    Travspd_Layer=arcpy.mapping.Layer(Travspd_mph)
+    arcpy.MakeRasterLayer_management(Travspd_mph, Travspd_Layer)
+##    Travspd_Layer=arcpy.mapping.Layer(Travspd_mph)
+    del outSpeed
 
 arcpy.mapping.AddLayer(df,Travspd_Layer,"BOTTOM")
 arcpy.RefreshActiveView()
@@ -146,6 +162,17 @@ where = where1 + where2
 arcpy.SelectLayerByAttribute_management(IPP, "NEW_SELECTION", where)
 
 arcpy.AddMessage("Path Distance")
+
+# InVertFact identifies that a table file will be used to define the vertical-
+# factor graph used to determine the VFs. The Vertical Factor (VF) defines the
+# vertical difficulty encountered in moving from one cell to the next.
+# In this application the Tobler Hiking Function can be used to define the
+# cost of travelling on slope.
+# Slope = Angle * pi /180 (radians)
+# VF = Exp(-3.5*abs(tan(slope)+0.05))
+# This is the Tobler Hiking Function less the baseline velocity.  The baseline
+# velocity is determined by the Travspd_spm layer ands the "cost" of directional
+# slope dtravel is obtained from the VF.  Path Distance Tool applies directionality.
 
 InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler.txt")'
 ##outPathDist = PathDistance(IPP, Travspd_spm, DEM2, "", "BINARY 1 45", "", "BINARY 1 -45 45", "", blnk_travsppd)
@@ -195,11 +222,11 @@ arcpy.Dissolve_management(traveltime_hrs_poly, TravTimePoly_hrs, "HOURS;DateHrsT
 TravTime_Layer=arcpy.mapping.Layer(TravTimePoly_hrs)
 arcpy.mapping.AddLayer(df,TravTime_Layer,"BOTTOM")
 
-arcpy.Delete_management(wrkspc + '\\' + PthDis_travsp)
-arcpy.Delete_management(wrkspc + '\\' + Travspd_spm)
-arcpy.Delete_management(wrkspc + '\\' + TravTime_hrs)
-arcpy.Delete_management(wrkspc + '\\' + travtimhr_rcl)
-arcpy.Delete_management(wrkspc + '\\' + traveltime_hrs_poly)
+##arcpy.Delete_management(wrkspc + '\\' + PthDis_travsp)
+##arcpy.Delete_management(wrkspc + '\\' + Travspd_spm)
+##arcpy.Delete_management(wrkspc + '\\' + TravTime_hrs)
+##arcpy.Delete_management(wrkspc + '\\' + travtimhr_rcl)
+##arcpy.Delete_management(wrkspc + '\\' + traveltime_hrs_poly)
 
 
 tryLayer = "TravTimePoly_hrs"

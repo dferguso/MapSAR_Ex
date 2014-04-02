@@ -129,6 +129,8 @@ pFlowAcc = "Flow_Acc"
 pStrAcc = "Str_Acc"
 pStrOrder = "Str_Order"
 pStrExp = "Str_Exp"
+Tobler_kph = "Tobler_kph"
+Tspd_kph = "Tspd_kph"
 
 Trail_Impd = "Trail_Impd"
 Road_Impd = "Road_Impd"
@@ -137,6 +139,7 @@ Fence_Impd = "Fence_Impd"
 Veggie_Impd = "NLCD_Impd"
 ImpdConst = "ImpdConst"
 ImpdConstA = "ImpdConstA"
+ConstImpd="ConstImpd"
 #
 Sloper = "Slope"
 High_Slope = "High_Slope"
@@ -152,6 +155,8 @@ Miles_per_Km_Conversion = 0.6213711922
 SubNum = int(SubNum)
 
 theDist = float(TheoDist)
+if bufferUnit=="km":
+    bufferUnit="Kilometers"
 TheoSearch = "{0} {1}".format(theDist, bufferUnit)
 
 arcpy.Compact_management(wrkspc)
@@ -171,7 +176,7 @@ arcpy.SelectLayerByAttribute_management(IPP, "NEW_SELECTION", where)
 arcpy.AddMessage("Buffer IPP around the " + ippType )
 #############################################
 
-maxSlope = "50"
+maxSlope = "60"
 
 # Set the cell size environment using a raster dataset.
 #arcpy.env.cellSize = DEM2
@@ -246,30 +251,33 @@ arcpy.mapping.AddLayer(df,HighSlope_Layer,"BOTTOM")
 
 # Execute CreateConstantRaster
 arcpy.AddMessage("Create NULL value raster")
-outConstRaster = CreateConstantRaster(0.0, "INTEGER", CellSize, extent)
+outConstRaster = CreateConstantRaster(0, "INTEGER", CellSize, extent)
 
 # Save the output
 outConstRaster.save(ImpdConstA)
 arcpy.DefineProjection_management(ImpdConstA, spatialRef)
-outSetNull=SetNull(ImpdConstA, ImpdConstA, '"Value" = 0')
+whereClause = "Value = 0"
+outSetNull=SetNull(ImpdConstA, ImpdConstA, whereClause)
 outSetNull.save(ImpdConst)
 
-ConstImpd=arcpy.mapping.Layer(ImpdConst)
-arcpy.Delete_management(wrkspc + '\\' + ImpdConstA)
-
-arcpy.mapping.AddLayer(df,ConstImpd,"BOTTOM")
+##arcpy.MakeRasterLayer_management(ImpdConst,ConstImpd)
+##arcpy.mapping.AddLayer(df,ConstImpd,"BOTTOM")
+try:
+    arcpy.Delete_management(wrkspc + '\\' + ImpdConstA)
+except:
+    pass
 
 try:
     if gp.GetCount_management(Roads) == 0:
         arcpy.AddMessage("No Roads")
-        arcpy.CopyRaster_management(ConstImpd,Road_Impd)
+        arcpy.CopyRaster_management(ImpdConst,Road_Impd)
     else:
         #Roads Processing
         # Process: Clip Roads
-        arcpy.AddMessage("Clip Roads and buffer to 20 meters")
+        arcpy.AddMessage("Clip Roads and buffer to 10 meters")
         arcpy.Clip_analysis(Roads, IPP_dist, Roads_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Roads_Clipped, Roads_Buf, "20 Meters")
+        arcpy.Buffer_analysis(Roads_Clipped, Roads_Buf, "10 Meters")
 
     ################################
     # Need to add in code to verify Roads Layer has CFCC
@@ -288,7 +296,7 @@ try:
 
 except:
     arcpy.AddMessage("No Road Layer")
-    Road_Impd = ConstImpd
+    arcpy.CopyRaster_management(ImpdConst,Road_Impd)
 
 RoadImpd_Layer=arcpy.mapping.Layer(Road_Impd)
 arcpy.mapping.AddLayer(df,RoadImpd_Layer,"BOTTOM")
@@ -297,15 +305,15 @@ arcpy.mapping.AddLayer(df,RoadImpd_Layer,"BOTTOM")
 try:
     if gp.GetCount_management(Trails) == 0:
         arcpy.AddMessage("No Trails")
-        arcpy.CopyRaster_management(ConstImpd,Trail_Impd)
+        arcpy.CopyRaster_management(ImpdConst,Trail_Impd)
     else:
         #Trail Processing
         # Process: Clip Trails
-        arcpy.AddMessage("Clip Trails and buffer to 20 meters")
+        arcpy.AddMessage("Clip Trails and buffer to 10 meters")
         arcpy.Clip_analysis(Trails, IPP_dist, Trails_Clipped, "")
 
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Trails_Clipped, Trails_Buf, "20 Meters")
+        arcpy.Buffer_analysis(Trails_Clipped, Trails_Buf, "10 Meters")
 
         # Process: Add Join for Trails
         TrailBuf_Layer=arcpy.mapping.Layer(Trails_Buf)
@@ -321,117 +329,117 @@ try:
 
 except:
     arcpy.AddMessage("No Trails Layer")
-    Trail_Impd = ConstImpd
+    arcpy.CopyRaster_management(ImpdConst,Trail_Impd)
 
 TrailImpd_Layer=arcpy.mapping.Layer(Trail_Impd)
 arcpy.mapping.AddLayer(df,TrailImpd_Layer,"BOTTOM")
 
 
-##try:
-if gp.GetCount_management(pStreams) == 0:
-    arcpy.AddMessage("No Streams")
-    arcpy.CopyRaster_management(ConstImpd,pStream_Impd)
-else:
-    # Streams Processing
-    # Process: Clip Streams
-    arcpy.AddMessage("Clip Streams and buffer to 10 meters")
-############################################
-    arcpy.Clip_analysis(pStreams, IPP_dist, pStreams_Clipped, "")
-
-############################################
-
-    # Process: Buffer for theoretical search area
-    arcpy.Buffer_analysis(pStreams_Clipped, pStreams_Buf, "10 Meters")
-
-    # Check to see if the Streams polyline already has a "Impd" field.  If not create on
-    pStreamImpedance = 1 #20
-    if len(arcpy.ListFields(pStreams_Buf,"Impedance")) > 0:
-        arcpy.CalculateField_management(pStreams_Buf,"Impedance",pStreamImpedance)
+try:
+    if gp.GetCount_management(pStreams) == 0:
+        arcpy.AddMessage("No Streams")
+        arcpy.CopyRaster_management(ImpdConst,pStream_Impd)
     else:
-        # Add the new field and calculate the value
-        arcpy.AddField_management(pStreams_Buf, "Impedance", "SHORT")
-        arcpy.CalculateField_management(pStreams_Buf,"Impedance",pStreamImpedance)
+        # Streams Processing
+        # Process: Clip Streams
+        arcpy.AddMessage("Clip Streams and buffer to 5 meters")
+    ############################################
+        arcpy.Clip_analysis(pStreams, IPP_dist, pStreams_Clipped, "")
 
-    # Process: Polyline to Raster
-    arcpy.FeatureToRaster_conversion(pStreams_Buf, "Impedance", pStrImpd, CellSize)
+    ############################################
 
-    if uSeStr == "true":
-        arcpy.AddMessage("Calculate Stream Order - Fill")
-        # Execute Fill
-        outFill = Fill(DEM_Clip)
-        # Save the output
-        outFill.save(pStrFill)
+        # Process: Buffer for theoretical search area
+        arcpy.Buffer_analysis(pStreams_Clipped, pStreams_Buf, "5 Meters")
 
-        arcpy.AddMessage("Calculate Stream Order - Flow Direction")
-        outFlowDirection = FlowDirection(pStrFill, "NORMAL")
-        outFlowDirection.save(pOutFlow)
+        # Check to see if the Streams polyline already has a "Impd" field.  If not create on
+        pStreamImpedance = 1 #20
+        if len(arcpy.ListFields(pStreams_Buf,"Impedance")) > 0:
+            arcpy.CalculateField_management(pStreams_Buf,"Impedance",pStreamImpedance)
+        else:
+            # Add the new field and calculate the value
+            arcpy.AddField_management(pStreams_Buf, "Impedance", "SHORT")
+            arcpy.CalculateField_management(pStreams_Buf,"Impedance",pStreamImpedance)
 
-        # Set local variables
-        dataType = "FLOAT"
-        # Execute FlowDirection
-        arcpy.AddMessage("Calculate Stream Order - Flow Accumlation")
-        ##May 07, 2013#########################
-        ##outFlowAccumulation = FlowAccumulation(pOutFlow, pStrImpd, dataType)
-        outFlowAccumulation = FlowAccumulation(pOutFlow, "", dataType)
-        ##May 07, 2013#########################
+        # Process: Polyline to Raster
+        arcpy.FeatureToRaster_conversion(pStreams_Buf, "Impedance", pStrImpd, CellSize)
 
-        # Save the output
-        outFlowAccumulation.save(pFlowAcc)
-        outNull = SetNull(Raster(pFlowAcc)<500,1)
-        outNull.save(pStrAcc)
-        del outNull
+        if uSeStr == "true":
+            arcpy.AddMessage("Calculate Stream Order - Fill")
+            # Execute Fill
+            outFill = Fill(DEM_Clip)
+            # Save the output
+            outFill.save(pStrFill)
 
-        orderMethod = "STRAHLER"
-        # Execute StreamOrder
-        arcpy.AddMessage("Calculate Stream Order - Strahler")
-        outStreamOrder = StreamOrder(pStrAcc, pOutFlow, orderMethod)
-        # Save the output
-        outStreamOrder.save(pStrOrder)
+            arcpy.AddMessage("Calculate Stream Order - Flow Direction")
+            outFlowDirection = FlowDirection(pStrFill, "NORMAL")
+            outFlowDirection.save(pOutFlow)
 
-        # Set local variables
-        numberCells = 2
-        zoneValues = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        arcpy.AddMessage("Calculate Stream Order - Expand Strahler to 2x2 neighbors")
-        # Execute Expand
-        outExpand = Expand(pStrOrder, numberCells, zoneValues)
+            # Set local variables
+            dataType = "FLOAT"
+            # Execute FlowDirection
+            arcpy.AddMessage("Calculate Stream Order - Flow Accumlation")
+            ##May 07, 2013#########################
+            ##outFlowAccumulation = FlowAccumulation(pOutFlow, pStrImpd, dataType)
+            outFlowAccumulation = FlowAccumulation(pOutFlow, "", dataType)
+            ##May 07, 2013#########################
 
-        # Save the output
-        outExpand.save(pStrExp)
+            # Save the output
+            outFlowAccumulation.save(pFlowAcc)
+            outNull = SetNull(Raster(pFlowAcc)<500,1)
+            outNull.save(pStrAcc)
+            del outNull
+
+            orderMethod = "STRAHLER"
+            # Execute StreamOrder
+            arcpy.AddMessage("Calculate Stream Order - Strahler")
+            outStreamOrder = StreamOrder(pStrAcc, pOutFlow, orderMethod)
+            # Save the output
+            outStreamOrder.save(pStrOrder)
+
+            # Set local variables
+            numberCells = 2
+            zoneValues = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            arcpy.AddMessage("Calculate Stream Order - Expand Strahler to 2x2 neighbors")
+            # Execute Expand
+            outExpand = Expand(pStrOrder, numberCells, zoneValues)
+
+            # Save the output
+            outExpand.save(pStrExp)
 
 
-        arcpy.AddMessage("Reclassify Stream Order to Stream Impedance")
-        # Set local variables
-        StreamImpd_Layer=arcpy.mapping.Layer(pStrExp)
-        arcpy.mapping.AddLayer(df,StreamImpd_Layer,"BOTTOM")
-        # Execute Reclassify
-        ##May 07, 2013#########################
-        outRaster = ReclassByTable(pStrExp, inRemapTable,"ORDER_","ORDER_","IMPEDANCE","NODATA")
-        ##May 07, 2013#########################
+            arcpy.AddMessage("Reclassify Stream Order to Stream Impedance")
+            # Set local variables
+            StreamImpd_Layer=arcpy.mapping.Layer(pStrExp)
+            arcpy.mapping.AddLayer(df,StreamImpd_Layer,"BOTTOM")
+            # Execute Reclassify
+            ##May 07, 2013#########################
+            outRaster = ReclassByTable(pStrExp, inRemapTable,"ORDER_","ORDER_","IMPEDANCE","NODATA")
+            ##May 07, 2013#########################
 
 
-        # Save the output
-        outRaster.save(pStream_Impd)
-        del outRaster
+            # Save the output
+            outRaster.save(pStream_Impd)
+            del outRaster
 
-        arcpy.Delete_management(wrkspc + '\\' + pStrFill)
-        arcpy.Delete_management(wrkspc + '\\' + pOutFlow)
-        arcpy.Delete_management(wrkspc + '\\' + pFlowAcc)
-        arcpy.Delete_management(wrkspc + '\\' + pStrAcc)
-        arcpy.Delete_management(wrkspc + '\\' + pStrOrder)
-        arcpy.Delete_management(wrkspc + '\\' + pStrExp)
+            arcpy.Delete_management(wrkspc + '\\' + pStrFill)
+            arcpy.Delete_management(wrkspc + '\\' + pOutFlow)
+            arcpy.Delete_management(wrkspc + '\\' + pFlowAcc)
+            arcpy.Delete_management(wrkspc + '\\' + pStrAcc)
+            arcpy.Delete_management(wrkspc + '\\' + pStrOrder)
+            arcpy.Delete_management(wrkspc + '\\' + pStrExp)
 
-    else:
-        outDivide = Raster(pStrImpd)*99.0
-        outDivide.save(pStream_Impd)
-        del outDivide
+        else:
+            outDivide = Raster(pStrImpd)*99.0
+            outDivide.save(pStream_Impd)
+            del outDivide
 
-    arcpy.Delete_management(wrkspc + '\\' + pStreams_Clipped)
-    arcpy.Delete_management(wrkspc + '\\' + pStreams_Buf)
-    arcpy.Delete_management(wrkspc + '\\' + pStrImpd)
+        arcpy.Delete_management(wrkspc + '\\' + pStreams_Clipped)
+        arcpy.Delete_management(wrkspc + '\\' + pStreams_Buf)
+        arcpy.Delete_management(wrkspc + '\\' + pStrImpd)
 
-##except:
-##    arcpy.AddMessage("No Streams Layer")
-##    pStream_Impd= ConstImpd
+except:
+    arcpy.AddMessage("No Streams Layer")
+    arcpy.CopyRaster_management(ImpdConst,pStream_Impd)
 
 pStreamsImpd_Layer=arcpy.mapping.Layer(pStream_Impd)
 arcpy.mapping.AddLayer(df,pStreamsImpd_Layer,"BOTTOM")
@@ -440,16 +448,18 @@ arcpy.mapping.AddLayer(df,pStreamsImpd_Layer,"BOTTOM")
 try:
     if gp.GetCount_management(Water) == 0:
         arcpy.AddMessage("No Water Polygons")
-        arcpy.CopyRaster_management(ConstImpd,Water_Impd)
+        arcpy.CopyRaster_management(ImpdConst,Water_Impd)
+
+
     else:
         # Water Processing
         # Process: Clip Water
         arcpy.AddMessage("Clip water features")
 
-############################################
+    ############################################
         arcpy.Clip_analysis(Water, IPP_dist, Water_Clipped, "")
 
-############################################
+    ############################################
 
         # Check to see if the water polygon already has a "Impd" field.  If not create one
         WaterImpedance = 99
@@ -466,7 +476,7 @@ try:
         arcpy.Delete_management(wrkspc + '\\' + Water_Clipped)
 except:
     arcpy.AddMessage("No water Layer")
-    Water_Impd= ConstImpd
+    arcpy.CopyRaster_management(ImpdConst,Water_Impd)
 
 WaterImpd_Layer=arcpy.mapping.Layer(Water_Impd)
 arcpy.mapping.AddLayer(df,WaterImpd_Layer,"BOTTOM")
@@ -475,14 +485,14 @@ arcpy.RefreshActiveView()
 try:
     if gp.GetCount_management(Electric) == 0:
         arcpy.AddMessage("No Utility Lines")
-        arcpy.CopyRaster_management(ConstImpd,Utility_Impd)
+        arcpy.CopyRaster_management(ImpdConst,Utility_Impd)
     else:
         #Utility Line Processing
         # Process: Clip PowerLines
-        arcpy.AddMessage("Clip Power Lines and buffer to 20 meters")
+        arcpy.AddMessage("Clip Power Lines and buffer to 10 meters")
         arcpy.Clip_analysis(Electric, IPP_dist, Electric_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Electric_Clipped, Electric_Buf, "20 Meters")
+        arcpy.Buffer_analysis(Electric_Clipped, Electric_Buf, "10 Meters")
 
         # Check to see if the Utility polyline already has a "Impd" field.  If not create on
         UtilityImpedance = 30
@@ -501,7 +511,7 @@ try:
 
 except:
     arcpy.AddMessage("No utility Layer")
-    Utility_Impd= ConstImpd
+    arcpy.CopyRaster_management(ImpdConst,Utility_Impd)
 
 UtilityImpd_Layer=arcpy.mapping.Layer(Utility_Impd)
 arcpy.mapping.AddLayer(df,UtilityImpd_Layer,"BOTTOM")
@@ -510,14 +520,14 @@ arcpy.mapping.AddLayer(df,UtilityImpd_Layer,"BOTTOM")
 try:
     if gp.GetCount_management(Fence) == 0:
         arcpy.AddMessage("No Fence lines")
-        arcpy.CopyRaster_management(ConstImpd,Fence_Impd)
+        arcpy.CopyRaster_management(ImpdConst,Fence_Impd)
     else:
         # Fence line processing
         # Process: Clip Fences
-        arcpy.AddMessage("Clip Fences and buffer to 10 meters")
+        arcpy.AddMessage("Clip Fences and buffer to 5 meters")
         arcpy.Clip_analysis(Fence, IPP_dist, Fence_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "10 Meters")
+        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "5 Meters")
 
         # Check to see if the Fence polyline already has a "Impd" field.  If not create on
         FenceImpedance = 99
@@ -535,7 +545,7 @@ try:
         arcpy.Delete_management(wrkspc + '\\' + Fence_Buf)
 except:
     arcpy.AddMessage("No Fence Layer")
-    Fence_Impd= ConstImpd
+    arcpy.CopyRaster_management(ImpdConst,Fence_Impd)
 
 FenceImpd_Layer=arcpy.mapping.Layer(Fence_Impd)
 arcpy.mapping.AddLayer(df,FenceImpd_Layer,"BOTTOM")
@@ -544,7 +554,7 @@ arcpy.RefreshActiveView()
 try:
     if not NLCD:
         arcpy.AddMessage("No Land Cover Data")
-        arcpy.CopyRaster_management(ConstImpd,Veggie_Impd)
+        arcpy.CopyRaster_management(ImpdConst,Veggie_Impd)
     else:
         # Process: Clip Raster NLCD
         arcpy.AddMessage("Clip NLCD")
@@ -585,7 +595,7 @@ try:
 
 except:
     arcpy.AddMessage("No NLCD Layer")
-    Veggie_Impd= ConstImpd
+    arcpy.CopyRaster_management(ImpdConst,Veggie_Impd)
 
 #arcpy.mapping.RemoveLayer(df,NLCDResamp)
 VeggieImpd_Layer=arcpy.mapping.Layer(Veggie_Impd)
@@ -596,16 +606,39 @@ arcpy.Delete_management(wrkspc + '\\' + IPP_dist)
 # Process: Raster Calculator (9)
 arcpy.Compact_management(wrkspc)
 arcpy.AddMessage("Get Impedance layer")
-outCon = Con(IsNull(Raster(Fence_Impd)),Con(IsNull(Raster(Road_Impd)), Con(IsNull(Raster(Trail_Impd)), \
-Con(IsNull(Raster(High_Slope)), Con(IsNull(Raster(Water_Impd)), Con(IsNull(Raster(pStream_Impd)), \
-Con(IsNull(Raster(Utility_Impd)), Raster(Veggie_Impd), Raster(Utility_Impd)), Raster(pStream_Impd)),\
-Raster(Water_Impd)),Raster(High_Slope)), Raster(Trail_Impd)), Raster(Road_Impd)), Raster(Fence_Impd))
+try:
+    arcpy.env.extent = "MINOF" #IPP_dist
+    outCon = Con(IsNull(Raster(Fence_Impd)),Con(IsNull(Raster(Road_Impd)), Con(IsNull(Raster(Trail_Impd)), \
+    Con(IsNull(Raster(High_Slope)), Con(IsNull(Raster(Water_Impd)), Con(IsNull(Raster(pStream_Impd)), \
+    Con(IsNull(Raster(Utility_Impd)), Raster(Veggie_Impd), Raster(Utility_Impd)), Raster(pStream_Impd)), \
+    Raster(Water_Impd)),Raster(High_Slope)), Raster(Trail_Impd)), Raster(Road_Impd)), Raster(Fence_Impd))
 
-outCon.save(Impedance)
+    outCon.save(Impedance)
+    del outCon
 
-del outCon
+except:
+    arcpy.AddMessage("No Impedance layer")
+    pass
 
-fcList=[DEM_Clip,IPP_dist, Water_Impd,pStream_Impd,Trail_Impd,Road_Impd,Utility_Impd,Fence_Impd,Veggie_Impd,High_Slope,ImpdConst,Sloper, NLCD_Resample2, NLCD_Clip]
+###################################
+## Add Feb 18, 2014 - Temporary for Search Speed Study -Tobler Hiking Function
+arcpy.AddMessage("Tobler Slope Speed")
+Div1 = 57.29578
+outDivide = Exp(-3.5*Abs(Tan(Raster(Sloper)/Div1)+0.05))*6.0
+outDivide.save(Tobler_kph)
+del outDivide
+
+arcpy.AddMessage("Traveling Speed - kph")
+outDivide = Raster(Tobler_kph)/Exp(0.0212*Float(Raster(Impedance)))
+outDivide.save(Tspd_kph)
+del outDivide
+##############################
+
+
+
+fcList=[DEM_Clip,IPP_dist, Water_Impd,pStream_Impd,Trail_Impd,Road_Impd,\
+        Utility_Impd,Fence_Impd,Veggie_Impd,High_Slope,ImpdConst,ImpdConstA,\
+        Sloper, NLCD_Resample2, NLCD_Clip]#, Tobler_kph]
 fcLayer=["IPPTheoDistance", "DEM_clipped", "High_Slope", "ImpdConst",
          "Roads_Buffered", "Road_Impd", "Trails_Buffered", "Trail_Impd", "Stream_Impd",
          "Water_Impd", "Utility_Impd", "Fence_Impd", "NLCD_Resample", "NLCD_Impd", "Str_Exp"]

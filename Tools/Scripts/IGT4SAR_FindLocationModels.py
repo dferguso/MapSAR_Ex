@@ -111,46 +111,59 @@ if NLCD == '#' or not NLCD:
 #    NLCD = "NLCD" # provide a default value if unspecified
     NLCD = "empty"
 
-Structures = arcpy.GetParameterAsText(6)  # Get the subject number
+Structures = eval(arcpy.GetParameterAsText(6))  # Get the subject number
 if Structures == '#' or not Structures:
     Structures = "0" # provide a default value if unspecified
 
-Rds = arcpy.GetParameterAsText(7)  # Get the subject number
+Rds = eval(arcpy.GetParameterAsText(7))  # Get the subject number
 if Rds == '#' or not Rds:
     Rds = "0" # provide a default value if unspecified
 
-Linear = arcpy.GetParameterAsText(8)  # Get the subject number
+Linear = eval(arcpy.GetParameterAsText(8))  # Get the subject number
 if Linear == '#' or not Linear:
     Linear = "0" # provide a default value if unspecified
 
-Drain = arcpy.GetParameterAsText(9)  # Get the subject number
+Drain = eval(arcpy.GetParameterAsText(9))  # Get the subject number
 if Drain == '#' or not Drain:
     Drain = "0" # provide a default value if unspecified
 
-pWater = arcpy.GetParameterAsText(10)  # Get the subject number
+pWater = eval(arcpy.GetParameterAsText(10))  # Get the subject number
 if pWater == '#' or not pWater:
     pWater = "0" # provide a default value if unspecified
 
-Brush = arcpy.GetParameterAsText(11)  # Get the subject number
+Brush = eval(arcpy.GetParameterAsText(11))  # Get the subject number
 if Brush == '#' or not Brush:
     Brush = "0" # provide a default value if unspecified
 
-Scrub = arcpy.GetParameterAsText(12)  # Get the subject number
+Scrub = eval(arcpy.GetParameterAsText(12))  # Get the subject number
 if Scrub == '#' or not Scrub:
     Scrub = "0" # provide a default value if unspecified
 
-Woods = arcpy.GetParameterAsText(13)  # Get the subject number
+Woods = eval(arcpy.GetParameterAsText(13))  # Get the subject number
 if Woods == '#' or not Woods:
     Woods = "0" # provide a default value if unspecified
 
-Fields = arcpy.GetParameterAsText(14)  # Get the subject number
+Fields = eval(arcpy.GetParameterAsText(14))  # Get the subject number
 if Fields == '#' or not Fields:
     Fields = "0" # provide a default value if unspecified
 
-Rock = arcpy.GetParameterAsText(15)  # Get the subject number
+Rock = eval(arcpy.GetParameterAsText(15))  # Get the subject number
 if Rock == '#' or not Rock:
     Rock = "0" # provide a default value if unspecified
 
+arcpy.AddMessage('pWater is: ' +str(pWater))
+
+
+Structures = int(Structures*100)
+Rds = int(Rds*100)
+Linear=int(Linear*100)
+Drain=int(Drain*100)
+pWater = int(pWater*100)
+Brush = int(Brush*100)
+Scrub = int(Scrub*100)
+Woods = int(Woods*100)
+Fields = int(Fields*100)
+Rock = int(Rock*100)
 
 Roads = "Roads"
 Trails = "Trails"
@@ -200,6 +213,8 @@ Miles_per_Km_Conversion = 0.6213711922
 SubNum = int(SubNum)
 
 theDist = float(TheoDist)
+if bufferUnit=="km":
+    bufferUnit="Kilometers"
 TheoSearch = "{0} {1}".format(theDist, bufferUnit)
 
 arcpy.Compact_management(wrkspc)
@@ -260,14 +275,6 @@ arcpy.Resample_management(NLCD_Clip, NLCD_Resample, CellSize, "NEAREST")
 ##DEM_Clip = DEM2
 ########################
 
-pWater = int(pWater)
-Fields = int(Fields)
-Structures = int(Structures)
-Woods = int(Woods)
-Rock = int(Rock)
-Brush = int(Brush)
-Scrub = int(Scrub)
-
 # Set local variables
 arcpy.AddMessage("Reclassify NLCD")
 inRaster = NLCD_Resample
@@ -277,12 +284,11 @@ remap = RemapValue([[11,pWater],[12,Fields],[21,Fields],\
                     [31,Rock],[32,pWater],[41,Woods],[42,Woods],\
                     [43,Woods],[51,Scrub],[52,Scrub],[71,Brush],[72,Fields],\
                     [73,Fields],[74,Fields],[81,Fields],[82,Fields],\
-                    [91,Woods],[92,Woods],[93,Woods],[94,Scrub],\
+                    [90,Woods],[91,Woods],[92,Woods],[93,Woods],[94,Scrub],\
                     [95,Brush],[96,pWater],[97,pWater],[98,pWater],[99,pWater]])
 
 # Execute Reclassify
 outReclassify = Reclassify(inRaster, reclassField, remap, "NODATA")
-
 # Save the output
 outReclassify.save(NLCD_Reclass)
 
@@ -299,7 +305,8 @@ arcpy.AddField_management(IPP_dist, "VALUE", "SHORT")
 arcpy.CalculateField_management(IPP_dist, "VALUE",0, "PYTHON")
 # Process: Polyline to Raster (3)
 arcpy.FeatureToRaster_conversion(IPP_dist, "VALUE", ConstRstr_Temp, CellSize)
-outSetNull = SetNull(ConstRstr_Temp, ConstRstr_Temp, "VALUE = 0")
+outSetNull = SetNull(ConstRstr_Temp, ConstRstr_Temp, "VALUE = 500")
+#outSetNull = SetNull(ConstRstr_Temp, ConstRstr_Temp, "VALUE = 0")
 outSetNull.save(ConstRstr)
 
 arcpy.Delete_management(wrkspc + '\\' + ConstRstr_Temp)
@@ -473,11 +480,26 @@ else:
 ##
 
 ##
-OutRaster = Con(IsNull(Road_Find),Con(IsNull(Linear_Find),Con(IsNull(Water_Find), Con(IsNull(pStreams_Find), NLCD_Reclass,pStreams_Find),  Water_Find),Linear_Find), Road_Find)
-
+OutRaster = (Con(IsNull(Road_Find),Con(IsNull(Linear_Find),Con(IsNull(Water_Find), Con(IsNull(pStreams_Find), NLCD_Reclass,pStreams_Find),  Water_Find),Linear_Find), Road_Find))
 OutRaster.save("FindFeatures")
+
 FindLayer=arcpy.mapping.Layer("FindFeatures")
 arcpy.mapping.AddLayer(df,FindLayer,"BOTTOM")
+
+##try:
+arcpy.AddField_management("FindFeatures", "Area_", "FLOAT")
+arcpy.AddField_management("FindFeatures", "POA", "FLOAT")
+arcpy.AddField_management("FindFeatures", "Pden", "FLOAT")
+YCell=arcpy.GetRasterProperties_management("FindFeatures", "CELLSIZEY")
+XCell=arcpy.GetRasterProperties_management("FindFeatures", "CELLSIZEX")
+metersUnit=arcpy.Describe("FindFeatures").spatialReference.metersPerUnit
+cellArea=int(YCell[0])*int(XCell[0])*metersUnit
+calcArea="!Count!/1000./1000.*" + str(cellArea)
+arcpy.CalculateField_management("FindFeatures","POA","!Value!/100.0","PYTHON_9.3")
+arcpy.CalculateField_management("FindFeatures","Area_",calcArea,"PYTHON_9.3")
+arcpy.CalculateField_management("FindFeatures","Pden","!POA!/!Area_!","PYTHON_9.3")
+##except:
+##    pass
 
 
 fcList=[IPP_dist, Water_Find, pStreams_Find, Road_Find, Trail_Find, Elec_Find, ConstRstr, Linear_Find]

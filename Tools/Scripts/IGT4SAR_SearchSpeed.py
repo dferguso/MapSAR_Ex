@@ -32,8 +32,7 @@ from arcpy import env
 from arcpy.sa import *
 
 # Script arguments
-#workspc = arcpy.GetParameterAsText(0)
-#env.workspace = workspc
+workspc = env.workspace
 env.overwriteOutput = "True"
 arcpy.env.extent = "MAXOF"
 
@@ -41,6 +40,7 @@ mxd = arcpy.mapping.MapDocument("CURRENT")
 df=arcpy.mapping.ListDataFrames(mxd,"*")[0]
 
 # Set local variables
+TSpd_kph = "Tspd_kph"
 TravSpd_kph = "TravSpd_kph"
 SegSpd = "SegSrchSpd"
 SegSpd_poly = "SegSpd_poly"
@@ -49,6 +49,11 @@ SegSpd_Joins = "Planning\SegSpd_Join"
 
 # Check out the ArcGIS Spatial Analyst extension license
 arcpy.CheckOutExtension("Spatial")
+
+inConstant=3.0/5.0
+outSpd=Times(TSpd_kph, inConstant)
+outSpd.save(TravSpd_kph)
+arcpy.Delete_management(workspc + '\\' + TSpd_kph)
 
 # Execute ZonalStatistics
 arcpy.AddMessage("Zonal Statistics")
@@ -72,7 +77,7 @@ arcpy.AddMessage("Add field: SegSpd_kph")
 arcpy.AddField_management(SegSpd_poly, "SegSpd", "DOUBLE", 6, "", "", "SegSpd_kph", "NULLABLE")
 # Process: Calculate Field (2)
 arcpy.AddMessage("Calculate Travel Speed Field")
-arcpy.CalculateField_management(SegSpd_poly, "SegSpd", "!grid_code!/100.0", "PYTHON")
+arcpy.CalculateField_management(SegSpd_poly, "SegSpd", "!gridcode!/100.0", "PYTHON")
 
 # Process: Spatial Join
 arcpy.AddMessage("Spatial Joins")
