@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Layers>
   <Layer>
     <Name>Clues_Point</Name>
@@ -26,6 +26,9 @@
   </Layer>
   <Layer>
     <Name>Search Segments</Name>
+  </Layer>
+  <Layer>
+    <Name>Segment_Points</Name>
   </Layer>
   <Layer>
     <Name>Assets</Name>

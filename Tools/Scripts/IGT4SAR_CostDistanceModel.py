@@ -95,7 +95,8 @@ Electric = "PowerLines"
 #Tables
 cfcc = "C:\MapSAR_Ex\Template\SAR_Default.gdb\cfcc"
 TrailClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\Trail_Class"
-LandCoverClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\LandCover_Class"
+##LandCoverClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\LandCover_Class"
+LandCoverClass = "LandCover_Class"
 inRemapTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\StreamOrder"
 
 #File Names:
@@ -214,6 +215,8 @@ if spnDEM != spn:
 XCel = arcpy.GetRasterProperties_management(DEM2,"CELLSIZEX")
 XCell = float(XCel.getOutput(0))
 CellSize = XCell
+BuffSize = str(CellSize * 1.5)
+Buff = '"'+ BuffSize + ' Meters"'
 arcpy.AddMessage("Cellsize is " + str(CellSize))
 
 
@@ -274,10 +277,11 @@ try:
     else:
         #Roads Processing
         # Process: Clip Roads
-        arcpy.AddMessage("Clip Roads and buffer to 10 meters")
+##        arcpy.AddMessage("Clip Roads and buffer to " + BuffSize + " meters")
+        arcpy.AddMessage("Clip Roads and buffer to 15 meters")
         arcpy.Clip_analysis(Roads, IPP_dist, Roads_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Roads_Clipped, Roads_Buf, "10 Meters")
+        arcpy.Buffer_analysis(Roads_Clipped, Roads_Buf, "15 Meters")
 
     ################################
     # Need to add in code to verify Roads Layer has CFCC
@@ -309,11 +313,12 @@ try:
     else:
         #Trail Processing
         # Process: Clip Trails
-        arcpy.AddMessage("Clip Trails and buffer to 10 meters")
+##        arcpy.AddMessage("Clip Trails and buffer to " + BuffSize + " meters")
+        arcpy.AddMessage("Clip Trails and buffer to 15 meters")
         arcpy.Clip_analysis(Trails, IPP_dist, Trails_Clipped, "")
 
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Trails_Clipped, Trails_Buf, "10 Meters")
+        arcpy.Buffer_analysis(Trails_Clipped, Trails_Buf, "15 Meters")
 
         # Process: Add Join for Trails
         TrailBuf_Layer=arcpy.mapping.Layer(Trails_Buf)
@@ -342,14 +347,14 @@ try:
     else:
         # Streams Processing
         # Process: Clip Streams
-        arcpy.AddMessage("Clip Streams and buffer to 5 meters")
+        arcpy.AddMessage("Clip Streams and buffer to 15 meters")
     ############################################
         arcpy.Clip_analysis(pStreams, IPP_dist, pStreams_Clipped, "")
 
     ############################################
 
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(pStreams_Clipped, pStreams_Buf, "5 Meters")
+        arcpy.Buffer_analysis(pStreams_Clipped, pStreams_Buf, "15 Meters")
 
         # Check to see if the Streams polyline already has a "Impd" field.  If not create on
         pStreamImpedance = 1 #20
@@ -489,10 +494,10 @@ try:
     else:
         #Utility Line Processing
         # Process: Clip PowerLines
-        arcpy.AddMessage("Clip Power Lines and buffer to 10 meters")
+        arcpy.AddMessage("Clip Power Lines and buffer to 15 meters")
         arcpy.Clip_analysis(Electric, IPP_dist, Electric_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Electric_Clipped, Electric_Buf, "10 Meters")
+        arcpy.Buffer_analysis(Electric_Clipped, Electric_Buf, "15 Meters")
 
         # Check to see if the Utility polyline already has a "Impd" field.  If not create on
         UtilityImpedance = 30
@@ -524,15 +529,16 @@ try:
     else:
         # Fence line processing
         # Process: Clip Fences
-        arcpy.AddMessage("Clip Fences and buffer to 5 meters")
+        arcpy.AddMessage("Clip Fences and buffer to 15 meters")
         arcpy.Clip_analysis(Fence, IPP_dist, Fence_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "5 Meters")
+        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "15 Meters")
 
         # Check to see if the Fence polyline already has a "Impd" field.  If not create on
         FenceImpedance = 99
         if len(arcpy.ListFields(Fence_Buf,"Impedance")) > 0:
-            arcpy.CalculateField_management(Fence_Buf,"Impedance",FenceImpedance)
+##            arcpy.CalculateField_management(Fence_Buf,"Impedance",FenceImpedance)
+            arcpy.AddMessage("User provider fence impedance")
         else:
             # Add the new field and calculate the value
             arcpy.AddField_management(Fence_Buf, "Impedance", "SHORT")
@@ -589,6 +595,7 @@ try:
 
         # Process: Lookup
         arcpy.AddMessage("Create Veggie Impedance Layer")
+##        arcpy.gp.Lookup_sa(NLCD_Resample2, "LandCover_Class.Snow_Impd", Veggie_Impd)
         arcpy.gp.Lookup_sa(NLCD_Resample2, "LandCover_Class.Walk_Impd", Veggie_Impd)
         arcpy.RemoveJoin_management(NLCD_Resample2)
         arcpy.mapping.RemoveLayer(df,NLCDResamp)
@@ -634,14 +641,13 @@ outDivide.save(Tspd_kph)
 del outDivide
 ##############################
 
-
-
 fcList=[DEM_Clip,IPP_dist, Water_Impd,pStream_Impd,Trail_Impd,Road_Impd,\
         Utility_Impd,Fence_Impd,Veggie_Impd,High_Slope,ImpdConst,ImpdConstA,\
         Sloper, NLCD_Resample2, NLCD_Clip]#, Tobler_kph]
-fcLayer=["IPPTheoDistance", "DEM_clipped", "High_Slope", "ImpdConst",
-         "Roads_Buffered", "Road_Impd", "Trails_Buffered", "Trail_Impd", "Stream_Impd",
-         "Water_Impd", "Utility_Impd", "Fence_Impd", "NLCD_Resample", "NLCD_Impd", "Str_Exp"]
+fcLayer=["IPPTheoDistance", "DEM_clipped", "High_Slope", "ImpdConst",\
+         "Roads_Buffered", "Road_Impd", "Trails_Buffered", "Trail_Impd", "Stream_Impd",\
+         "Water_Impd", "Utility_Impd", "Fence_Impd", "NLCD_Resample", "NLCD_Impd",\
+         "Str_Exp", "NLCD_clipped", "Slope", "Expand_Str_O1"]
 
 for lyr in fcLayer:
     for ii in arcpy.mapping.ListLayers(mxd, lyr):

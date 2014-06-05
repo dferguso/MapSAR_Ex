@@ -55,6 +55,7 @@ del rows1
 
 rows1 = arcpy.UpdateCursor(fc1, where1)
 row1 = rows1.next()
+arcpy.AddMessage(pocSum)
 
 if not row1:
     msgs = "All tasks have been processed"

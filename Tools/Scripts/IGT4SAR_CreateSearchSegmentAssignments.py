@@ -56,7 +56,7 @@ while row1:
     except:
         pass
     row.Status = "Planned"
-    row.Map_Scale = 12000
+    row.Map_Scale = 24000
     row.Create_Map = "Yes"
     row.Create_gpx = "Yes"
     row.Previous_Search = "No"
