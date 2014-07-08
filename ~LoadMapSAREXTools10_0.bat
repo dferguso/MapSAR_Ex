@@ -5,19 +5,19 @@ If Not DEFINED ProgramFiles(x86) Set _programs=%ProgramFiles%
 
 ECHO %_programs%
 
-xcopy "c:\Mapsar_Ex\tools\addins\*.esriaddin" "%_programs%\ArcGIS\Desktop10.0\bin\Addins\"
+set _igtpath=%~dp0
 
-xcopy "c:\Mapsar_Ex\tools\SAR_Toolbox100.tbx" "%_programs%\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\"
+xcopy "%_igtpath%tools\addins\*.esriaddin" "%_programs%\ArcGIS\Desktop10.0\bin\Addins\"
 
-IF NOT EXIST %APPDATA%\ArcGIS4LocalGovernment\ConfigFiles (
-   MKDIR %APPDATA%\ArcGIS4LocalGovernment\ConfigFiles"
+xcopy "%_igtpath%tools\SAR_Toolbox100.tbx" "%_programs%\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\"
+
+set _config="%APPDATA%\ArcGIS4LocalGovernment\ConfigFiles"
+IF NOT EXIST %_config% (
+   MKDIR %_config%
 )
-copy c:\mapsar_ex\tools\aaloaded.config %APPDATA%\ArcGIS4LocalGovernment\ConfigFiles\loaded.config /y
+copy "%_igtpath%tools\aaloaded.config" %_config%\loaded.config /y
 
-cd %_programs%\Common Files\ArcGIS\bin
+set _regasmdir="%_programs%\Common Files\ArcGIS\bin\"
+start "Register Measure Angle Addin" /D%_regasmdir% /W %_regasmdir%\ESRIRegAsm /p:Desktop "%_igtpath%Tools\AddIns\MeasureAngle.dll"
 
-ESRIRegAsm /p:Desktop "C:\MapSAR_Ex\Tools\AddIns\MeasureAngle.dll"
-
-cd \
-
-c:\mapsar_ex\tools\geomag-0.9.win32.exe
+"%_igtpath%tools\geomag-0.9.win32.exe"

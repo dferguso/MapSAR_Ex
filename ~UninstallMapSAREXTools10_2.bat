@@ -16,7 +16,6 @@ del "%_programs%\ArcGIS\Desktop10.2\ArcToolbox\Toolboxes\SAR_Toolbox100.tbx"
 
 del "%APPDATA%\ArcGIS4LocalGovernment\ConfigFiles\loaded.config"
 
-cd %_programs%\Common Files\ArcGIS\bin
-
-ESRIRegAsm /p:Desktop /u "C:\MapSAR_Ex\Tools\AddIns\MeasureAngle.dll"
-
+set _igtpath=%~dp0
+set _regasmdir="%_programs%\Common Files\ArcGIS\bin\"
+start "Unregister Measure Angle Addin" /D%_regasmdir% /W %_regasmdir%\ESRIRegAsm /p:Desktop /u "%_igtpath%Tools\AddIns\MeasureAngle.dll"
