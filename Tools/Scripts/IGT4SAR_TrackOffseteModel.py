@@ -31,11 +31,15 @@ from arcpy import env
 
 gp = arcgisscripting.create()
 
+# Set enviroment, frames and layers
+arcpy.env.workspace
+
+defaultDB = arcpy.env.workspace
+arcpy.env.overwriteOutput = True
+
+
 mxd = arcpy.mapping.MapDocument("CURRENT")
 df=arcpy.mapping.ListDataFrames(mxd,"*")[0]
-
-# Overwrite pre-existing files
-env.overwriteOutput = "True"
 
 # Script arguments
 ##workspc = arcpy.GetParameterAsText(0)
@@ -60,11 +64,17 @@ if bufferUnit == '#' or not bufferUnit:
 
 OffDists = arcpy.GetParameterAsText(4)  # Optional - User entered distancesDetermine to use PLS or LKP
 
-OutName = arcpy.GetParameterAsText(5)
-
 Dist = OffDists.split(',')
 Distances=map(int,Dist)
 Distances.sort()
+
+# Set date and time vars
+timestamp = ''
+now = datetime.datetime.now()
+todaydate = now.strftime("%m_%d")
+todaytime = now.strftime("%H_%M_%p")
+timestamp = '{0}_{1}'.format(todaydate,todaytime)
+OutName = "{0}\TrackOffset_{1}".format(defaultDB,timestamp)
 
 #File Names:
 IPP = "Planning Point"
@@ -73,6 +83,8 @@ Trails = "Trails"
 Roads = "Roads"
 pStreams ="Streams"
 Electric ="PowerLines"
+
+
 
 Roads_Clipped = "Roads_Clipped"
 Trails_Clipped = "Trails_Clipped"
@@ -219,6 +231,8 @@ arcpy.AddMessage(pDist)
 
 ##try:
 arcpy.MultipleRingBuffer_analysis(LineTrack, TrackBuffer, pDist, "Meters", "TRACKOFFSET", "ALL", "FULL")
+##TrackOff = arcpy.MultipleRingBuffer_analysis(LineTrack, TrackBuffer, pDist, "Meters", "TRACKOFFSET", "ALL", "FULL")
+
 ##
 ##except:
 ##    TrackBuf = TrackBuffer
@@ -243,5 +257,10 @@ arcpy.Delete_management(TrackBuffer)
 # create a new layer
 arcpy.AddMessage('Insert Track Buffer')
 insertLayer = arcpy.mapping.Layer(OutName)
+
+#Insert layer into Reference layer Group
+arcpy.AddMessage("Add layer to '13 Incident_Analysis\StatisticalArea'")
+refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+arcpy.mapping.AddLayerToGroup(df, refGroupLayer, insertLayer,'TOP')
 
 

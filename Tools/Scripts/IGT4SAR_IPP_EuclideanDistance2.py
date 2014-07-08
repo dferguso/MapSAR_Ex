@@ -30,77 +30,7 @@
 import arcpy
 import string
 
-mxd = arcpy.mapping.MapDocument("CURRENT")
-df=arcpy.mapping.ListDataFrames(mxd,"*")[0]
-
-# Script arguments
-SubNum = arcpy.GetParameterAsText(0)  # Get the subject number
-IPP = arcpy.GetParameterAsText(1)  # Determine to use PLS or LKP
-UserSelect = arcpy.GetParameterAsText(2)  # Subejct Category or User Defined Values
-bufferUnit = arcpy.GetParameterAsText(3) # Desired units
-IPPDists = arcpy.GetParameterAsText(4)  # Optional - User entered distancesDetermine to use PLS or LKP
-
-#arcpy.env.workspace = workspc
-
-# Overwrite pre-existing files
-arcpy.env.overwriteOutput = True
-IPPBuffer = "Planning\StatisticalArea"
-
-SubNum = int(SubNum)
-fc1="Incident_Info"
-
-EcoReg = "Temperate"
-Terrain = "Mountainous"
-PopDen = "Wilderness"
-
-try:
-    rows = arcpy.SearchCursor(fc1)
-    row = rows.next()
-
-    while row:
-        # you need to insert correct field names in your getvalue function
-        EcoReg = row.getValue("Eco_Region")
-        Terrain = row.getValue("Terrain")
-        PopDen = row.getValue("Pop_Den")
-        row = rows.next()
-    del rows
-    del row
-
-except:
-    EcoReg = "Temperate"
-    Terrain = "Mountainous"
-    PopDen = "Wilderness"
-    arcpy.AddWarning("No Incident Information provided. Default values used.")
-    arcpy.AddWarning("Eco_Region = Temperate; Terrain = Mountainous; Population Density = Wilderness.")
-    arcpy.AddWarning("If inappropriate...Remove Statistical Search Area Layer, \nprovide Incident Information and re-run\n")
-
-
-
-fc2 = "Subject_Information"
-where = '"Subject_Number"= %d' % (SubNum)
-rows = arcpy.SearchCursor(fc2, where)
-row = rows.next()
-
-while row:
-    # you need to insert correct field names in your getvalue function
-    Subject_Category = row.getValue("Category")
-    row = rows.next()
-del rows
-del row
-del where
-
-if UserSelect=='User Defined Values':
-    Dist = IPPDists.split(',')
-    Distances=map(float,Dist)
-    Distances.sort()
-    mult = 1.0
-else:
-    if bufferUnit =='kilometers':
-        mult = 1.6093472
-    else:
-        mult = 1.0
-
-#    bufferUnit = "miles"
+def RingDistances(Subject_Category, EcoReg, Terrain):
     arcpy.AddMessage("Subject Category is " + Subject_Category)
 
     if Subject_Category == "Abduction":
@@ -298,130 +228,215 @@ else:
     else:
         Distances = [0.4,1.1,2.0,6.1]
 
-# Buffer areas of impact around major roads
-fc3 = "Planning Point"
+    return(Distances)
 
-where1 = '"Subject_Number" = ' + str(SubNum)
-where2 = ' AND "IPPType" = ' + "'" + IPP + "'"
-where = where1 + where2
+def getDataframe():
+    ## Get current mxd and dataframe
+    try:
+        mxd = arcpy.mapping.MapDocument('CURRENT')
+        df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-arcpy.SelectLayerByAttribute_management(fc3, "NEW_SELECTION", where)
-arcpy.AddMessage("Buffer IPP around the " + IPP )
+        return(mxd,df)
 
-dissolve_option = "ALL"
+    except SystemExit as err:
+            pass
 
-k=0
 
-rows = arcpy.SearchCursor(fc3, where)
-for row in rows:
-##row = rows.next()
-    k=1
-    if bufferUnit =='kilometers':
-        fieldName3 = "Area_SqKm"
-        fieldAlias3 = "Area (sq km)"
-        expression3 = "round(!shape.area@squarekilometers!,2)"
-        pDistIPP = '"IPPDist"'
+if __name__ == '__main__':
 
-    else:
-        fieldName3 = "Area_SqMi"
-        fieldAlias3 = "Area (sq miles)"
-        expression3 = "round(!shape.area@squaremiles!,2)"
-        pDistIPP = '"IPPDist"'
+    mxd, df = getDataframe()
 
-    perct = ['25%', '50%', '75%', '95%']
-    inFeatures = IPPBuffer
-    fieldName1 = "Descrip"
-    fieldName2 = "Area_Ac"
-    fieldName4 = "Sub_Cat"
+    # Script arguments
+    SubNum = arcpy.GetParameterAsText(0)  # Get the subject number
+    IPP = arcpy.GetParameterAsText(1)  # Determine to use PLS or LKP
+    UserSelect = arcpy.GetParameterAsText(2)  # Subejct Category or User Defined Values
+    bufferUnit = arcpy.GetParameterAsText(3) # Desired units
+    IPPDists = arcpy.GetParameterAsText(4)  # Optional - User entered distancesDetermine to use PLS or LKP
 
-    fieldAlias1 = "Description"
-    fieldAlias2 = "Area (Acres)"
-    fieldAlias4 = "Subject Category"
+    #arcpy.env.workspace = workspc
 
-    expression2 = "int(!shape.area@acres!)"
+    # Overwrite pre-existing files
+    arcpy.env.overwriteOutput = True
+    IPPBuffer = "Planning\StatisticalArea"
 
-    pDist=[]
-    for x in Distances:
-        pDist.append(round(x * mult,2))
+    SubNum = int(SubNum)
+    fc1="Incident_Info"
 
-    arcpy.AddMessage("Units = " + bufferUnit)
-    arcpy.AddMessage(pDist)
+    EcoReg = "Temperate"
+    Terrain = "Mountainous"
+    PopDen = "Wilderness"
+
+    try:
+        rows = arcpy.SearchCursor(fc1)
+        row = rows.next()
+
+        while row:
+            # you need to insert correct field names in your getvalue function
+            EcoReg = row.getValue("Eco_Region")
+            Terrain = row.getValue("Terrain")
+            PopDen = row.getValue("Pop_Den")
+            row = rows.next()
+        del rows
+        del row
+
+    except:
+        EcoReg = "Temperate"
+        Terrain = "Mountainous"
+        PopDen = "Wilderness"
+        arcpy.AddWarning("No Incident Information provided. Default values used.")
+        arcpy.AddWarning("Eco_Region = Temperate; Terrain = Mountainous; Population Density = Wilderness.")
+        arcpy.AddWarning("If inappropriate...Remove Statistical Search Area Layer, \nprovide Incident Information and re-run\n")
+
+
+
+    fc2 = "Subject_Information"
+    where = '"Subject_Number"= %d' % (SubNum)
+    rows = arcpy.SearchCursor(fc2, where)
+    row = rows.next()
 
     while row:
         # you need to insert correct field names in your getvalue function
-        arcpy.MultipleRingBuffer_analysis(fc3, IPPBuffer, pDist, bufferUnit, "DistFrmIPP", dissolve_option, "FULL")
+        Subject_Category = row.getValue("Category")
         row = rows.next()
-
     del rows
     del row
     del where
 
-    arcpy.AddMessage('Completed multi-ring buffer')
+    if UserSelect=='User Defined Values':
+        Dist = IPPDists.split(',')
+        Distances=map(float,Dist)
+        Distances.sort()
+        mult = 1.0
+    else:
+        if bufferUnit =='kilometers':
+            mult = 1.6093472
+        else:
+            mult = 1.0
+    #    bufferUnit = "miles"
+        Distances = RingDistances(Subject_Category, EcoReg, Terrain)
 
-    arcpy.AddField_management(inFeatures, fieldName1, "TEXT", "", "", "25",
-                              fieldAlias1, "NULLABLE", "","PrtRange")
-    arcpy.AddField_management(inFeatures, fieldName2, "DOUBLE", "", "", "",
-                              fieldAlias2, "NULLABLE")
-    arcpy.AddField_management(inFeatures, fieldName3, "DOUBLE", "", "", "",
-                              fieldAlias3, "NULLABLE")
-    arcpy.AddField_management(inFeatures, fieldName4, "TEXT", "", "", "25",
-                              fieldAlias4, "NULLABLE", "","PrtRange")
+    # Buffer areas of impact around major roads
+    fc3 = "Planning Point"
 
-    arcpy.AddMessage('Completed AddFields')
+    where1 = '"Subject_Number" = ' + str(SubNum)
+    where2 = ' AND "IPPType" = ' + "'" + IPP + "'"
+    where = where1 + where2
 
-    arcpy.CalculateField_management(IPPBuffer, fieldName2, expression2,
-                                        "PYTHON")
-    arcpy.CalculateField_management(IPPBuffer, fieldName3, expression3,
-                                        "PYTHON")
+    arcpy.SelectLayerByAttribute_management(fc3, "NEW_SELECTION", where)
+    arcpy.AddMessage("Buffer IPP around the " + IPP )
 
-    rows = arcpy.UpdateCursor(IPPBuffer)
-    arcpy.AddMessage('Completed update cursor')
-    row = rows.next()
+    dissolve_option = "ALL"
 
     k=0
-    while row:
-        # you need to insert correct field names in your getvalue function
-        row.setValue(fieldName1, perct[k])
-        row.setValue(fieldName4, Subject_Category)
-        arcpy.AddMessage('Completed setValues')
-        rows.updateRow(row)
-        k=k+1
+
+    rows = arcpy.SearchCursor(fc3, where)
+    for row in rows:
+    ##row = rows.next()
+        k=1
+        if bufferUnit =='kilometers':
+            fieldName3 = "Area_SqKm"
+            fieldAlias3 = "Area (sq km)"
+            expression3 = "round(!shape.area@squarekilometers!,2)"
+            pDistIPP = '"IPPDist"'
+
+        else:
+            fieldName3 = "Area_SqMi"
+            fieldAlias3 = "Area (sq miles)"
+            expression3 = "round(!shape.area@squaremiles!,2)"
+            pDistIPP = '"IPPDist"'
+
+        perct = ['25%', '50%', '75%', '95%']
+        inFeatures = IPPBuffer
+        fieldName1 = "Descrip"
+        fieldName2 = "Area_Ac"
+        fieldName4 = "Sub_Cat"
+
+        fieldAlias1 = "Description"
+        fieldAlias2 = "Area (Acres)"
+        fieldAlias4 = "Subject Category"
+
+        expression2 = "int(!shape.area@acres!)"
+
+        pDist=[]
+        for x in Distances:
+            pDist.append(round(x * mult,2))
+
+        arcpy.AddMessage("Units = " + bufferUnit)
+        arcpy.AddMessage(pDist)
+
+        while row:
+            # you need to insert correct field names in your getvalue function
+            arcpy.MultipleRingBuffer_analysis(fc3, IPPBuffer, pDist, bufferUnit, "DistFrmIPP", dissolve_option, "FULL")
+            row = rows.next()
+
+        del rows
+        del row
+        del where
+
+        arcpy.AddMessage('Completed multi-ring buffer')
+
+        arcpy.AddField_management(inFeatures, fieldName1, "TEXT", "", "", "25",
+                                  fieldAlias1, "NULLABLE", "","PrtRange")
+        arcpy.AddField_management(inFeatures, fieldName2, "DOUBLE", "", "", "",
+                                  fieldAlias2, "NULLABLE")
+        arcpy.AddField_management(inFeatures, fieldName3, "DOUBLE", "", "", "",
+                                  fieldAlias3, "NULLABLE")
+        arcpy.AddField_management(inFeatures, fieldName4, "TEXT", "", "", "25",
+                                  fieldAlias4, "NULLABLE", "","PrtRange")
+
+        arcpy.AddMessage('Completed AddFields')
+
+        arcpy.CalculateField_management(IPPBuffer, fieldName2, expression2,
+                                            "PYTHON")
+        arcpy.CalculateField_management(IPPBuffer, fieldName3, expression3,
+                                            "PYTHON")
+
+        rows = arcpy.UpdateCursor(IPPBuffer)
+        arcpy.AddMessage('Completed update cursor')
         row = rows.next()
 
-    del rows
-    del row
-    ##del where
+        k=0
+        while row:
+            # you need to insert correct field names in your getvalue function
+            row.setValue(fieldName1, perct[k])
+            row.setValue(fieldName4, Subject_Category)
+            arcpy.AddMessage('Completed setValues')
+            rows.updateRow(row)
+            k=k+1
+            row = rows.next()
 
-    arcpy.AddMessage('get current map document')
-    # get the map document
-    mxd = arcpy.mapping.MapDocument("CURRENT")
+        del rows
+        del row
+        ##del where
 
-    arcpy.AddMessage('get data frame')
-    # get the data frame
-    df = arcpy.mapping.ListDataFrames(mxd,"*")[0]
+        arcpy.AddMessage('get current map document')
+        # get the map document
+        mxd = arcpy.mapping.MapDocument("CURRENT")
 
-    # create a new layer
-    arcpy.AddMessage('Insert IPPBuffer')
-    insertLayer = arcpy.mapping.Layer(IPPBuffer)
-    #Reference layer
-    arcpy.AddMessage('Grab reference layer')
-    refLayer = arcpy.mapping.ListLayers(mxd, "Hasty_Points", df)[0]
-    # add the layer to the map at the bottom of the TOC in data frame 0
+        arcpy.AddMessage('get data frame')
+        # get the data frame
+        df = arcpy.mapping.ListDataFrames(mxd,"*")[0]
 
-    arcpy.mapping.InsertLayer(df, refLayer, insertLayer,"BEFORE")
-    arcpy.AddMessage("8 Segments_Group\StatisticalArea")
-    tryLayer = "8 Segments_Group\StatisticalArea"
-    try:
-        # Set layer that output symbology will be based on
-        symbologyLayer = "C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\StatisticalArea.lyr"
+        # create a new layer
+        arcpy.AddMessage('Insert IPPBuffer')
+        insertLayer = arcpy.mapping.Layer(IPPBuffer)
 
-        # Apply the symbology from the symbology layer to the input layer
-        arcpy.ApplySymbologyFromLayer_management (tryLayer, symbologyLayer)
-    except:
-        pass
+        #Insert layer into Reference layer Group
+        arcpy.AddMessage("Add layer to '13 Incident_Analysis\StatisticalArea'")
+        refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+        arcpy.mapping.AddLayerToGroup(df, refGroupLayer, insertLayer,'TOP')
 
-if k == 0:
-    arcpy.AddMessage("There was no " + IPP + " defined")
+        try:
+            # Set layer that output symbology will be based on
+            symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\StatisticalArea.lyr"
+
+            # Apply the symbology from the symbology layer to the input layer
+            arcpy.ApplySymbologyFromLayer_management (tryLayer, symbologyLayer)
+        except:
+            pass
+
+    if k == 0:
+        arcpy.AddMessage("There was no " + IPP + " defined")
 
 
 

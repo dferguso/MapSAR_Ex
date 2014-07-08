@@ -73,6 +73,7 @@ del kk
 
 ###############
 fc1="Incident_Info"
+
 rows = arcpy.SearchCursor(fc1)
 row = rows.next()
 arcpy.AddMessage("Get Incident Info")
@@ -97,6 +98,8 @@ except:
     MapCoord = "MapCoord"
     Base_Phone = "Base_PhoneNumber"
     Base_Freq = "Comms_Freq"
+    UtmZone = ""
+    UsngGrid=""
 
 if zk == 0:
     arcpy.AddError("Please update incident information")
@@ -197,6 +200,234 @@ for AssNum in AssignNum:
             filename = output + "/" + str(PlanNo) + ".fdf"
         #
 
+######
+
+        fc_lyr = "none"
+        fc = "none"
+        where4 = '"Area_Name" = ' + "'" + TaskMap + "'"
+
+        try:
+            if arcpy.Exists(fc4):
+                rows4 = arcpy.UpdateCursor(fc4, where4)
+                for row4 in rows4:
+                    if fc != "none":
+                        arcpy.AddWarning("Another feature has the same name")
+                    else:
+                        fc = fc4
+                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Search Boundary",df)[0]
+                        row4.Status = "Planned"
+##                        pSearch = row4.getValue("Searched")
+##                        row4.Searched = pSearch + 1
+                        rows4.updateRow(row4)
+
+
+            if arcpy.Exists(fc5):
+                rows4 = arcpy.SearchCursor(fc5, where4)
+                for row4 in rows4:
+                    if fc != "none":
+                        arcpy.AddWarning("Another feature has the same name")
+                    else:
+                        fc = fc5
+                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Points",df)[0]
+
+
+            if arcpy.Exists(fc6):
+                rows4 = arcpy.SearchCursor(fc6, where4)
+                for row4 in rows4:
+                    if fc != "none":
+                        arcpy.AddWarning("Another feature has the same name")
+                    else:
+                        fc = fc6
+                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Line",df)[0]
+
+
+            if arcpy.Exists(fc7):
+                rows4 = arcpy.SearchCursor(fc7, where4)
+                for row4 in rows4:
+                    if fc != "none":
+                        arcpy.AddWarning("Another feature has the same name")
+                    else:
+                        fc = fc7
+                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Segments",df)[0]
+
+        except:
+            arcpy.AddError("failed to get feature layer")
+##    ##Automate map production - July 27, 2012
+##
+##        try:
+        PrintMap = row.getValue("Create_Map")
+        if PrintMap == 'Yes':
+            arcpy.AddMessage("Creating task map for Assignment Number: " +str(AssNum))
+
+            if fc == "none":
+                arcpy.AddWarning("No features had this area name and No map created.")
+            else:
+                try:
+                    reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+                    arcpy.mapping.RemoveLayer(df,reMoveLyr)
+                    del reMoveLyr
+                except:
+                    pass
+
+                arcpy.RefreshTOC()
+                arcpy.RefreshActiveView()
+
+                arcpy.MakeFeatureLayer_management (fc, "FgTrzG", where4)
+                mkLyr = arcpy.mapping.Layer("FgTrzG")
+                arcpy.mapping.AddLayer(df,mkLyr,"TOP")
+                updateLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+                arcpy.mapping.UpdateLayer(df,updateLayer,symbologyLayer,True)
+                selectLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+                ## Set transparency for the assigned area to 30% - Sept 13, 2013 - DHF
+                selectLayer.transparency = 30
+
+                ##########################
+                ## Add segment points to map to help define segment borders
+                ##Add June 11, 2014
+                try:
+                    mapLyr002=arcpy.mapping.ListLayers(mxd, "Segment_Points",df)[0]
+                    arcpy.SelectLayerByLocation_management(mapLyr002,"WITHIN_A_DISTANCE",selectLayer,"20 meters","NEW_SELECTION")
+                    arcpy.MakeFeatureLayer_management ("Segment_Points", "FgTrzPt")
+                    mkLyr002 = arcpy.mapping.Layer("FgTrzPt")
+                    arcpy.mapping.AddLayer(df,mkLyr002,"TOP")
+                    updateLayer002 = arcpy.mapping.ListLayers(mxd,"FgTrzPt",df)[0]
+                    ##Label Features
+                    ##arcpy.AddMessage("Attempt labeling")
+                    if updateLayer002.supports("LABELCLASSES"):
+                        ##arcpy.AddMessage("Supports Labelclasses\n")
+                        for lblclass in updateLayer002.labelClasses:
+                            lblclass.showClassLabels = True
+                    lblclass.expression = "[NAME]"
+                    updateLayer002.showLabels = True
+                    ###########
+
+                    arcpy.mapping.UpdateLayer(df,updateLayer002,"Segment_Points",True)
+                except:
+                    pass
+                ##########################
+
+                arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
+                try:
+                    mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+                    arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
+                    UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
+                    USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
+                    rows7=arcpy.SearchCursor(mapLyr)
+                    row7 = rows7.next()
+                    UTMZn.text = row7.getValue("GRID1MIL")
+                    UtmZone=UTMZn.text
+                    USNGZn.text = row7.getValue("GRID100K")
+                    UsngGrid = USNGZn.text
+                    arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text + "\n")
+
+                    arcpy.SelectLayerByAttribute_management (mapLyr, "CLEAR_SELECTION")
+
+                    del mapLyr
+                    del UTMZn
+                    del USNGZn
+                    del row7
+                    del rows7
+                except:
+                    arcpy.AddMessage("No update to UTM Zone or USNG Grid")
+                    pass
+
+                arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
+                df.zoomToSelectedFeatures()
+                arcpy.RefreshActiveView()
+                arcpy.SelectLayerByAttribute_management (selectLayer, "CLEAR_SELECTION")
+
+                mxd.activeView='PAGE_LAYOUT'
+
+                mapScale = row.getValue("Map_Scale")
+
+                if mapScale > 0:
+                    pScaler = row.getValue("Map_Scale")
+                    df.scale = pScaler*1.0
+                else:
+                    df.scale = 24000.0
+
+                del symbologyLayer
+                del mkLyr
+                del updateLayer
+                del mapScale
+                del pScaler
+
+                try:
+                    cIncident=arcpy.GetCount_management("Incident_Information")
+                    if int(cIncident.getOutput(0)) > 0:
+                        mapLyr = arcpy.mapping.ListLayers(mxd, "Incident_Information")[0]
+                        MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+                        rows8=arcpy.SearchCursor(mapLyr)
+                        row8 = rows8.next()
+                        MD=row8.getValue("MagDec")
+                        if not MD:
+                            arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
+                        else:
+                            MagDeclin.text = row8.getValue("MagDec")
+                        del rows8
+                        del row8
+                        del MagDeclin
+                    else:
+                        arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
+                except:
+                    arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
+
+                if TaskMap:
+                    MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+                    MapName.text = "  " + TaskMap
+                if PlanNo:
+                    PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+                    PlanNum.text = "  " + PlanNo
+                if AssNum:
+                    TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+                    TaskNum.text = "  " + TaskNo
+
+                if fname == True:
+                    outFile = output + "/" + str(TaskNo) + "_MAP.pdf"
+                else:
+                    outFile = output + "/" + str(PlanNo) + "_MAP.pdf"
+
+##                    if fname == True:
+##                        outFile = output + "/" + str(TaskNo) + "_aerial.pdf"
+##                    else:
+##                        outFile = output + "/" + str(PlanNo) + "_aerial.pdf"
+
+                try:
+                    arcpy.mapping.ExportToPDF(mxd, outFile)
+                except:
+                    arcpy.AddWarning("  ")
+                    arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
+                    arcpy.AddWarning("Problem with ExportToPDF")
+                    arcpy.AddWarning("  ")
+
+                reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+                arcpy.mapping.RemoveLayer(df,reMoveLyr)
+
+                ###############################
+                ## Add June 11, 2014
+                try:
+                    reMoveLyr002 = arcpy.mapping.ListLayers(mxd,"FgTrzPt",df)[0]
+                    arcpy.mapping.RemoveLayer(df,reMoveLyr002)
+                except:
+                    pass
+                ##############################
+
+                arcpy.RefreshTOC()
+                arcpy.RefreshActiveView()
+
+                del selectLayer
+                del MapName
+                del PlanNum
+                del TaskNum
+                del outFile
+                del reMoveLyr
+
+        else:
+            arcpy.AddMessage('No map created')
+##        except:
+##            arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
+
+###Create ICS204 - Moved June 23, 2014 by Don Ferguson to accomodate USNG_GRID and UTM_ZONE
         txt= open (filename, "w")
         txt.write("%FDF-1.2\n")
         txt.write("%????\n")
@@ -211,6 +442,17 @@ for AssNum in AssignNum:
         txt.write("<</T(topmostSubform[0].Page1[0].PlanNo[0])/V(" + str(PlanNo) + ")>>\n")
         txt.write("<</T(topmostSubform[0].Page1[0].MapDatum[0])/V(" + str(MapDatum) + ")>>\n")
         txt.write("<</T(topmostSubform[0].Page1[0].MapCoord[0])/V(" + str(MapCoord) + ")>>\n")
+        ###################################
+        '''Added June 23, 2013 - Don Ferguson#
+           If the Incident_Info table contains field for USNG_GRID and UTM_ZONE
+           Then these fields will be added to the ICS204 - TAF (if the fields exist on those forms'''
+        try:
+            txt.write("<</T(topmostSubform[0].Page1[0].UTMZONE[0])/V(" + str(UtmZone) + ")>>\n")
+            txt.write("<</T(topmostSubform[0].Page1[0].USNGGRID[0])/V(" + str(UsngGrid) + ")>>\n")
+        except:
+            arcpy.AddMessage("UTM_Zone and USNG_Grid were not added to the ICS204 Form")
+            pass
+        #################
         txt.write("<</T(topmostSubform[0].Page1[0].ResourceType[0])/V(" + str(ResourceType) + ")>>\n")
         txt.write("<</T(topmostSubform[0].Page1[0].Priority[0])/V(" + str(Priority) + ")>>\n")
         txt.write("<</T(topmostSubform[0].Page1[0].TaskNo[0])/V(" + str(TaskNo) + ")>>\n")
@@ -283,7 +525,6 @@ for AssNum in AssignNum:
         txt.write("%%EO\n")
         txt.close ()
 
-######
         del TaskInstruct
         del ResourceType
         del Priority
@@ -291,202 +532,6 @@ for AssNum in AssignNum:
         del PreSearch
         del PrepBy
         del Notes
-
-        fc_lyr = "none"
-        fc = "none"
-        where4 = '"Area_Name" = ' + "'" + TaskMap + "'"
-
-        try:
-            if arcpy.Exists(fc4):
-                rows4 = arcpy.UpdateCursor(fc4, where4)
-                for row4 in rows4:
-                    if fc != "none":
-                        arcpy.AddWarning("Another feature has the same name")
-                    else:
-                        fc = fc4
-                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Search Boundary",df)[0]
-                        #row4.Status = "Planned"
-                        #pSearch = row4.getValue("Searched")
-                        #row4.Searched = pSearch + 1
-                        #rows4.updateRow(row4)
-
-
-            if arcpy.Exists(fc5):
-                rows4 = arcpy.SearchCursor(fc5, where4)
-                for row4 in rows4:
-                    if fc != "none":
-                        arcpy.AddWarning("Another feature has the same name")
-                    else:
-                        fc = fc5
-                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Points",df)[0]
-
-
-            if arcpy.Exists(fc6):
-                rows4 = arcpy.SearchCursor(fc6, where4)
-                for row4 in rows4:
-                    if fc != "none":
-                        arcpy.AddWarning("Another feature has the same name")
-                    else:
-                        fc = fc6
-                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Line",df)[0]
-
-
-            if arcpy.Exists(fc7):
-                rows4 = arcpy.SearchCursor(fc7, where4)
-                for row4 in rows4:
-                    if fc != "none":
-                        arcpy.AddWarning("Another feature has the same name")
-                    else:
-                        fc = fc7
-                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Segments",df)[0]
-
-        except:
-            arcpy.AddError("failed to get feature layer")
-##    ##Automate map production - July 27, 2012
-##
-##        try:
-        PrintMap = row.getValue("Create_Map")
-        if PrintMap == 'Yes':
-            arcpy.AddMessage("Creating task map for Assignment Number: " +str(AssNum))
-
-            if fc == "none":
-                arcpy.AddWarning("No features had this area name and No map created.")
-            else:
-                try:
-                    reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-                    arcpy.mapping.RemoveLayer(df,reMoveLyr)
-                    del reMoveLyr
-                except:
-                    pass
-
-                arcpy.RefreshTOC()
-                arcpy.RefreshActiveView()
-
-                arcpy.MakeFeatureLayer_management (fc, "FgTrzG", where4)
-                mkLyr = arcpy.mapping.Layer("FgTrzG")
-                arcpy.mapping.AddLayer(df,mkLyr,"TOP")
-                updateLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-                arcpy.mapping.UpdateLayer(df,updateLayer,symbologyLayer,True)
-                selectLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-                ## Set transparency for the assigned area to 30% - Sept 13, 2013 - DHF
-                selectLayer.transparency = 30
-                ##
-
-                arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
-                try:
-                    mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
-                    arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
-                    UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-                    USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
-                    rows7=arcpy.SearchCursor(mapLyr)
-                    row7 = rows7.next()
-                    UTMZn.text = row7.getValue("GRID1MIL")
-                    USNGZn.text = row7.getValue("GRID100K")
-                    arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text + "\n")
-
-                    arcpy.SelectLayerByAttribute_management (mapLyr, "CLEAR_SELECTION")
-
-                    del mapLyr
-                    del UTMZn
-                    del USNGZn
-                    del row7
-                    del rows7
-                except:
-                    arcpy.AddMessage("No update to UTM Zone or USNG Grid")
-                    pass
-
-                arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
-                df.zoomToSelectedFeatures()
-                arcpy.RefreshActiveView()
-                arcpy.SelectLayerByAttribute_management (selectLayer, "CLEAR_SELECTION")
-
-                mxd.activeView='PAGE_LAYOUT'
-
-                mapScale = row.getValue("Map_Scale")
-
-                if mapScale > 0:
-                    pScaler = row.getValue("Map_Scale")
-                    df.scale = pScaler*1.0
-                else:
-                    df.scale = 24000.0
-
-                del symbologyLayer
-                del mkLyr
-                del updateLayer
-                del mapScale
-                del pScaler
-
-                try:
-                    cIncident=arcpy.GetCount_management("Incident_Information")
-                    if int(cIncident.getOutput(0)) > 0:
-                        mapLyr = arcpy.mapping.ListLayers(mxd, "Incident_Information")[0]
-                        MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-                        rows8=arcpy.SearchCursor(mapLyr)
-                        row8 = rows8.next()
-                        MD=row8.getValue("MagDec")
-                        if not MD:
-                            arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
-                        else:
-                            MagDeclin.text = row8.getValue("MagDec")
-                        del rows8
-                        del row8
-                        del MagDeclin
-                    else:
-                        arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
-                except:
-                    arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
-
-
-
-
-                if TaskMap:
-                    MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
-                    MapName.text = "  " + TaskMap
-                if PlanNo:
-                    PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
-                    PlanNum.text = "  " + PlanNo
-                if AssNum:
-                    TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
-                    TaskNum.text = "  " + AssNum
-
-                if fname == True:
-                    outFile = output + "/" + str(TaskNo) + "_map.pdf"
-                else:
-                    outFile = output + "/" + str(PlanNo) + "_map.pdf"
-
-
-
-##                    if fname == True:
-##                        outFile = output + "/" + str(TaskNo) + "_aerial.pdf"
-##                    else:
-##                        outFile = output + "/" + str(PlanNo) + "_aerial.pdf"
-
-                try:
-                    arcpy.mapping.ExportToPDF(mxd, outFile)
-                except:
-                    arcpy.AddWarning("  ")
-                    arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
-                    arcpy.AddWarning("Problem with ExportToPDF")
-                    arcpy.AddWarning("  ")
-
-                reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-                arcpy.mapping.RemoveLayer(df,reMoveLyr)
-
-
-                arcpy.RefreshTOC()
-                arcpy.RefreshActiveView()
-
-                del selectLayer
-                del MapName
-                del PlanNum
-                del TaskNum
-                del outFile
-                del reMoveLyr
-
-        else:
-            arcpy.AddMessage('No map created')
-##        except:
-##            arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
 
 ##########################################
 
@@ -513,9 +558,9 @@ for AssNum in AssignNum:
                         'UNIT["Degree",0.017453292519943295]]')
 
                     if fname == True:
-                        filegpx = output + "/" + str(TaskNo) + ".gpx"
+                        filegpx = output + "/" + str(TaskNo) + "_GPX.gpx"
                     else:
-                        filegpx = output + "/" + str(PlanNo) + ".gpx"
+                        filegpx = output + "/" + str(PlanNo) + "_GPX.gpx"
 
                     txt= open (filegpx, "w")
                     txt.write('<?xml version="1.0" encoding="UTF-8"?>\n')

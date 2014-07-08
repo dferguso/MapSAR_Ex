@@ -63,9 +63,17 @@ DEM2 = arcpy.GetParameterAsText(5)
 if DEM2 == '#' or not DEM2:
     DEM2 = "DEM" # provide a default value if unspecified
 
+# Set date and time vars
+timestamp = ''
+now = datetime.datetime.now()
+todaydate = now.strftime("%m_%d")
+todaytime = now.strftime("%H_%M_%p")
+timestamp = '{0}_{1}'.format(todaydate,todaytime)
+
 # Local variables:
 IPP = "Planning Point"
-
+Sloper = "Slope"
+Impedance = "Impedance"
 walkspd_kph = "walkspd_kph"
 Travspd_spm = "TravSpd_spm"
 PthDis_travsp = "PthDis_travsp"
@@ -73,14 +81,11 @@ blnk_travsppd = "blnk_travsppd"
 Travspd_kph = "Travspd_kph"
 Travspd_mph = "Travspd_mph"
 Travspd_Layer = "Travspd_Layer"
-Sloper = "Slope"
-Impedance = "Impedance"
 
 TravTime_hrs = "TravTime_hrs"
-travtimhr_rcl = "Travtimhr_rcl"
+travtimhr_rcl = "Travtimhr_rcl_{0}".format(timestamp)
 traveltime_hrs_poly = "traveltime_hrs_poly"
-TravTimePoly_hrs = "TravTimePoly_hrs"
-ToblerTable ="C:\MapSAR_Ex\Tools\Tables\Tobler002.txt"
+
 ##May 07, 2013#########################
 TimeTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\TimeTable"
 ##TimeTable = "Time_Table_3hr"
@@ -101,9 +106,10 @@ cellSize = XCell
 
 ############################
 if bufferUnit =='kilometers':
-    bufferUnit='Kilometers'
+    TravTimePoly_hrs = "MobilityModel_{0}kph_{1}".format(int(float(deSiredSpdA)*10.0), timestamp)
     mult = 1.0
 else:
+    TravTimePoly_hrs = "MobilityModel_{0}mph_{1}".format(int(float(deSiredSpdA*10.0)), timestamp)
     mult = 1.6093472
 
 deSiredSpd = mult * float(deSiredSpdA)
@@ -123,33 +129,32 @@ del outDivide
 # Travspd_kph = Raster(walkspd_kph)/Exp(0.0212*Float(Raster(Impedance)))
 
 try:
-    arcpy.Delete_management(wrkspc + '\\' + Travspd_kph)
+    arcpy.Delete_management(Travspd_kph)
 except:
     pass
 
-arcpy.AddMessage("Traveling Speed - kph")
-outDivide = Con(Exp(0.0212*Float(Raster(Impedance))) > Exp(0.0212*98.0),0.0,Raster(walkspd_kph)/Exp(0.0212*Float(Raster(Impedance))))
-outDivide.save(Travspd_kph)
-del outDivide
+arcpy.AddMessage("Calculate Traveling Speed across requested area")
+outRast = Con((Exp(0.0212*(Raster(Impedance))) > Exp(0.0212*98.0)),0.0,(Raster(walkspd_kph)/Exp(0.0212*(Raster(Impedance)))))
+outRast.save(Travspd_kph)
+del outRast
+
 
 ##arcpy.Delete_management(wrkspc + '\\' + Impedance)
 ##arcpy.Delete_management(wrkspc + '\\' + walkspd_kph)
 
-if bufferUnit =='Kilometers':
-    arcpy.MakeRasterLayer_management(Travspd_kph, Travspd_Layer)
-    Travspd_Layer=arcpy.mapping.Layer(Travspd_kph)
-
+if bufferUnit =='kilometers':
+    Travspd_Layer=arcpy.MakeRasterLayer_management(Travspd_kph, "Travel Speed in kph")
 else:
     outSpeed = Raster(Travspd_kph)/1.6093472
     outSpeed.save(Travspd_mph)
-    arcpy.MakeRasterLayer_management(Travspd_mph, Travspd_Layer)
-##    Travspd_Layer=arcpy.mapping.Layer(Travspd_mph)
+    Travspd_Layer=arcpy.MakeRasterLayer_management(Travspd_mph, "Travel Speed in mph")
     del outSpeed
 
-arcpy.mapping.AddLayer(df,Travspd_Layer,"BOTTOM")
+refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+arcpy.mapping.AddLayerToGroup(df,refGroupLayer,Travspd_Layer.getOutput(0),'TOP')
 arcpy.RefreshActiveView()
 
-arcpy.AddMessage("Seconds per meter")
+arcpy.AddMessage("Calculate Travel Time in Seconds per Meter")
 outDivide = Con(Raster(Travspd_kph) == 0.0,36000,3600.0/(Raster(Travspd_kph) * 1000.0))
 outDivide.save(Travspd_spm)
 del outDivide
@@ -174,16 +179,27 @@ arcpy.AddMessage("Path Distance")
 # velocity is determined by the Travspd_spm layer ands the "cost" of directional
 # slope dtravel is obtained from the VF.  Path Distance Tool applies directionality.
 
-InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler.txt")'
-##outPathDist = PathDistance(IPP, Travspd_spm, DEM2, "", "BINARY 1 45", "", "BINARY 1 -45 45", "", blnk_travsppd)
-outPathDist = PathDistance(IPP, Travspd_spm, DEM2, "", "BINARY 1 45", "", InVertFact, "", blnk_travsppd)
+##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler.txt")'
+InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler_Bike.txt")'
+##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\ToblerTest.txt")'
+
+############Test Section##################
+# Create the VfCosSec Object
+lowCutAngle = -60
+highCutAngle = 60
+cosPower = 1
+secPower = 1
+myVerticalFactor = VfCosSec(lowCutAngle, highCutAngle, cosPower, secPower)
+##########################################
+
+##outPathDist = PathDistance(IPP, Travspd_spm, DEM2, "", "BINARY 1 45", DEM2, myVerticalFactor)
+outPathDist = PathDistance(IPP, Travspd_spm, DEM2, "", "BINARY 1 45", DEM2, InVertFact)#, "", blnk_travsppd)
 outPathDist.save(PthDis_travsp)
 del outPathDist
 
 # Process: Divide (6)
 ##May 07, 2013#########################
 outDivide = Raster(PthDis_travsp)/3600.0*10.0
-##outDivide = Raster(PthDis_travsp)/3600.0*100.0
 ##May 07, 2013#########################
 outDivide.save(TravTime_hrs)
 del outDivide
@@ -209,7 +225,6 @@ arcpy.AddField_management(traveltime_hrs_poly, "HOURS", "FLOAT", 6, "", "", "", 
 arcpy.AddMessage("Calculate Hours Field")
 ##May 07, 2013#########################
 arcpy.CalculateField_management(traveltime_hrs_poly, "HOURS", "!gridcode!/10.0", "PYTHON")
-##arcpy.CalculateField_management(traveltime_hrs_poly, "HOURS", "!grid_code!/100.0", "PYTHON")
 ##May 07, 2013#########################
 # Process: Add Field (2)
 arcpy.AddMessage("Add field: DateHrsTxt")
@@ -220,21 +235,22 @@ arcpy.AddMessage("Dissolve")
 arcpy.Dissolve_management(traveltime_hrs_poly, TravTimePoly_hrs, "HOURS;DateHrsTxt", "", "MULTI_PART", "DISSOLVE_LINES")
 
 TravTime_Layer=arcpy.mapping.Layer(TravTimePoly_hrs)
-arcpy.mapping.AddLayer(df,TravTime_Layer,"BOTTOM")
+arcpy.mapping.AddLayerToGroup(df,refGroupLayer,TravTime_Layer,'TOP')
 
-##arcpy.Delete_management(wrkspc + '\\' + PthDis_travsp)
-##arcpy.Delete_management(wrkspc + '\\' + Travspd_spm)
-##arcpy.Delete_management(wrkspc + '\\' + TravTime_hrs)
-##arcpy.Delete_management(wrkspc + '\\' + travtimhr_rcl)
-##arcpy.Delete_management(wrkspc + '\\' + traveltime_hrs_poly)
+##try:
+# Set layer that output symbology will be based on
+symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\MobilityModel.lyr"
 
+# Apply the symbology from the symbology layer to the input layer
+updateLayer = arcpy.mapping.ListLayers(mxd, TravTimePoly_hrs, df)[0]
+arcpy.ApplySymbologyFromLayer_management (updateLayer, symbologyLayer)
 
-tryLayer = "TravTimePoly_hrs"
-try:
-    # Set layer that output symbology will be based on
-    symbologyLayer = "C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\MobilityModel.lyr"
+##except:
+##    pass
 
-    # Apply the symbology from the symbology layer to the input layer
-    arcpy.ApplySymbologyFromLayer_management (tryLayer, symbologyLayer)
-except:
-    pass
+arcpy.Delete_management(wrkspc + '\\' + PthDis_travsp)
+arcpy.Delete_management(wrkspc + '\\' + Travspd_spm)
+arcpy.Delete_management(wrkspc + '\\' + TravTime_hrs)
+arcpy.Delete_management(wrkspc + '\\' + travtimhr_rcl)
+arcpy.Delete_management(wrkspc + '\\' + traveltime_hrs_poly)
+

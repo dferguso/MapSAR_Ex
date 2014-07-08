@@ -37,6 +37,22 @@ import arcpy.mapping
 from arcpy import env
 from arcpy.sa import *
 
+def findField(fc, myField):
+    fieldList = arcpy.ListFields(fc)
+    fieldCount=0
+    booln="False"
+    for field in fieldList:
+        if field.name == myField:
+            fieldName = field.name
+            booln="True"
+            rows = arcpy.SearchCursor(fc,"","",myField)
+            for row in rows:
+                if row.getValue(fieldName):
+                    fieldCount+=1
+            del fieldName
+    return booln,fieldCount
+
+
 # Create the Geoprocessor objects
 gp = arcgisscripting.create()
 
@@ -95,8 +111,8 @@ Electric = "PowerLines"
 #Tables
 cfcc = "C:\MapSAR_Ex\Template\SAR_Default.gdb\cfcc"
 TrailClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\Trail_Class"
-##LandCoverClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\LandCover_Class"
-LandCoverClass = "LandCover_Class"
+LandCoverClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\LandCover_Class"
+##LandCoverClass = "LandCover_Class"
 inRemapTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\StreamOrder"
 
 #File Names:
@@ -277,7 +293,7 @@ try:
     else:
         #Roads Processing
         # Process: Clip Roads
-##        arcpy.AddMessage("Clip Roads and buffer to " + BuffSize + " meters")
+    ##        arcpy.AddMessage("Clip Roads and buffer to " + BuffSize + " meters")
         arcpy.AddMessage("Clip Roads and buffer to 15 meters")
         arcpy.Clip_analysis(Roads, IPP_dist, Roads_Clipped, "")
         # Process: Buffer for theoretical search area
@@ -290,9 +306,60 @@ try:
         # Process: Add Join for Roads
         RoadBuf_Layer=arcpy.mapping.Layer(Roads_Buf)
         arcpy.mapping.AddLayer(df,RoadBuf_Layer,"BOTTOM")
-        arcpy.AddJoin_management(Roads_Buf, "CFCC", cfcc, "CFCC", "KEEP_ALL")
-        # Process: Polyline to Raster (3)
         arcpy.AddMessage("create Road Impedance Layer")
+        #################
+        # Updated June 14, 2014 - Don Ferguson
+        # Update to include the use of MTFCC in addition to CFCC
+        #################
+        cfcc_count=0
+        mtcfc_count=0
+        rTable="MTFCC"
+
+        checkMtfcc, mtfccCount=findField(Roads_Buf, "MTFCC")
+        checkCfcc, cfccCount=findField(Roads_Buf, "CFCC")
+        rdsCount = arcpy.GetCount_management(Roads_Buf)
+
+        if checkCfcc==False:
+            if checkMtfcc == False:
+                arcpy.AddField_management(Roads_Buf, "MTFCC", TEXT)
+                rows=arcpy.UpdateCursor(Roads_Buf)
+                for row in rows:
+                    row.MTFCC = "S1100"
+                    rows.updateRow(row)
+                del row
+                del rows
+                rTable="MTFCC"
+            else:
+                if mtfccCount == rdsCount:
+                    rTable="MTFCC"
+                else:
+                    rTable="MTFCC"
+                    rows=arcpy.UpdateCursor(Roads_Buf)
+                    for row in rows:
+                        if not row.getValue(rTable):
+                            row.MTFCC = "S1100"
+                        rows.updateRow(row)
+                    del row
+                    del rows
+
+        else:
+            if cfccCount == rdsCount:
+                rTable="CFCC"
+            else:
+                rTable="CFCC"
+                rows=arcpy.UpdateCursor(Roads_Buf)
+                for row in rows:
+                    if not row.getValue(rTable):
+                        row.CFCC = "A00"
+                    rows.updateRow(row)
+                del row
+                del rows
+
+
+
+        # Process: Polyline to Raster (3)
+        arcpy.AddJoin_management(Roads_Buf, rTable, cfcc, rTable, "KEEP_ALL")
+        #################
         arcpy.FeatureToRaster_conversion(Roads_Buf, "cfcc.Walk_Impd", Road_Impd, CellSize)
         arcpy.RemoveJoin_management(Roads_Buf)
         arcpy.Delete_management(wrkspc + '\\' + Roads_Buf)
@@ -357,7 +424,7 @@ try:
         arcpy.Buffer_analysis(pStreams_Clipped, pStreams_Buf, "15 Meters")
 
         # Check to see if the Streams polyline already has a "Impd" field.  If not create on
-        pStreamImpedance = 1 #20
+        pStreamImpedance = 20
         if len(arcpy.ListFields(pStreams_Buf,"Impedance")) > 0:
             arcpy.CalculateField_management(pStreams_Buf,"Impedance",pStreamImpedance)
         else:
@@ -643,11 +710,11 @@ del outDivide
 
 fcList=[DEM_Clip,IPP_dist, Water_Impd,pStream_Impd,Trail_Impd,Road_Impd,\
         Utility_Impd,Fence_Impd,Veggie_Impd,High_Slope,ImpdConst,ImpdConstA,\
-        Sloper, NLCD_Resample2, NLCD_Clip]#, Tobler_kph]
+        Sloper, NLCD_Resample2, NLCD_Clip, Tobler_kph]
 fcLayer=["IPPTheoDistance", "DEM_clipped", "High_Slope", "ImpdConst",\
-         "Roads_Buffered", "Road_Impd", "Trails_Buffered", "Trail_Impd", "Stream_Impd",\
+         "Road_Impd", "Trails_Buffered", "Trail_Impd", "Stream_Impd",\
          "Water_Impd", "Utility_Impd", "Fence_Impd", "NLCD_Resample", "NLCD_Impd",\
-         "Str_Exp", "NLCD_clipped", "Slope", "Expand_Str_O1"]
+         "Str_Exp", "NLCD_clipped", "Slope", "Roads_Buffered","Expand_Str_O1"]
 
 for lyr in fcLayer:
     for ii in arcpy.mapping.ListLayers(mxd, lyr):

@@ -27,19 +27,33 @@
 import arcpy
 import geomag
 
-mxd=arcpy.mapping.MapDocument("CURRENT")
-df=arcpy.mapping.ListDataFrames(mxd,"*")[0]
+def getDataframe():
+    ## Get current mxd and dataframe
+    try:
+        mxd = arcpy.mapping.MapDocument('CURRENT')
+        df = arcpy.mapping.ListDataFrames(mxd)[0]
 
-# Get UTM and USNG Zones
-# Get declination from Incident Information
+        return(mxd,df)
 
-fc1 = "Plan_Point"
-unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
-desc = arcpy.Describe(fc1)
-shapefieldname = desc.ShapeFieldName
+    except SystemExit as err:
+            pass
 
-arcpy.AddMessage("Checking for Planning Point\n")
-try:
+###########Main############
+if __name__ == '__main__':
+    mxd, df = getDataframe()
+
+    # Get UTM and USNG Zones
+    # Get declination from Incident Information
+
+    fc1 = "Plan_Point"
+    fc2 = "Incident_Information"
+
+    unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
+    desc = arcpy.Describe(fc1)
+    shapefieldname = desc.ShapeFieldName
+
+    arcpy.AddMessage("Checking for Planning Point\n")
+##    try:
     cPlanPt =arcpy.GetCount_management(fc1)
     if int(cPlanPt.getOutput(0)) > 0:
         rows1 = arcpy.SearchCursor(fc1, '', unProjCoordSys)
@@ -64,28 +78,65 @@ try:
         MagDecTxt = str(abs(MagDeclinlination)) + " " + Cardinal
         arcpy.AddMessage(MagDecTxt)
 
+##            try:  #Update Incident Name and Number with the file name and dataframe name
+        IncName = df.name
+        IncNumA = mxd.filePath.split("\\")
+        IncNum=IncNumA[-1].strip(".mxd")
+        arcpy.AddMessage("The Incident Name is " + IncName + "\n")
+        arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
+        MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+        MapName.text = " "
+
+        PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+        PlanNum.text = " "
+
+        AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+        AssignNum.text = " "
+
+        fld2 = "Incident_Name"
+        fld3 = "Incident_Number"
+        cursor = arcpy.UpdateCursor(fc2)
+        for row in cursor:
+            row.setValue(fld2, IncName)
+            row.setValue(fld3, IncNum)
+            cursor.updateRow(row)
+        del cursor, row
+        del IncName, IncNum, fld2, fld3
+##            except:
+##                arcpy.AddMessage("Error: Update Incident Name and Number manually\n")
+
         try:
             cIncident=arcpy.GetCount_management("Incident_Information")
             arcpy.AddMessage("Checking Incident Information")
+
+            # Get list of fields in Incident Information
+            fieldList = arcpy.ListFields(fc2)
+            field=[]
+            for fld in fieldList:
+                field.append(fld.name.encode('ascii','ignore'))
+
             if int(cIncident.getOutput(0)) > 0:
-                fc2 = "Incident_Information"
-                field = "MagDec"
-                MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-                cursor = arcpy.UpdateCursor(fc2)
-                for row in cursor:
-                    row.setValue(field, MagDecTxt)
-                    cursor.updateRow(row)
-                MagDeclin.text = MagDecTxt
-                arcpy.AddMessage("Magnetic Declination is " + MagDeclin.text + "\n")
-                del row
-                del MagDeclin
+                if "MagDec" in field:
+                    fld1 = "MagDec"
+                    MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+
+                    cursor = arcpy.UpdateCursor(fc2)
+                    for row in cursor:
+                        row.setValue(fld1, MagDecTxt)
+                        cursor.updateRow(row)
+                    MagDeclin.text = MagDecTxt
+                    arcpy.AddMessage("Magnetic Declination is " + MagDeclin.text + "\n")
+                    del cursor, row
+                    del MagDeclin
+                else:
+                    arcpy.AddMessage("Magnetic Declination is not in the field list for Incident Information")
             else:
                 arcpy.AddWarning("No Incident Information provided\n")
         except:
             arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
 
         try:
-            arcpy.AddMessage("Updating UTM and USNG grid info")
+            arcpy.AddMessage("Updating UTM and USNG grid info on map layout")
             mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
             arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT","1 Incident_Group\Planning Point")
             UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
@@ -99,14 +150,41 @@ try:
             del rows
             del row
             del mapLyr
-            del UTMZn
-            del USNGZn
             arcpy.AddMessage("Refresh display when complete, View > Refresh or F5\n")
         except:
             arcpy.AddMessage("Error: Update USNG Grid and UTM Zone text fields on map layout manually\n")
+
+        try:
+            dfSpatial_Ref = df.spatialReference.name
+            dfSpatial_Type = df.spatialReference.type
+            arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type + "\n")
+            arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref + "\n")
+
+            fld2 = "MapDatum"
+            fld3 = "MapCoord"
+            cursor = arcpy.UpdateCursor(fc2)
+            for row in cursor:
+                row.setValue(fld2, dfSpatial_Ref)
+##                row.setValue(fld3, dfSpatial_Type)
+                if "UTM_ZONE" in field:
+                    row.setValue("UTM_ZONE", UTMZn.text)
+                if "USNG_GRID" in field:
+                    row.setValue("USNG_GRID", USNGZn.text)
+                cursor.updateRow(row)
+            del cursor, row
+            del dfSpatial_Ref, dfSpatial_Type
+        except:
+            arcpy.AddMessage("Error: Update Map Datum and Map Coordinates (Projected/Geogrpahic) Manually\n")
     else:
         arcpy.AddWarning("Warning: Need to add Planning Point prior to updating map layout\n")
-except:
-    arcpy.AddWarning("There was an error")
-del mxd
-del df
+##    except:
+##        arcpy.AddWarning("There was an error")
+
+    try:
+        del UTMZn
+        del USNGZn
+    except:
+        pass
+
+    del mxd
+    del df

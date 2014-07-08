@@ -28,9 +28,14 @@
 import arcpy
 
 #workspc = arcpy.GetParameterAsText(0)
+SegmentName = arcpy.GetParameterAsText(0)  # Get the subject number
+if SegmentName == '#' or not SegmentName:
+    arcpy.AddMessage("You need to select a Track - Quick response Task")
 
 #arcpy.env.workspace = workspc
 arcpy.env.overwriteOutput = "True"
+
+
 
 ##fc1="Hasty_Segments"
 fc1="Hasty_Line"
@@ -47,79 +52,120 @@ expression4 = "float(!shape.lastpoint!.split()[0])"
 expression5 = "float(!shape.lastpoint!.split()[1])"
 
 
-##try:
-arcpy.CalculateField_management(fc1, fieldName1, "!SHAPE.length@miles!", "PYTHON")
-arcpy.CalculateField_management(fc1, fieldName2, expression2, "PYTHON")
-arcpy.CalculateField_management(fc1, fieldName3, expression3, "PYTHON")
-arcpy.CalculateField_management(fc1, fieldName4, expression4, "PYTHON")
-arcpy.CalculateField_management(fc1, fieldName5, expression5, "PYTHON")
-
-#shapeName = arcpy.Describe(fc1).ShapeFieldName
-rows1 = arcpy.SearchCursor(fc1)
+# Get a list of areas that have already been assigned
+Areas=[]
+rows1 = arcpy.SearchCursor(fc2)
 row1 = rows1.next()
-
 while row1:
-    # you need to insert correct field names in your getvalue function
-    Area_Name = row1.getValue("Area_Name")
-    Length_miles = row1.getValue("Length_miles")
-    Type = row1.getValue("Type")
-    PtA_X = row1.getValue("PointA_X")
-    PtA_Y = row1.getValue("PointA_Y")
-    PtB_X = row1.getValue("PointB_X")
-    PtB_Y = row1.getValue("PointB_Y")
-##    feat = row1.getValue(shapeName)
-##    #pnt = feat.getPart()
-##
-##    # Print x,y coordinates of current point
-##    #
-##    #print pnt.X, pnt.Y
-##
-##    fpointX = int(feat.firstPoint.X)
-##    fpointY = int(feat.firstPoint.Y)
-##    lpointX = int(feat.lastPoint.X)
-##    lpointY = int(feat.lastPoint.Y)
-
-    Descrip1 = "Search along " + str(Area_Name) + " for a distance of " + str(int(Length_miles*100.0)/100.0) + " miles"
-    Descrip2 = " between point 1: " + str(int(PtA_X)) + " " + str(int(PtA_Y)) + ", and point2: "
-    Descrip3 = str(int(PtB_X)) + " " +str(int(PtB_Y)) + "."
-    Descrip4 = "  Sweep 10 - 20 ft on each side of road/trail.  Look for decision points and location where someone may leave the trail."
-
-    Descrip = Descrip1 + Descrip2 + Descrip3 + Descrip4
-    rows = arcpy.InsertCursor(fc2)
-    x = 1
-
-    while x <= 1:
-        row = rows.newRow()
-        row.Description = Descrip
-        row.Area_Name = Area_Name
-        try:
-            row.Priority = "High"
-        except:
-            pass
-        row.Status = "Planned"
-        row.Map_Scale = 24000
-        row.Create_Map = "Yes"
-        row.Create_gpx = "Yes"
-        row.Previous_Search = "No"
-        arcpy.AddMessage(Area_Name)
-        rows.insertRow(row)
-        x += 1
-
-    del rows
-    del row
-
+    AreaN =row1.Area_Name
+    AreaN.encode('ascii','ignore')
+    Areas.append(AreaN)
     row1 = rows1.next()
-del row1
-del rows1
 
-##except:
-##    # Get the tool error messages
-##    #
-##    msgs = "There was an error"
-##
-##    # Return tool error messages for use with a script tool
-##    #
-##    arcpy.AddError(msgs)
-##    # Print tool error messages for use in Python/PythonWin
-##    #
-##    print msgs
+fc3 = "Operation_Period"
+Perd=[0]
+Safety = " "
+rows1 = arcpy.SearchCursor(fc3)
+row1 = rows1.next()
+while row1:
+    Perd.append(row1.Period)
+    Safety = row1.Safety_Message
+    row1 = rows1.next()
+OpPerid = max(Perd)
+if OpPerid==0:
+    arcpy.AddMessage('No Operational Period Established - Default to 0')
+
+
+
+arcpy.AddMessage("\n")
+
+SName = SegmentName.split(";")
+for SegName in SName:
+    SegName.encode('ascii','ignore')
+    where1 = ('"Area_Name" = \'{0}\''.format(SegName.replace("'","")))
+    rows1 = arcpy.SearchCursor(fc1,where1)
+    row1 = rows1.next()
+
+    while row1:
+        try:
+            Area_Name = row1.getValue("Area_Name")
+            Area_Name.encode('ascii','ignore')
+            arcpy.AddMessage("Segment: " + Area_Name)
+
+            arcpy.CalculateField_management(fc1, fieldName1, "!SHAPE.length@miles!", "PYTHON")
+            arcpy.CalculateField_management(fc1, fieldName2, expression2, "PYTHON")
+            arcpy.CalculateField_management(fc1, fieldName3, expression3, "PYTHON")
+            arcpy.CalculateField_management(fc1, fieldName4, expression4, "PYTHON")
+            arcpy.CalculateField_management(fc1, fieldName5, expression5, "PYTHON")
+            Length_miles = row1.getValue("Length_miles")
+            Type = row1.getValue("Type")
+            PtA_X = row1.getValue("PointA_X")
+            PtA_Y = row1.getValue("PointA_Y")
+            PtB_X = row1.getValue("PointB_X")
+            PtB_Y = row1.getValue("PointB_Y")
+        ##    feat = row1.getValue(shapeName)
+        ##    #pnt = feat.getPart()
+        ##
+        ##    # Print x,y coordinates of current point
+        ##    #
+        ##    #print pnt.X, pnt.Y
+        ##
+        ##    fpointX = int(feat.firstPoint.X)
+        ##    fpointY = int(feat.firstPoint.Y)
+        ##    lpointX = int(feat.lastPoint.X)
+        ##    lpointY = int(feat.lastPoint.Y)
+
+            Descrip1 = "Search along " + Area_Name + " for a distance of " + str(int(Length_miles*100.0)/100.0) + " miles"
+            Descrip2 = " between point 1: " + str(int(PtA_X)) + " " + str(int(PtA_Y)) + ", and point2: "
+            Descrip3 = str(int(PtB_X)) + " " +str(int(PtB_Y)) + "."
+            Descrip4 = "  Sweep 10 - 20 ft on each side of road/trail.  Look for decision points and location where someone may leave the trail."
+
+            Descrip = Descrip1 + Descrip2 + Descrip3 + Descrip4
+            rows = arcpy.InsertCursor(fc2)
+
+            x = 1
+
+            while x <= 1:
+                row = rows.newRow()
+                row.Description = Descrip
+                row.Area_Name = Area_Name
+                try:
+                    row.Priority = "High"
+                except:
+                    pass
+
+                if OpPerid>0:
+                    row.Period = OpPerid
+                    row.Safety_Note = Safety
+
+                row.Status = "Planned"
+                row.Map_Scale = 24000
+                row.Create_Map = "Yes"
+                row.Create_gpx = "Yes"
+                if Area_Name in Areas:
+                    row.Previous_Search = "Yes"
+                else:
+                    row.Previous_Search = "No"
+                rows.insertRow(row)
+                x += 1
+
+            del rows
+            del row
+
+        except:
+            # Get the tool error messages
+            #
+            msgs = ("There was an error with {0}".format(where1))
+
+            # Return tool error messages for use with a script tool
+            #
+            arcpy.AddError(msgs)
+            # Print tool error messages for use in Python/PythonWin
+            #
+            print msgs
+        row1 = rows1.next()
+
+    del row1
+    del rows1
+
+arcpy.AddMessage("\n")

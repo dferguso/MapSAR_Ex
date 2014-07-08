@@ -92,6 +92,14 @@ wrkspc = arcpy.GetParameterAsText(0)  # Get the subject number
 arcpy.AddMessage("\nCurrent Workspace" + '\n' + wrkspc + '\n')
 env.workspace = wrkspc
 
+# Set date and time vars
+timestamp = ''
+now = datetime.datetime.now()
+todaydate = now.strftime("%m_%d")
+todaytime = now.strftime("%H_%M_%p")
+timestamp = '{0}_{1}'.format(todaydate,todaytime)
+
+
 SubNum = arcpy.GetParameterAsText(1)  # Get the subject number
 if SubNum == '#' or not SubNum:
     SubNum = "1" # provide a default value if unspecified
@@ -150,9 +158,6 @@ if Fields == '#' or not Fields:
 Rock = eval(arcpy.GetParameterAsText(15))  # Get the subject number
 if Rock == '#' or not Rock:
     Rock = "0" # provide a default value if unspecified
-
-arcpy.AddMessage('pWater is: ' +str(pWater))
-
 
 Structures = int(Structures*100)
 Rds = int(Rds*100)
@@ -279,6 +284,7 @@ arcpy.Resample_management(NLCD_Clip, NLCD_Resample, CellSize, "NEAREST")
 arcpy.AddMessage("Reclassify NLCD")
 inRaster = NLCD_Resample
 reclassField = "VALUE"
+
 remap = RemapValue([[11,pWater],[12,Fields],[21,Fields],\
                     [22,Structures],[23,Structures],[24,(Structures)],\
                     [31,Rock],[32,pWater],[41,Woods],[42,Woods],\
@@ -296,20 +302,21 @@ outReclassify.save(NLCD_Reclass)
 arcpy.Delete_management(wrkspc + '\\' + NLCD_Resample)
 arcpy.Delete_management(wrkspc + '\\' + NLCD_Clip)
 
-##NLCDLayer=arcpy.mapping.Layer(NLCD_Reclass)
-##arcpy.mapping.AddLayer(df,NLCDLayer,"BOTTOM")
-
 # Execute CreateConstantRaster
 arcpy.AddMessage("Create NULL value raster")
-arcpy.AddField_management(IPP_dist, "VALUE", "SHORT")
-arcpy.CalculateField_management(IPP_dist, "VALUE",0, "PYTHON")
-# Process: Polyline to Raster (3)
-arcpy.FeatureToRaster_conversion(IPP_dist, "VALUE", ConstRstr_Temp, CellSize)
-outSetNull = SetNull(ConstRstr_Temp, ConstRstr_Temp, "VALUE = 500")
-#outSetNull = SetNull(ConstRstr_Temp, ConstRstr_Temp, "VALUE = 0")
+outConstRaster = CreateConstantRaster(0, "INTEGER", CellSize, extent)
+
+# Save the output
+outConstRaster.save(ConstRstr_Temp)
+arcpy.DefineProjection_management(ConstRstr_Temp, spatialRef)
+whereClause = "Value = 0"
+outSetNull=SetNull(ConstRstr_Temp, ConstRstr_Temp, whereClause)
 outSetNull.save(ConstRstr)
 
-arcpy.Delete_management(wrkspc + '\\' + ConstRstr_Temp)
+try:
+    arcpy.Delete_management(wrkspc + '\\' + ConstRstr_Temp)
+except:
+    pass
 
 if Rds > 0.0:
     try:
@@ -384,7 +391,7 @@ if Linear > 0.0:
             # Set local variables
             #Roads Processing
             # Process: Clip Trails
-            arcpy.AddMessage("Clip Trails Feature and buffer\n")
+            arcpy.AddMessage("Clip Powerline Feature and buffer\n")
             arcpy.Clip_analysis(Electric, IPP_dist, Electric_Clipped, "")
             arcpy.Buffer_analysis(Electric_Clipped, Electric_Buf, "10 Meters")
 
@@ -474,36 +481,46 @@ if pWater > 0.0:
 else:
     Water_Find = ConstRstr
 
-##WaterFind_Layer=arcpy.mapping.Layer(Water_Find)
-##arcpy.mapping.AddLayer(df,WaterFind_Layer,"BOTTOM")
+WaterFind_Layer=arcpy.mapping.Layer(Water_Find)
+arcpy.mapping.AddLayer(df,WaterFind_Layer,"BOTTOM")
 
 ##
 
 ##
-OutRaster = (Con(IsNull(Road_Find),Con(IsNull(Linear_Find),Con(IsNull(Water_Find), Con(IsNull(pStreams_Find), NLCD_Reclass,pStreams_Find),  Water_Find),Linear_Find), Road_Find))
-OutRaster.save("FindFeatures")
+OutRaster = Con(IsNull(Raster(Road_Find)),Con(IsNull(Raster(Linear_Find)), \
+    Con(IsNull(Raster(Water_Find)), Con(IsNull(Raster(pStreams_Find)), \
+    Raster(NLCD_Reclass),Raster(pStreams_Find)), Raster(Water_Find)), \
+    Raster(Linear_Find)), Raster(Road_Find))
 
-FindLayer=arcpy.mapping.Layer("FindFeatures")
-arcpy.mapping.AddLayer(df,FindLayer,"BOTTOM")
+FindFeat_Name="FindFeatures_{0}".format(timestamp)
+
+OutRaster.save(FindFeat_Name)
+
+FindLayer=arcpy.mapping.Layer(FindFeat_Name)
+
+#Insert layer into Reference layer Group
+arcpy.AddMessage("Add layer to '13 Incident_Analysis\{0}'".format(FindFeat_Name))
+refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+arcpy.mapping.AddLayerToGroup(df, refGroupLayer, FindLayer,'TOP')
+
 
 ##try:
-arcpy.AddField_management("FindFeatures", "Area_", "FLOAT")
-arcpy.AddField_management("FindFeatures", "POA", "FLOAT")
-arcpy.AddField_management("FindFeatures", "Pden", "FLOAT")
-YCell=arcpy.GetRasterProperties_management("FindFeatures", "CELLSIZEY")
-XCell=arcpy.GetRasterProperties_management("FindFeatures", "CELLSIZEX")
-metersUnit=arcpy.Describe("FindFeatures").spatialReference.metersPerUnit
+arcpy.AddField_management(FindFeat_Name, "Area_", "FLOAT")
+arcpy.AddField_management(FindFeat_Name, "POA", "FLOAT")
+arcpy.AddField_management(FindFeat_Name, "Pden", "FLOAT")
+YCell=arcpy.GetRasterProperties_management(FindFeat_Name, "CELLSIZEY")
+XCell=arcpy.GetRasterProperties_management(FindFeat_Name, "CELLSIZEX")
+metersUnit=arcpy.Describe(FindFeat_Name).spatialReference.metersPerUnit
 cellArea=int(YCell[0])*int(XCell[0])*metersUnit
 calcArea="!Count!/1000./1000.*" + str(cellArea)
-arcpy.CalculateField_management("FindFeatures","POA","!Value!/100.0","PYTHON_9.3")
-arcpy.CalculateField_management("FindFeatures","Area_",calcArea,"PYTHON_9.3")
-arcpy.CalculateField_management("FindFeatures","Pden","!POA!/!Area_!","PYTHON_9.3")
+arcpy.CalculateField_management(FindFeat_Name,"POA","!Value!/100.0","PYTHON_9.3")
+arcpy.CalculateField_management(FindFeat_Name,"Area_",calcArea,"PYTHON_9.3")
+arcpy.CalculateField_management(FindFeat_Name,"Pden","!POA!/!Area_!","PYTHON_9.3")
 ##except:
 ##    pass
 
-
-fcList=[IPP_dist, Water_Find, pStreams_Find, Road_Find, Trail_Find, Elec_Find, ConstRstr, Linear_Find]
-fcLayer=["IPPTheoDistance"]
+fcList=[IPP_dist, Water_Find, pStreams_Find, Road_Find, Trail_Find, Elec_Find, ConstRstr, ConstRstr_Temp, Linear_Find, NLCD_Reclass]
+fcLayer=["IPPTheoDistance", "SetNull_Cons1"]
 
 for lyr in fcLayer:
     for ii in arcpy.mapping.ListLayers(mxd, lyr):
