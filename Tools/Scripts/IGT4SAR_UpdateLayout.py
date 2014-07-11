@@ -97,9 +97,12 @@ if __name__ == '__main__':
         fld3 = "Incident_Number"
         cursor = arcpy.UpdateCursor(fc2)
         for row in cursor:
-            row.setValue(fld2, IncName)
-            row.setValue(fld3, IncNum)
-            cursor.updateRow(row)
+            incidName=row.getValue(fld2)
+            if incidName != IncName:
+                row.setValue(fld2, IncName)
+                row.setValue(fld3, IncNum)
+                cursor.updateRow(row)
+            del incidName
         del cursor, row
         del IncName, IncNum, fld2, fld3
 ##            except:
