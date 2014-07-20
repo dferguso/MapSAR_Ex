@@ -2,16 +2,29 @@
 -------------------------------------------------------------------------------
 Name:        IGT4SAR_RepeaterLocations.py
 
-Purpose:  Estimate optimal locations for radio repeaters based on the terrain
-within the prescribed area.  Various points are defined within the area either
+Purpose:  Estimate potential locations for radio repeaters to provide coverage
+of a pre-defined area based on either a random distribution or user defined
+locations of "Observers" (radios in the field).  Radio coverage is estimated
+using "Line-of-Sight" analysis based on digital elevation model (DEM) and
+antenna heights of the transmit and receive units.  This analysis uses the
+Spatial Analyst - Observer Points Tool.  This tool performs the Viewshed
+analysis in reverse by considering the locations of "Observers" in the field and
+highlighting locations that are visible from each raster surface location.  The
+user has the option of using pre-defined points (preferably not more than 10) or
+allowing the computer to pick 10 random points within the user prescribed area
+(extent).  Locations across the raster are identified that can see the "Observer
+Points" are a graded on how many points are visible from that location.  The
+points that are visible from a location, the higher the grade.  Graded areas are
+converted to polygons and
+Various points are defined within the area either
 by the using or using the Random Points Generator tool.  The Observer points
 tool is than used to predict locations that has a "view" of the maximum number
 of points.
 
 Author:      Don Ferguson
 
-Created:     06/12/2012
-Copyright:   (c) Don Ferguson 2012
+Created:     07/12/2014
+Copyright:   (c) Don Ferguson 2014
 Licence:
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -48,10 +61,9 @@ arcpy.env.extent = "MAXOF"
 def getDataframe():
     """ get current mxd and dataframe returns mxd, frame"""
     try:
-        mxd = arcpy.mapping.MapDocument('CURRENT')
-        frame = arcpy.mapping.ListDataFrames(mxd,"*")[0]
+        mxd = arcpy.mapping.MapDocument('CURRENT');df = arcpy.mapping.ListDataFrames(mxd,"*")[0]
 
-        return(mxd,frame)
+        return(mxd,df)
 
     except SystemExit as err:
             pass
@@ -76,37 +88,49 @@ def checkSR(inRaster):   #From Jon Peddar - MapSAR
 
 def AddViewFields(obsvrPts, antHeight, rad2):
     obsvrName=[]
-    fldNames=[('Description','TEXT'),('OFFSETA', 'SHORT'),('OFFSETB', 'SHORT'), \
+    fldNames=[('DESCRIPTION','TEXT'),('OFFSETA', 'SHORT'),('OFFSETB', 'SHORT'), \
               ('AZIMUTH1', 'SHORT'),('AZIMUTH2', 'SHORT'),('VERT1', 'SHORT'), \
               ('VERT2', 'SHORT'),('RADIUS1', 'SHORT'),('RADIUS2', 'SHORT')]
-    fName=[fldNames[i][0] for i in range(9)]
-    fieldnames = [f.name for f in arcpy.ListFields(obsvrPts)]
-    compList=set(fieldnames).intersection(fName)
-    compList=list(compList); chkList=list(fName)
-    [chkList.remove(kk) for kk in compList]
+    fName=[fldNames[k][0] for k in range(9)]
+    if int(arcpy.GetCount_management(obsvrPts).getOutput(0)) > 0:
+        fieldnames = [f.name for f in arcpy.ListFields(obsvrPts)]
+        if "OID" in fieldnames:
+            OID="OID"
+        elif "OBJECTID" in fieldnames:
+            OID="OBJECTID"
+        else:
+            OID=None
+        compList=set(fieldnames).intersection(fName)
+        compList=list(compList); chkList=list(fName)
+        [chkList.remove(kk) for kk in compList]
 
-    #Default values for Observer Points
-    obsvrDef=[antHeight,2,0,360,90,-90,0,rad2]
+        #Default values for Observer Points
+        obsvrDef=[antHeight,2,0,360,90,-90,0,rad2]
+        #Add field if it does not exist
+        for field in fldNames:
+            if field[0] in chkList:
+                arcpy.AddField_management(*(obsvrPts,) + field)
 
-    #Add field if it does not exist
-    for field in fldNames:
-        if field in chkList:
-            arcpy.AddField_management(*(outName,) + field)
+        cursor=arcpy.UpdateCursor(obsvrPts)
+        cnt=1
+        for row in cursor:
+            if OID:
+                descp="ObsvrPt_{0}".format(row.getValue(OID))
+            else:
+                descp="ObsvrPt_{0}".format(row.getValue(cnt))
+            obsvrName.append(descp)
+            cnt+=1
 
-    cursor=arcpy.UpdateCursor(outName)
-    for row in cursor:
-        descp="ObsvrPt_{0}".format(row.getValue("OID"))
-        obsvrName.append(descp)
-
-        if row.getValue(fName[0]) is None:
-            row.setValue(fName[0], descp)
-        ct=0
-        for k in fname[1:9]:
-            if row.getValue(k) is None:
-                row.setValue(k, obsvrDef[ct])
-            ct+=1
-        cursor.updateRow(row)
-
+            if row.getValue(fName[0]) is None:
+                row.setValue(fName[0], descp)
+            ct=0
+            for k in fName[1:9]:
+                if row.getValue(k) is None:
+                    row.setValue(k, obsvrDef[ct])
+                ct+=1
+            cursor.updateRow(row)
+        del fieldnames, cursor, row, ct, cnt, compList, descp, field
+    del fName, fldNames
     return()
 
 
@@ -115,24 +139,183 @@ def RandomPts(outName, wrkspc, fcExtent):
     obsvrName=[]
     numPoints = 10
     minDistance = "100 Meters"
-    arcpy.CreateRandomPoints_management(wrkspc, outName, "", fcExtent, numPoints, minDistance)
+    arcpy.CreateRandomPoints_management(wrkspc, outName, fcExtent, "", numPoints, minDistance)
     return()
 
-def RepeaterAreas(rptrPolys,DEM):
-    #Select each polygon
-        #clip DEM to polygon
-        #maxElev = Get raster property - max value
-        #Raster math - ElevArea=Con(Clipped DEM >= Max Value,1) - or >=round(maxElev,2)
-        #convert ElevArea to Polygon
-        #Dissolve Polygon
-        #convert polygon to point
-        #Return points
-    return
+def enterXY(fcName):
+    inRows = arcpy.SearchCursor(outName)
+    # Open insertcursor
+    #
+    outRows = arcpy.InsertCursor(outPts)
+    for inRow in inRows: # One output feature for each input point feature
+        inShape = inRow.shape
+        pnt = inShape.getPart(0)
+        feat = outRows.newRow()
+        feat.shape = pnt
+        # Insert the feature
+        #
+        outRows.insertRow(feat)
+    return()
 
-def RepeaterViewshed(Rptrpts, DEM):
-    return
+def deleteFeature(fcList):
+    for gg in fcList:
+        if arcpy.Exists(gg):
+            try:
+                arcpy.Delete_management(wrkspc + '\\' + gg)
+            except:
+                pass
+
+    return()
+
+def deleteLayer(df,fcLayer):
+    for lyr in fcLayer:
+        for ii in arcpy.mapping.ListLayers(mxd, lyr):
+            try:
+                print "Deleting layer", ii
+                arcpy.mapping.RemoveLayer(df , ii)
+            except:
+                pass
+    return()
 
 
+def RepeaterAreas(RptrPoly_Lyr,DEM, nList, df):
+    DEM_Clip="DEM_{0}".format(nList[0])
+    ElevPt="Rpt_{0}".format(nList[0])
+    DEM_Max="DEMmax_{0}".format(nList[0])
+
+    express02 = '"DESCRIPTION" = \'{0}\''.format(nList[0])
+    arcpy.AddMessage(express02)
+
+    arcpy.SelectLayerByAttribute_management(RptrPoly_Lyr, "NEW_SELECTION", express02)
+
+    arcpy.Clip_management(DEM, "#",DEM_Clip ,RptrPoly_Lyr, "", "ClippingGeometry")
+
+    arcpy.SelectLayerByAttribute_management(RptrPoly_Lyr,"CLEAR_SELECTION")
+
+    demMax=arcpy.GetRasterProperties_management (DEM_Clip, "MAXIMUM")
+    cPtChk=0
+    rdNum = 2
+    field='Value'
+    while cPtChk<1:
+        if rdNum>=0:
+            demMax2 = int(float(demMax.getOutput(0))*(10.0**rdNum))/(10**rdNum)
+        elif rdNum==-1:
+            demMax2 = int(float(demMax.getOutput(0)))-1
+        else:
+            arcpy.AddError('Problem with your DEM')
+            break
+
+        OutRas=Con((Raster(DEM_Clip) > demMax2),1)
+        OutRas.save(DEM_Max)
+        del OutRas
+        deleteFeature([DEM_Clip])
+        try:
+            cDemMax=arcpy.GetRasterProperties_management (DEM_Max, "MAXIMUM")
+            arcpy.RasterToPoint_conversion(DEM_Max,ElevPt,field)
+            deleteFeature([DEM_Max])
+            cPtChk001=arcpy.GetCount_management(ElevPt)
+            cPtChk = int(cPtChk001.getOutput(0))
+            del cPtChk001
+        except:
+            cPtChk = 0
+        arcpy.AddMessage("Maximum of DEM in this region is: {0} m\n".format(demMax2))
+        rdNum-=1
+
+    nList=[]
+    cursor = arcpy.SearchCursor(ElevPt)
+    for row in cursor:
+        nList.append(row.getValue('OBJECTID'))
+    nList.sort
+
+    if len(nList)>1:
+        ElevPt_Lyr = arcpy.mapping.Layer(ElevPt)
+        arcpy.mapping.AddLayer(df,ElevPt_Lyr,'BOTTOM')
+        # If more than one point is generated, delete the extras.
+        expression = "OBJECTID > " + str(nList[0])
+        arcpy.SelectLayerByAttribute_management(ElevPt_Lyr, "NEW_SELECTION", expression)
+        # Execute GetCount and if some features have been selected, then execute
+        #  DeleteRows to remove the selected rows.
+        arcpy.DeleteRows_management(ElevPt_Lyr)
+        deleteLayer(df,[ElevPt_Lyr])
+
+    del demMax, demMax2, cPtChk
+    return(ElevPt)
+
+def UpdateSpatialFields(RepeaterLocations,nlist):
+    RptrNames = [f.name for f in arcpy.ListFields(RepeaterLocations)]
+    if "Descritpion" in RptrNames:
+        where01 = "Description = {0}".format(nlist)
+    else:
+        where01 = ""
+
+    desc=arcpy.Describe(RepeaterLocations)
+    shapeFN = desc.ShapeFieldName
+    cursor = arcpy.UpdateCursor(RepeaterLocations, where01)
+    for row in cursor:
+        feat=row.getValue(shapeFN)
+        pnt=feat.getPart()
+        if 'UTM_Easting' in RptrNames:
+            row.setValue('UTM_Easting',int(pnt.X))
+        if 'UTM_Northing' in RptrNames:
+            row.setValue('UTM_Northing',int(pnt.Y))
+        cursor.updateRow(row)
+    try:
+        del cursor, row, desc, shapeFN
+    except:
+        pass
+    return()
+
+    desc=arcpy.Describe(RepeaterLocations)
+    shapeFN = desc.ShapeFieldName
+    cursor = arcpy.UpdateCursor(RepeaterLocations, where01, \
+                        r'GEOGCS["GCS_WGS_1984",' + \
+                        'DATUM["D_WGS_1984",' + \
+                        'SPHEROID["WGS_1984",6378137,298.257223563]],' + \
+                        'PRIMEM["Greenwich",0],' + \
+                        'UNIT["Degree",0.017453292519943295]]')
+    for row in cursor:
+        feat=row.getValue(shapeFN)
+        pnt=feat.getPart()
+        if 'LATITUDE' in RptrNames:
+            row.setValue('LATITUDE',float(pnt.Y))
+        if 'LONGITUDE' in RptrNames:
+            row.setValue('LONGITUDE',float(pnt.X))
+        cursor.updateRow(row)
+    del cursor, row, desc, shapeFN
+
+    return()
+
+def RepeaterViewshed(RptrPts_Lyr, DEM, nList,refGroupLayer, df, mxd):
+    # Set layer that output symbology will be based on
+
+    expression = "DESCRIPTION = '{0}'".format(nList)
+    arcpy.SelectLayerByAttribute_management(RptrPts_Lyr, "NEW_SELECTION", expression)
+
+    # Set local variables
+    zFactor = 1; useEarthCurvature = "CURVED_EARTH"; refractivityCoefficient = 0.15
+
+    # Execute Viewshed
+    outViewshed = Viewshed(DEM, RptrPts_Lyr, zFactor, useEarthCurvature, refractivityCoefficient)
+    # Save the output
+    outViewshed.save(nList)
+    arcpy.RefreshCatalog(nList)
+
+    nRstr = nList+'rstr'
+    arcpy.MakeRasterLayer_management(Raster(nList), nRstr)
+    nList_Lyr = arcpy.mapping.Layer(nRstr)
+    nList_Lyr.name=nList
+    arcpy.mapping.RemoveLayer(df,nList_Lyr)
+##    deleteLayer(df,[nList_Lyr])
+    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,nList_Lyr,'BOTTOM')
+
+    try:
+        lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
+        symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\10 Coverage Area.lyr"
+        arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+    except:
+        pass
+
+    return()
 
 ##########################################
 
@@ -145,42 +328,70 @@ if __name__ == '__main__':
     todaytime = now.strftime("%H_%M_%p")
     timestamp = '{0}_{1}'.format(todaydate,todaytime)
 
-    UserSelect = arcpy.GetParameterAsText(0)
+    fcExtent = arcpy.GetParameterAsText(0)
+    if fcExtent == '#' or not fcExtent:
+        fcExtent = "Search_Boundary" # provide a default value if unspecified
+
+    UserSelect = arcpy.GetParameterAsText(1)
     if UserSelect == '#' or not UserSelect:
         UserSelect = "System" # provide a default value if unspecified
 
-    inputFeature = arcpy.GetParameterAsText(1)  # If not using System points then define
+    inputFeature = arcpy.GetParameterAsText(2)  # If not using System points then define
 
-    DEM2 = arcpy.GetParameterAsText(2)
+    DEM2 = arcpy.GetParameterAsText(3)
     if DEM2 == '#' or not DEM2:
         arcpy.AddMessage("You need to provide a valid DEM")
 
-    antHeight = arcpy.GetParameterAsText(3)
+    antHeight = arcpy.GetParameterAsText(4)
     if antHeight == '#' or not antHeight:
         antHeight = 15 # provide a default value if unspecified
 
-    maxDist = arcpy.GetParameterAsText(4) # Desired units
+    maxDist = arcpy.GetParameterAsText(5) # Desired units
     if maxDist == '#' or not maxDist:
         maxDist = 5000 # provide a default value if unspecified
 
+    arcpy.AddMessage("\n")
+
     # Variables
-    outName = 'ObsvrRandom'
+    outName = 'ObsvrPts_{0}'.format(timestamp)
     rptrView = 'rptrView'
     rptrArea = 'rptrArea'
-    rptrPolys = 'rptrPolys'
-    fcExtent = "Search_Boundary"
+    rptrPolys = 'RptrRegions_{0}'.format(timestamp)
+    scratchPt = "Scratch_Point"
+    RepeaterLocations = 'RptrLocations'
+    RptrPts_Lyr = "Repeater Locations (Potential)"
+    RptrTemp_Lyr = "RptrTemp_Lyr"
+    fcNames=[outName, rptrView,rptrArea,rptrPolys]
+    for fcN in fcNames:
+        try:
+            arcpy.Delete_management(wrkspc + '\\' + fcN)
+        except:
+            pass
+
+    checkSR(DEM2)
+    XCel = arcpy.GetRasterProperties_management(DEM2,"CELLSIZEX")
+    XCell = float(XCel.getOutput(0))
 
     '''
     Check if user is using System values which are Random Points distributed
     throughout the search area, or is user planning to use a User Defined feature
     '''
+    refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Communications*',df)[0]
+
     if UserSelect=="System":
-        cSearchArea=arcpy.GetCount_management(fcExtent)
         #Does the Search Boundary exist?
-        if int(cSearchArea.getOutput(0)) > 0:
-            obsvrPts=RandomPts(outName, wrkspc, fcExtent)
-        else:
+        cSearchArea=arcpy.GetCount_management(fcExtent)
+        if int(cSearchArea.getOutput(0)) == 1:
+            RandomPts(outName, wrkspc, fcExtent)
+            obsvrPts= outName
+            ObsvrPts_Lyr = arcpy.mapping.Layer(obsvrPts)
+            arcpy.mapping.AddLayerToGroup(df,refGroupLayer,ObsvrPts_Lyr,'BOTTOM')
+
+        elif int(cSearchArea.getOutput(0)) < 1:
             arcpy.AddError("You need to specify the Search Area Boundary (8 Segments_Group \ Search Boundary")
+        else:
+            arcpy.AddError("You need to select a single polygon")
+
     else:
         obsvrPts = inputFeature
         # Check fields inprep for Observer
@@ -188,177 +399,97 @@ if __name__ == '__main__':
     #Check to see if the feature as the appropriate fields
     AddViewFields(obsvrPts, antHeight, maxDist)
 
-    outObsPoints = ObserverPoints(DEM,obsvrPts, 1, "CURVED_EARTH", 0.13)
+    outObsPoints = ObserverPoints(DEM2,obsvrPts, 1, "CURVED_EARTH", 0.13)
     outObsPoints.save(rptrView)
-
-    rptrList=[]
-    cursor=arcpy.SearchCursor(rptrView)
-    for row in cursor:
-        rptrList.append(row.getValue('Value'))
-    OutRas = Con((rptrView==rptrList[-2]),1,Con((rptrView==rptrList[-1]),2))
-    OutRas.save(rptrArea)
 
     # Set local variables
     field = "VALUE"
-
     # Execute RasterToPolygon
-    arcpy.RasterToPolygon_conversion(rptrArea, rptrPolys, "SIMPLIFY", field)
-    arcpy.AddField_management(rptrPolys,"NAME")
-    rowCtA=1
-    rowCtB=1
-    nameList=[]
-    cursor=arcpy.UpdateCursor(rptrPolys)
+    arcpy.RasterToPolygon_conversion(rptrView, rptrPolys, "SIMPLIFY", field)
+    deleteFeature([rptrView])
+    #deleteFeature([rptrArea])
+
+
+    # Delete any polygons that have a area smaller than the DEM cell size squared
+    shapeArea=1.1*XCell*XCell
+
+    expression = "Shape_Area <= " + str(shapeArea) + "OR gridcode = 0"
+    arcpy.AddMessage("Delete regions with Area less than {0} and gridcode = 0 (no pts visible)\n".format(shapeArea))
+
+    arcpy.MakeTableView_management(rptrPolys, RptrTemp_Lyr)
+
+    arcpy.SelectLayerByAttribute_management(RptrTemp_Lyr, "NEW_SELECTION", expression)
+
+    # Execute GetCount and if some features have been selected, then execute
+    #  DeleteRows to remove the selected rows.
+    if int(arcpy.GetCount_management(RptrTemp_Lyr).getOutput(0)) > 0:
+        arcpy.DeleteRows_management(RptrTemp_Lyr)
+
+    deleteLayer(df,[RptrTemp_Lyr])
+
+    arcpy.AddField_management(rptrPolys,"DESCRIPTION", "TEXT")
+    gcList=[]
+    cursor=arcpy.SearchCursor(rptrPolys)
     for row in cursor:
-        if row.getValue('gridcode'==rptrList[-2]):
-            firstName="ObsvrPt{1}_{0}".format(rptrList[-2],rowCtA)
-            rowCtA+=1
+        gcList.append(row.getValue('gridcode'))
+    del row, cursor
+    gcCode=sorted(list(set(gcList)),reverse=True)
+
+    newList=[]
+    for nCode in gcCode:
+        where_clause="gridcode = {0}".format(nCode)
+        cursor=arcpy.UpdateCursor(rptrPolys, where_clause)
+        rowCt=1
+        for row in cursor:
+            gCode=row.getValue('gridcode')
+            gArea=row.getValue('Shape_Area')
+            firstName="ObsvrPt{0}_{1}".format(gCode,rowCt)
+            row.setValue("DESCRIPTION", firstName)
+            newList.append([firstName, gCode, gArea])
+            rowCt+=1
+            cursor.updateRow(row)
+        del cursor, row, rowCt
+    del nCode
+
+    #sort by "gridcode" (area[1]) in ascending order (1 - best, 2 - good) and "Area" (area[2]) in descending order
+    nameList=sorted(newList,key=lambda fld: (-fld[1], -fld[2]))
+
+    #take the top 10 from the list
+    tempList = nameList
+    if len(tempList)>10:
+        nameList=[]
+        nameList=tempList[0:2]
+    del tempList
+
+    arcpy.AddMessage("There will be {0} regions considered\n".format(len(nameList)))
+
+    RptrPoly_Lyr = arcpy.mapping.Layer(rptrPolys)
+    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,RptrPoly_Lyr,'BOTTOM')
+
+    for nList in nameList:
+        RptrPts=RepeaterAreas(RptrPoly_Lyr,DEM2, nList, df)
+        AddViewFields(RptrPts, antHeight, maxDist)
+        cursor=arcpy.UpdateCursor(RptrPts)
+        for row in cursor:
+            row.setValue('DESCRIPTION', nList[0])
+            cursor.updateRow(row)
+        if RepeaterLocations:
+            arcpy.Append_management(RptrPts, RepeaterLocations,"NO_TEST")
         else:
-            firstName="ObsvrPt{1}_{0}".format(rptrList[-1],rowCtB)
-            rowCtB+=1
-        row.setValue("NAME", firstName)
-        nameList.append(firstName)
+            arcpy.Copy_management(RptrPts,RepeaterLocations)
+            RptrPts_Lyr = arcpy.mapping.Layer(RepeaterLocations)
+            arcpy.mapping.AddLayerToGroup(df,refGroupLayer,RptrPts_Lyr,'BOTTOM')
 
-    # Process for each Polygon
-    # if there are more than 3 locations for Best than do 5 "Best" locations
-    # Otherwise do 3 "Best" locations and 3 "Good" locations
-    RepeaterAreas(rptrPolys,DEM)
+        deleteFeature([RptrPts])
 
-    AddViewFields(outName, antHeight, rad2)
+    for nList in nameList:
+        UpdateSpatialFields(RepeaterLocations,nList[0])
+        RepeaterViewshed(RptrPts_Lyr, DEM2, nList[0],refGroupLayer, df, mxd)
 
-    RepeaterViewshed(Rptrpts, DEM)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    DEM_Clip="DEM_Clip"
-    IPP = "Planning Point"
-    IPP_dist = "IPPTheoDistance"
-    Elev_Same="Elev_Same"
-    Elev_Up = "Elev_Up"
-    Elev_Down="Elev_Down"
-
-
-    Prob = ElevProb.split(',')
-    ProbElev=map(int,Prob)
-
-    Dist = ElevDists.split(',')
-    Distances=map(float,Dist)
-    Distances.append(0)
-    Distances.sort()
-
-
-    SubNum = int(SubNum)
-
-    if bufferUnit =='kilometers':
-        mult = 1.6093472
-    else:
-        mult = 1.0
-
-    theDist = float(TheoDist)*mult
-    TheoSearch = "{0} {1}".format(theDist, bufferUnit)
-
-    Distances = [k*mult for k in Distances]
-    distUp = Distances[1]
-    distDown = Distances[2]
-
-    try:
-        arcpy.Delete_management(IPP_dist)
-    except:
-        pass
-
-    # Buffer around IPP
-    where1 = '"Subject_Number" = ' + str(SubNum)
-    where2 = ' AND "IPPType" = ' + "'" + ippType + "'"
-    whereAll = where1 + where2
-
-    arcpy.SelectLayerByAttribute_management(IPP, "NEW_SELECTION", whereAll)
-
-    # Process: Buffer for theoretical search area
-    arcpy.Buffer_analysis(IPP, IPP_dist, TheoSearch)
-
-    desc = arcpy.Describe(IPP_dist)
-    extent = desc.extent
-    arcpy.env.extent = IPP_dist
-
-    ########################
-    arcpy.Clip_management(DEM2, "#", DEM_Clip, IPP_dist, "", "ClippingGeometry")
-    ##DEM_Clip = DEM2
-    ########################
-    DEM_Clip = checkSR(DEM_Clip)
-
-    desc=arcpy.Describe(IPP)
-    shapeName=desc.ShapeFieldName
-    arcpy.AddMessage("\n")
-    for row in arcpy.SearchCursor(IPP, whereAll):
-        feat=row.getValue(shapeName)
-        pnt=feat.getPart()
-        cellPt="{0} {1}".format(pnt.X, pnt.Y)
-        # Determine the elevation at the IPP
-        result = (arcpy.GetCellValue_management(DEM_Clip, cellPt))
-        cellElev = int(float(result.getOutput(0)))
-        # Print x,y coordinates of each point feature
-        arcpy.AddMessage("The coordinates at the {0} are: {1}, {2}".format(ippType, pnt.X, pnt.Y))
-        arcpy.AddMessage("And the elevation is at the {1} is: {0}".format(cellElev, ippType))
-    del row
-
-    #####
-    # IPP Elevation = cellelev
-    # Same Elevation
-    OutRas = Con((((cellElev-10) <= Raster(DEM_Clip))  &  (Raster(DEM_Clip)  <= (cellElev+10))),ProbElev[0],0)
-    OutRas.save(Elev_Same)
-
-
-    # Overall up
-    OutRas = Con((((cellElev+10) < Raster(DEM_Clip))  &  (Raster(DEM_Clip)  <= (cellElev+distUp))),ProbElev[1],0)
-    ##OutRas((((cellElev+10) < DEM_Clip)  &  (DEM_Clip  <= (640+48))),ElevProb[1],0)
-    ##OutRas((((cellElev+48) < DEM_Clip)  &  (DEM_Clip  <= (640+100))),ElevProb[1],0)
-    ##OutRas((((cellElev+100) < DEM_Clip)  &  (DEM_Clip  <= (640+370))),ElevProb[1],0)
-    OutRas.save(Elev_Up)
-
-    # Overall down
-    OutRas=Con((((cellElev-distDown) <= Raster(DEM_Clip))  &  (Raster(DEM_Clip)  < (cellElev-10))),ProbElev[2],0)
-    ##OutRas((((cellElev-40) <= DEM_Clip)  &  (DEM_Clip  < (cellElev-10))),ElevProb[2],0)
-    ##OutRas((((cellElev-86) <= DEM_Clip)  &  (DEM_Clip  < (cellElev-40))),ElevProb[2],0)
-    ##OutRas((((cellElev-203) <= DEM_Clip)  &  (DEM_Clip  < (cellElev-86))),ElevProb[2],0)
-    OutRas.save(Elev_Down)
-
-    OutRas=(Raster(Elev_Same)+Raster(Elev_Up)+Raster(Elev_Down))
-    OutRas.save(Elev_Model)
-
-    refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
-##    ElevModel_Lyr = arcpy.MakeRasterLayer_management(Elev_Model, "Elevation Model")
-##    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,ElevModel_Lyr.getOutput(0),'TOP')
-    ElevModel_Lyr = arcpy.mapping.Layer(Elev_Model)
-    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,ElevModel_Lyr,'TOP')
-
-
-    fcList=["IPPTheoDistance","Elev_Same","Elev_Up", "Elev_Down", "DEM_Clip"]
-
-    for gg in fcList:
-        if arcpy.Exists(gg):
-            try:
-                arcpy.Delete_management(wrkspc + '\\' + gg)
-            except:
-                pass
+    lyr = arcpy.mapping.ListLayers(mxd, RptrPoly_Lyr.name, df)[0]
+    arcpy.mapping.RemoveLayer(df,lyr)
+    arcpy.RefreshTOC()
+    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,RptrPoly_Lyr,'BOTTOM')
+##
+##    fcList=[rptrPolys]
+##    deleteFeature(fcList)
