@@ -120,6 +120,11 @@ if __name__ == '__main__':
         cOpPeriod=arcpy.GetCount_management(Operation_Period)
         if int(cOpPeriod.getOutput(0)) > 0:
             # Process: Calculate Field
+            fieldnames = [f.name for f in arcpy.ListFields(Operation_Period)]
+            if "Period_Text" in fieldnames:
+                pass
+            else:
+                 arcpy.AddField_management(Operation_Period,"Period_Text", "TEXT")
             arcpy.CalculateField_management(Operation_Period, "Period_Text", "!Period!", "PYTHON_9.3", "")
 
             # Process: Table To Domain (3)

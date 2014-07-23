@@ -45,6 +45,12 @@ def copyanything(src, dst):
 
 #in_fc  - Source Folder
 in_fc = "C:\MapSAR_Ex\Template"
+# Set date and time vars
+timestamp = ''
+now = datetime.datetime.now()
+todaydate = now.strftime("%m_%d")
+todaytime = now.strftime("%H_%M_%p")
+timestamp = '{0}_{1}'.format(todaydate,todaytime)
 
 #out_fc  - Target Folder
 out_fc = arcpy.GetParameterAsText(0)
@@ -59,6 +65,24 @@ if output_coordinate_system == '#' or not output_coordinate_system:
 #Set the transformation
 transformation = arcpy.GetParameterAsText(2)
 
+# Get initial operational information: Subject Name, Incidnet Name, Incident
+# Number and Lead Agency
+SubName = arcpy.GetParameterAsText(3)
+if SubName == '#' or not SubName:
+    arcpy.AddMessage("Subject information can be entered at a later time")
+
+IncidName = arcpy.GetParameterAsText(4)
+if IncidName == '#' or not IncidName:
+    arcpy.AddMessage("Incident information can be entered at a later time")
+
+IncidNum = arcpy.GetParameterAsText(5)
+if IncidNum == '#' or not IncidNum:
+    arcpy.AddMessage("Incident information can be entered at a later time")
+
+LeadAgency = arcpy.GetParameterAsText(6)
+if LeadAgency == '#' or not LeadAgency:
+    arcpy.AddMessage("Lead Agency information can be entered at a later time")
+
 if (output_coordinate_system != "") and (output_coordinate_system != "#"):
     sr = output_coordinate_system
 
@@ -70,8 +94,10 @@ if (output_coordinate_system != "") and (output_coordinate_system != "#"):
 copyanything(in_fc, out_fc)
 
 # Set environment settings
-templ= in_fc  + '\\SAR_Default.gdb'
-wrkspc = out_fc + '\\SAR_Default.gdb'
+templ= os.path.join(in_fc,'SAR_Default.gdb')
+wrkspc = os.path.join(out_fc,'SAR_Default.gdb')
+##templ= in_fc  + '\\SAR_Default.gdb'
+##wrkspc = out_fc + '\\SAR_Default.gdb'
 env.workspace = wrkspc
 
 
@@ -115,22 +141,104 @@ except Exception as e:
 arcpy.Compact_management(templ)
 arcpy.Compact_management(wrkspc)
 
-
-mxd_nA = out_fc + '\\IncidentNo.mxd'
-
-##mxd_nB = "%r"%mxd_nA
-##mxd_name = mxd_nB[2:-1]
-
-##
+mxd_nA = os.path.join(out_fc,'IncidentNo.mxd')
 mxd = arcpy.mapping.MapDocument(mxd_nA)
+
 df = arcpy.mapping.ListDataFrames(mxd)[0]
+df.name = IncidName # Set the name of the main dataframe to the Incident Name
 
 df.spatialReference = sr
 
 # Add the SARToolBox
-arcpy.AddToolbox("C:\\MapSAR_Ex\\Tools\\SAR_Toolbox100.tbx")
+# arcpy.AddToolbox("C:\\MapSAR_Ex\\Tools\\SAR_Toolbox100.tbx")
 
 mxd.save()
+
+if IncidNum:
+    mxd_nB = os.path.join(out_fc, (IncidNum + '.mxd'))
+    arcpy.AddMessage('Save map as {0}'.format(mxd_nB))
+    mxd.saveACopy(mxd_nB)
+    del mxd
+    del df
+    os.remove(mxd_nA)
+    mxd = arcpy.mapping.MapDocument(mxd_nB)
+    df = arcpy.mapping.ListDataFrames(mxd)[0]
+
+
+if SubName:
+    SubjectInfo = os.path.join(wrkspc,"Subject_Information")
+    cursor = arcpy.UpdateCursor(SubjectInfo)
+    for row in cursor:
+        row.setValue('Name', SubName)
+        cursor.updateRow(row)
+    arcpy.AddMessage("update Subject Information domain")
+    arcpy.TableToDomain_management(SubjectInfo, "Subject_Number", "Name", wrkspc, "Subject_Number", "Subject_Number", "REPLACE")
+    try:
+        arcpy.SortCodedValueDomain_management(wrkspc, "Subject_Number", "DESCRIPTION", "ASCENDING")
+    except:
+        pass
+else:
+    arcpy.AddMessage("You have not provided a valid Subject Name")
+
+if LeadAgency:
+    LeadInfo =os.path.join(wrkspc,"Lead_Agency")
+    cursor = arcpy.UpdateCursor(LeadInfo)
+    for row in cursor:
+        row.setValue('Lead_Agency', LeadAgency)
+        cursor.updateRow(row)
+    arcpy.AddMessage("update Lead Agency domain")
+    arcpy.TableToDomain_management(LeadInfo, "Lead_Agency", "Lead_Agency", wrkspc, "Lead_Agency", "Lead_Agency", "REPLACE")
+    try:
+        arcpy.SortCodedValueDomain_management(wrkspc, "Lead_Agency", "DESCRIPTION", "ASCENDING")
+    except:
+        pass
+else:
+    arcpy.AddMessage("You have not provided a valid Lead Agency")
+
+
+if IncidName and IncidNum:
+    IncidInfo =os.path.join(wrkspc,"Incident_Info")
+    cursor = arcpy.UpdateCursor(IncidInfo)
+    for row in cursor:
+        row.setValue('Incident_Name', IncidName)
+        row.setValue('Incident_Number', IncidNum)
+        row.setValue('Lead_Agency', LeadAgency)
+        cursor.updateRow(row)
+else:
+    arcpy.AddMessage("You have not provided a valid Incident Name and/or Number")
+
+arcpy.AddMessage("update Incident Information domain")
+arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
+try:
+    arcpy.SortCodedValueDomain_management(wrkspc, "Incident_Name", "DESCRIPTION", "ASCENDING")
+except:
+    pass
+
+
+if IncidName and IncidNum:
+    OpInfo = os.path.join(wrkspc,"Operation_Period")
+
+    cursor = arcpy.UpdateCursor(OpInfo)
+    for row in cursor:
+        row.setValue('Period', 1)
+        cursor.updateRow(row)
+    # Update Operational Period Information
+    arcpy.AddMessage("update Operation Period domain")
+
+    fieldnames = [f.name for f in arcpy.ListFields(OpInfo)]
+    if "Period_Text" in fieldnames:
+        pass
+    else:
+         arcpy.AddField_management(OpInfo,"Period_Text", "TEXT")
+
+    arcpy.CalculateField_management(OpInfo, "Period_Text", "!Period!", "PYTHON_9.3", "")
+    arcpy.TableToDomain_management(OpInfo, "Period", "Period_Text", wrkspc, "Period", "Period_Text", "REPLACE")
+    try:
+        arcpy.SortCodedValueDomain_management(wrkspc, "Period", "DESCRIPTION", "ASCENDING")
+    except:
+        pass
+
+
 del mxd
 
 ##

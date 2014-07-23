@@ -134,10 +134,9 @@ def AddViewFields(obsvrPts, antHeight, rad2):
     return()
 
 
-def RandomPts(outName, wrkspc, fcExtent):
+def RandomPts(outName, wrkspc, fcExtent, numPoints=10):
     #Creates random points throughout fcExtent
     obsvrName=[]
-    numPoints = 10
     minDistance = "100 Meters"
     arcpy.CreateRandomPoints_management(wrkspc, outName, fcExtent, "", numPoints, minDistance)
     return()
@@ -381,8 +380,9 @@ if __name__ == '__main__':
     if UserSelect=="System":
         #Does the Search Boundary exist?
         cSearchArea=arcpy.GetCount_management(fcExtent)
+        numPoints = 10
         if int(cSearchArea.getOutput(0)) == 1:
-            RandomPts(outName, wrkspc, fcExtent)
+            RandomPts(outName, wrkspc, fcExtent,numPoints)
             obsvrPts= outName
             ObsvrPts_Lyr = arcpy.mapping.Layer(obsvrPts)
             arcpy.mapping.AddLayerToGroup(df,refGroupLayer,ObsvrPts_Lyr,'BOTTOM')
@@ -443,7 +443,7 @@ if __name__ == '__main__':
         for row in cursor:
             gCode=row.getValue('gridcode')
             gArea=row.getValue('Shape_Area')
-            firstName="ObsvrPt{0}_{1}".format(gCode,rowCt)
+            firstName="RptrPt{0}_{1}".format(gCode,rowCt)
             row.setValue("DESCRIPTION", firstName)
             newList.append([firstName, gCode, gArea])
             rowCt+=1
@@ -456,9 +456,9 @@ if __name__ == '__main__':
 
     #take the top 10 from the list
     tempList = nameList
-    if len(tempList)>10:
+    if len(tempList)>5:
         nameList=[]
-        nameList=tempList[0:2]
+        nameList=tempList[0:4]
     del tempList
 
     arcpy.AddMessage("There will be {0} regions considered\n".format(len(nameList)))
