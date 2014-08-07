@@ -24,7 +24,7 @@
 #-------------------------------------------------------------------------------
 
 # Take courage my friend help is on the way
-import arcpy, time
+import arcpy, time,os
 from arcpy import env
 from types import *
 
@@ -35,9 +35,10 @@ def checkNoneType(variable):
         result = variable
     return result
 
-
-# Set overwrite option
-arcpy.env.overwriteOutput = True
+# Environment variables
+wrkspc=arcpy.env.workspace
+env.overwriteOutput = "True"
+arcpy.env.extent = "MAXOF"
 
 output = arcpy.GetParameterAsText(0)
 AssignNumber = arcpy.GetParameterAsText(1)
@@ -53,24 +54,30 @@ fc4 = "Search Segments"
 fc5 = "Hasty_Points"
 fc6 = "Hasty_Line"
 fc7 = "Hasty_Segments"
+fc10 = "Air Search Pattern"
 
-clearLyrs = [fc4, fc5, fc6, fc7]
-lyrvis = [0,0,0,0]
+kmlMap = 'No'
+gpxMap = 'No'
+
+clearLyrs = [fc4, fc5, fc6, fc7, fc10]
+lyrvis = [0,0,0,0,0]
 disView = mxd.activeView
 
 kk=0
 for clearLyr in clearLyrs:
-    lyr = arcpy.mapping.ListLayers(mxd, clearLyr,df)[0]
-    arcpy.SelectLayerByAttribute_management(lyr, "CLEAR_SELECTION")
-    if lyr.visible == True:
-        lyrvis[kk]=1
-    else:
-        lyrvis[kk]=0
-    kk+=1
-    lyr.visible = False
-
+    try:
+        lyr = arcpy.mapping.ListLayers(mxd, clearLyr,df)[0]
+        arcpy.SelectLayerByAttribute_management(lyr, "CLEAR_SELECTION")
+        if lyr.visible == True:
+            lyrvis[kk]=1
+        else:
+            lyrvis[kk]=0
+        kk+=1
+        lyr.visible = False
+    except:
+        arcpy.AddWarning("Problem clearing layer {0}".format(clearLyr))
+        pass
 del kk
-
 ###############
 fc1="Incident_Info"
 
@@ -201,7 +208,6 @@ for AssNum in AssignNum:
         #
 
 ######
-
         fc_lyr = "none"
         fc = "none"
         where4 = '"Area_Name" = ' + "'" + TaskMap + "'"
@@ -249,6 +255,15 @@ for AssNum in AssignNum:
                     else:
                         fc = fc7
                         symbologyLayer = arcpy.mapping.ListLayers(mxd,"Hasty_Segments",df)[0]
+
+            if arcpy.Exists(fc10):
+                rows4 = arcpy.SearchCursor(fc10, where4)
+                for row4 in rows4:
+                    if fc != "none":
+                        arcpy.AddWarning("Another feature has the same name")
+                    else:
+                        fc = fc10
+                        symbologyLayer = arcpy.mapping.ListLayers(mxd,"Air Search Pattern",df)[0]
 
         except:
             arcpy.AddError("failed to get feature layer")
@@ -386,6 +401,7 @@ for AssNum in AssignNum:
                     outFile = output + "/" + str(TaskNo) + "_MAP.pdf"
                 else:
                     outFile = output + "/" + str(PlanNo) + "_MAP.pdf"
+
 
 ##                    if fname == True:
 ##                        outFile = output + "/" + str(TaskNo) + "_aerial.pdf"
@@ -613,12 +629,42 @@ for AssNum in AssignNum:
 
                     del shpType
                     del filegpx
+
             else:
                 arcpy.AddMessage('No gpx file created')
 
         except:
             arcpy.AddWarning("Unable to produce gpx for Assignment: " + where4)
-##################################
+##########################################
+
+##########################################
+## Create kml file for task
+    ##Automate map production - July 27, 2012
+        try:
+            kmlMap = row.getValue("Create_kml")
+            if kmlMap == 'Yes':
+                where4 = '"Area_Name" = ' + "'" + TaskMap + "'"
+
+                if fc == "none":
+                    arcpy.AddWarning("No features had this area name and no KML/KMZ created.")
+                else:
+                    if fname == True:
+                        filekml = output + "/" + str(TaskNo) + "_KML.kmz"
+                    else:
+                        filekml = output + "/" + str(PlanNo) + "_KML.kmz"
+
+                    fc_lyr = arcpy.mapping.Layer(fc)
+                    arcpy.SelectLayerByAttribute_management(fc_lyr,"NEW_SELECTION",where4)
+                    fc_lyr.visible=True
+                    arcpy.AddMessage("Creating KML/KMZ file for Assignment Number: " +str(AssNum) +'\n')
+                    arcpy.LayerToKML_conversion(fc_lyr,filekml,ignore_zvalue="CLAMPED_TO_GROUND")
+                    fc_lyr.visible=False
+
+            else:
+                arcpy.AddMessage('No KML/KMZ file created')
+
+        except:
+            arcpy.AddWarning("Unable to produce KML/KMZ for Assignment: " + where4)
 
 
         arcpy.AddMessage(" ")
@@ -657,7 +703,7 @@ del TaskNo
 del PlanNo
 del gpxMap
 del PrintMap
-del fc, fc1, fc2, fc3, fc4,fc5,fc6,fc7,fc8,fc9
+del fc, fc1, fc2, fc3, fc4,fc5,fc6,fc7,fc8,fc9, fc10
 del clearLyrs
 del lyrvis
 del disView

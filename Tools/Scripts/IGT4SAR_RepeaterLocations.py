@@ -344,10 +344,12 @@ if __name__ == '__main__':
     antHeight = arcpy.GetParameterAsText(4)
     if antHeight == '#' or not antHeight:
         antHeight = 15 # provide a default value if unspecified
+    antHeight = int(antHeight)
 
     maxDist = arcpy.GetParameterAsText(5) # Desired units
     if maxDist == '#' or not maxDist:
         maxDist = 5000 # provide a default value if unspecified
+    maxDist = int(maxDist)
 
     arcpy.AddMessage("\n")
 
@@ -375,7 +377,10 @@ if __name__ == '__main__':
     Check if user is using System values which are Random Points distributed
     throughout the search area, or is user planning to use a User Defined feature
     '''
-    refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Communications*',df)[0]
+    try:
+        refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Communications*',df)[0]
+    except:
+        refGroupLayer=""
 
     if UserSelect=="System":
         #Does the Search Boundary exist?
@@ -397,7 +402,7 @@ if __name__ == '__main__':
         # Check fields inprep for Observer
 
     #Check to see if the feature as the appropriate fields
-    AddViewFields(obsvrPts, antHeight, maxDist)
+    AddViewFields(obsvrPts, antHeight, (maxDist*2))
 
     outObsPoints = ObserverPoints(DEM2,obsvrPts, 1, "CURVED_EARTH", 0.13)
     outObsPoints.save(rptrView)
@@ -411,7 +416,7 @@ if __name__ == '__main__':
 
 
     # Delete any polygons that have a area smaller than the DEM cell size squared
-    shapeArea=1.1*XCell*XCell
+    shapeArea=2.0*XCell*XCell
 
     expression = "Shape_Area <= " + str(shapeArea) + "OR gridcode = 0"
     arcpy.AddMessage("Delete regions with Area less than {0} and gridcode = 0 (no pts visible)\n".format(shapeArea))
@@ -466,9 +471,10 @@ if __name__ == '__main__':
     RptrPoly_Lyr = arcpy.mapping.Layer(rptrPolys)
     arcpy.mapping.AddLayerToGroup(df,refGroupLayer,RptrPoly_Lyr,'BOTTOM')
 
+    maxDistDouble = int(2.5*maxDist)
     for nList in nameList:
         RptrPts=RepeaterAreas(RptrPoly_Lyr,DEM2, nList, df)
-        AddViewFields(RptrPts, antHeight, maxDist)
+        AddViewFields(RptrPts, antHeight, maxDistDouble)
         cursor=arcpy.UpdateCursor(RptrPts)
         for row in cursor:
             row.setValue('DESCRIPTION', nList[0])

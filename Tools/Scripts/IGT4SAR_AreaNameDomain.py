@@ -41,7 +41,8 @@ def appendName(pFeat,myList):
         AName_list=[]
         while row1:
             AName = row1.getValue("Area_Name")
-            AName_list.append(AName)
+            if AName != "ROW":
+                AName_list.append(AName)
             #arcpy.AddMessage(AName)
 
             row1 = rows1.next()
@@ -54,68 +55,73 @@ def appendName(pFeat,myList):
     return myList
 
 
+def AreaNamesUpdate(workspc):
+    fc1= "Area_Names"
+    fc = ["Hasty_Points", "Hasty_Line", "Hasty_Segments", "Search_Segments", "AirSearchPattern"]
+    myList =[]
+
+    #arcpy.AddMessage("Area Name ")
+    #try:
+    for pFeat in fc:
+        appendName(pFeat,myList)
+
+    # Remove duplicates by turning the list into a set and
+    # then turning the set back into a list
+
+    checked=[]
+    for j in myList:
+        if j not in checked:
+            checked.append(j)
+
+    myList = checked
+    del checked
+
+    arcpy.DeleteRows_management(fc1)
+
+    for xd in myList:
+        arcpy.AddMessage(xd)
+
+        rows = arcpy.InsertCursor(fc1)
+
+        row = rows.newRow()
+        row.Area_Name = xd
+        rows.insertRow(row)
+
+        del rows
+        del row
+
+    domTable = fc1
+    codeField = "Area_Name"
+    descField = "Area_Name"
+    dWorkspace = workspc
+    domName = "Area_Names"
+    domDesc = "Search area names"
+
+
+    # Process: Create a domain from an existing table
+    arcpy.TableToDomain_management(domTable, codeField, descField, dWorkspace, domName, domDesc,"REPLACE")
+
+
+    del fc1
+
+
+
+    ##except:
+    ##    # Get the tool error messages
+    ##    #
+    ##    msgs = "All tasks have been processed"
+    ##
+    ##    # Return tool error messages for use with a script tool
+    ##    #
+    ##    arcpy.AddWarning(msgs)
+    ##    # Print tool error messages for use in Python/PythonWin
+    ##    #
+    ##    print msgs
+
 ########
 # Main Program starts here
 #######
-
-fc1= "Area_Names"
-fc = ["Hasty_Points", "Hasty_Line", "Hasty_Segments", "Search_Segments"]
-myList =[]
-
-#arcpy.AddMessage("Area Name ")
-#try:
-for pFeat in fc:
-    appendName(pFeat,myList)
-
-# Remove duplicates by turning the list into a set and
-# then turning the set back into a list
-
-checked=[]
-for j in myList:
-    if j not in checked:
-        checked.append(j)
-
-myList = checked
-del checked
-
-arcpy.DeleteRows_management(fc1)
-
-for xd in myList:
-    arcpy.AddMessage(xd)
-
-    rows = arcpy.InsertCursor(fc1)
-
-    row = rows.newRow()
-    row.Area_Name = xd
-    rows.insertRow(row)
-
-    del rows
-    del row
-
-domTable = fc1
-codeField = "Area_Name"
-descField = "Area_Name"
-dWorkspace = workspc
-domName = "Area_Names"
-domDesc = "Search area names"
+if __name__ == '__main__':
+    AreaNamesUpdate(workspc)
 
 
-# Process: Create a domain from an existing table
-arcpy.TableToDomain_management(domTable, codeField, descField, dWorkspace, domName, domDesc,"REPLACE")
-
-
-del fc1
-
-
-
-##except:
-##    # Get the tool error messages
-##    #
-##    msgs = "All tasks have been processed"
-##
-##    # Return tool error messages for use with a script tool
-##    #
-##    arcpy.AddWarning(msgs)
-##    # Print tool error messages for use in Python/PythonWin
-##    #
-##    print msgs

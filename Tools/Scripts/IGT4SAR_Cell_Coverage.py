@@ -29,7 +29,7 @@ import arcpy, sys, arcgisscripting, os
 import arcpy.mapping
 from arcpy import env
 from arcpy.sa import *
-import IGT4SAR_Geodesic
+import IGT4SAR_geodesic_Cell
 
 # Create the Geoprocessor objects
 gp = arcgisscripting.create()
@@ -95,30 +95,29 @@ def ValidateNewLocation(Newpoint,NewCoord):
     else:
         sys.exit(arcpy.AddError("Please check the Point Coordinates\n"))
 
-def ValidateNewInfo(NewInfo,tParam, towerParam):
-    if NewInfo=='empty':
-        sys.exit(arcpy.AddError("Please check the tower/antenna information \n"))
-    else:
-        arcpy.AddMessage('Tower / Antenna Properties')
-        nInfo=NewInfo.split(',')
-        for k in range(len(nInfo)):
-            arcpy.AddMessage('{0} : {1}'.format(towerParam[k],nInfo[k]))
-            try:
-                kInt=int(nInfo[k])
-            except:
-                sys.exit(arcpy.AddError('Tower properties need to be numeric\n'))
+def ValidateNewInfo(nInfo,tParam, towerParam):
+    arcpy.AddMessage("\n")
+    for k in range(len(nInfo)):
+        arcpy.AddMessage('{0} : {1}'.format(towerParam[k],nInfo[k]))
+        try:
+            if k==0:
+                nInfo[k] = str(nInfo[k])
+            else:
+                nInfo[k]=int(nInfo[k])
+        except:
+            sys.exit(arcpy.AddError('Tower properties need to be numeric\n'))
 
-        if len(nInfo)!= 4:
-            sys.exit(arcpy.AddError("Please Check Antenna/Tower Properties - each seperated by a comma\n"))
-        else:
-            AntInfo=dict((tParam[i],int(nInfo[i])) for i in range(len(tParam)))
-            # Use is AntInfo.get("aBearing")
-            return(AntInfo)
+    if len(nInfo)!= 5:
+        sys.exit(arcpy.AddError("Please Check Antenna/Tower Properties - each seperated by a comma\n"))
+    else:
+        AntInfo=dict((tParam[i],nInfo[i]) for i in range(len(tParam)))
+        # Use is AntInfo.get("aBearing")
+        return(AntInfo)
 
 def AddViewFields(in_fc, fldNames):
     obsvrName=[]
     fName=[fldNames[k][0] for k in range(len(fldNames))]
-    if int(arcpy.GetCount_management(in_fcs).getOutput(0)) > 0:
+    if int(arcpy.GetCount_management(in_fc).getOutput(0)) > 0:
         fieldnames = [f.name for f in arcpy.ListFields(in_fc)]
         if "OID" in fieldnames:
             OID="OID"
@@ -135,82 +134,32 @@ def AddViewFields(in_fc, fldNames):
             if field[0] in chkList:
                 arcpy.AddField_management(*(in_fc,) + field)
 
-        del fieldnames, cursor, row, ct, cnt, compList, descp, field
+        del fieldnames, compList, field
     del fName
+    return(chkList)
+
+def WritePointGeometry(fc,xy):  #Only works for single point
+##    Could be used with version >= 10.1
+##    cursor = arcpy.da.InsertCursor(fc, ["SHAPE@XY"])
+##    cursor.insertRow([xy])
+##    del cursor
+
+##   Use arcpy.InsertCursor to stay compatible with ArcMAP 10.0
+    cur = arcpy.InsertCursor(fc)
+    pnt = arcpy.Point(xy[0],xy[1])
+    feat = cur.newRow()
+    feat.shape = pnt
+    cur.insertRow(feat)
+    del cur
     return()
 
-def Geodesic(in_fc,unProjCoordSys,AntInfo,timestamp):
-    # Execute CreateFeatureclass for Sector
-    inDataset = "CellSec_%s.shp" % (timestamp)
-    coordList = []
-    k=0
-    rows = arcpy.SearchCursor(in_fc, '', unProjCoordSys)
-
-    for row in rows:
-        feat = row.getValue(shapefieldname)
-        pnt = feat.getPart()
-        k+=1
-
-        # A list of features and coordinate pairs
-        pnt.X=pnt.X
-        pnt.Y=pnt.Y
-        coordList1 = IGT4SAR_Geodesic.Geodesic(pnt, float(AntInfo.get("aBearing")), \
-                     float(AntInfo.get("aSecAng")), float(AntInfo.get("aRange")))
-        coordList.append(coordList1)
-
-    del row
-    del rows
-    # Create empty Point and Array objects
-    #
-    array = arcpy.Array()
-
-    # A list that will hold each of the Polygon objects
-    #
-    featureList = []
-
-    for feature in coordList:
-        for coordPair in feature:
-            # For each coordinate pair, set the x,y properties and add to the
-            #  Array object.
-            #
-            point = arcpy.Point(float(coordPair[0]),float(coordPair[1]))
-
-            array.add(point)
-        # Create a Polygon object based on the array of points
-        #
-        polygon = arcpy.Polygon(array, unProjCoordSys)
-        # Clear the array for future use
-        #
-        array.removeAll()
-
-        # Append to the list of Polygon objects
-        #
-        featureList.append(polygon)
-
-    # Create a copy of the Polygon objects, by using featureList as input to
-    #  the CopyFeatures tool.
-    #
-    arcpy.CopyFeatures_management(featureList, inDataset)
-
-    arcpy.Project_management(inDataset, out_fc, outCS)
-    arcpy.Delete_management(inDataset)
-
-    del coordList
-    del polygon
-    del featureList
-    del feature
-
-
-def RepeaterViewshed(RptrPts_Lyr, DEM, nList,refGroupLayer, df, mxd):
+def CellViewshed(CellPts_Lyr, DEM, refGroupLayer, df, mxd):
     # Set layer that output symbology will be based on
-    expression = "DESCRIPTION = '{0}'".format(nList)
-    arcpy.SelectLayerByAttribute_management(RptrPts_Lyr, "NEW_SELECTION", expression)
-
     # Set local variables
     zFactor = 1; useEarthCurvature = "CURVED_EARTH"; refractivityCoefficient = 0.15
 
     # Execute Viewshed
-    outViewshed = Viewshed(DEM, RptrPts_Lyr, zFactor, useEarthCurvature, refractivityCoefficient)
+    outViewshed = Viewshed(DEM, CellPts_Lyr, zFactor, useEarthCurvature, refractivityCoefficient)
     # Save the output
     outViewshed.save(nList)
     arcpy.RefreshCatalog(nList)
@@ -256,213 +205,345 @@ def deleteLayer(df,fcLayer):
 ########
 # Main Program starts here
 #######
+if __name__ == '__main__':
+    ## Script arguments
+    mxd,df = getDataframe()
+    # Set date and time vars
+    timestamp = ''
+    now = datetime.datetime.now()
+    todaydate = now.strftime("%m_%d")
+    todaytime = now.strftime("%H_%M_%p")
+    timestamp = '{0}_{1}'.format(todaydate,todaytime)
 
-## Script arguments
-mxd,df = getDataframe()
-# Set date and time vars
-timestamp = ''
-now = datetime.datetime.now()
-todaydate = now.strftime("%m_%d")
-todaytime = now.strftime("%H_%M_%p")
-timestamp = '{0}_{1}'.format(todaydate,todaytime)
+    #inFeature  - this is a point feature used to get the latitude and longitude of point.
+    inFeature = arcpy.GetParameterAsText(0)
+    if inFeature == '#' or not inFeature:
+        sys.exit(arcpy.AddError("You need to provide a valid Feature Class"))
 
-#inFeature  - this is a point feature used to get the latitude and longitude of point.
-inFeature = arcpy.GetParameterAsText(0)
-if inFeature == '#' or not inFeature:
-    sys.exit(arcpy.AddError("You need to provide a valid Feature Class"))
+    #out_fc - this will be the output feature for the sector.  May allow user to decide name or I may specify.
+    cellTowers =arcpy.GetParameterAsText(1)
+    if cellTowers == '#' or not cellTowers:
+        cellTowers = "empty"
 
-#out_fc - this will be the output feature for the sector.  May allow user to decide name or I may specify.
-cellTowers =arcpy.GetParameterAsText(1)
-if cellTowers == '#' or not cellTowers:
-    cellTowers = "empty"
+    NewCoord = arcpy.GetParameterAsText(2)
+    if NewCoord == '#' or not NewCoord:
+        NewCoord = "empty"
 
-NewCoord = arcpy.GetParameterAsText(2)
-if NewCoord == '#' or not NewCoord:
-    NewCoord = "empty"
+    NewPoint = arcpy.GetParameterAsText(3)
+    if NewPoint == '#' or not NewPoint:
+        NewPoint = "empty"
 
-NewPoint = arcpy.GetParameterAsText(3)
-if NewPoint == '#' or not NewPoint:
-    NewPoint = "empty"
+    NewInfo = arcpy.GetParameterAsText(4)
+    if NewInfo == '#' or not NewInfo:
+        NewInfo = "empty"
 
-NewInfo = arcpy.GetParameterAsText(4)
-if NewInfo == '#' or not NewInfo:
-    NewInfo = "empty"
+    NewGenSector = arcpy.GetParameterAsText(5)
+    if NewGenSector == '#' or not NewGenSector:
+        NewGenSector = "empty"
 
-NewGenSector = arcpy.GetParameterAsText(5)
-if NewGenSector == '#' or not NewGenSector:
-    NewGenSector = "empty"
+    NewViewshed = arcpy.GetParameterAsText(6)
+    if NewViewshed == '#' or not NewViewshed:
+        NewViewshed = "empty"
 
-NewViewshed = arcpy.GetParameterAsText(6)
-if NewViewshed == '#' or not NewViewshed:
-    NewViewshed = "empty"
+    DEM = arcpy.GetParameterAsText(7)
+    if DEM == '#' or not DEM:
+        DEM = "empty"
 
-DEM = arcpy.GetParameterAsText(7)
-if DEM == '#' or not DEM:
-    DEM = "empty"
+    arcpy.AddMessage('\n')
+    ## Variables
+    tParam=['aDescrip', 'aHeight','aBearing', 'aSecAng', 'aRange']
+    towerParam=['Description','Height','Bearing', 'Sector Angle', 'Range']
+    unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984', \
+                      SPHEROID['WGS_1984',6378137.0,298.257223563]],\
+                      PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
+    fldNamesA=[('OFFSETA', 'SHORT'),('OFFSETB', 'SHORT'), \
+              ('AZIMUTH1', 'SHORT'),('AZIMUTH2', 'SHORT'),('VERT1', 'SHORT'), \
+              ('VERT2', 'SHORT'),('RADIUS1', 'SHORT'),('RADIUS2', 'SHORT')]
+    fldNamesB=[('DESCRIPTION','TEXT'),('HEIGHT','SHORT'),('ANTSEC_DIR','SHORT'),('ANTSEC_DISP', 'SHORT'),('RANGE_MAX', 'SHORT')]
+    CellTowers = "CellTowers"
 
-arcpy.AddMessage('\n')
+    OFFSETA = 15
+    OFFSETB = 2
+    AZIMUTH1 = 0
+    AZIMUTH2 = 360
+    VERT1 = 90
+    VERT2 = -90
+    RADIUS1 = 0
+    RADIUS2 = 5000
+    obsvrDef=[OFFSETA,OFFSETB,AZIMUTH1,AZIMUTH2,VERT1,VERT2,RADIUS1,RADIUS2]
 
-## Variables
-tParam=['aHeight','aBearing', 'aSecAng', 'aRange']
-towerParam=['Height','Bearing', 'Sector Angle', 'Range']
-unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984', \
-                  SPHEROID['WGS_1984',6378137.0,298.257223563]],\
-                  PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
-fldNamesA=[('DESCRIPTION','TEXT'),('OFFSETA', 'SHORT'),('OFFSETB', 'SHORT'), \
-          ('AZIMUTH1', 'SHORT'),('AZIMUTH2', 'SHORT'),('VERT1', 'SHORT'), \
-          ('VERT2', 'SHORT'),('RADIUS1', 'SHORT'),('RADIUS2', 'SHORT')]
-fldNamesB=[('ANTSEC_DIR','SHORT'),('ANTSEC_DISP', 'SHORT'),('RANGE_MAX', 'SHORT')]
-CellTowers = "CellTowers"
 
-planPt = arcpy.mapping.Layer("Planning Point")
-# Use Describe to get a SpatialReference object
-descPlanPt = arcpy.Describe(planPt)
-shapefieldname = descPlanPt.ShapeFieldName
-PlanPtCS = descPlanPt.SpatialReference
-
-########################################################
-if inFeature == "Use Cell Towers Layer":
-    if cellTowers=="empty":
-        sys.exit(arcpy.AddError("Please select one or more Cell Tower to consider\n"))
-    else:
-        cTower = cellTowers.split(";")
-    ##
-########################################################
-
-# Check to see if the cell Tower Layer exists
-#
-# Get a List of Layers
-LyrList=arcpy.mapping.ListLayers(mxd, "", df)
-LyrName=[]
-for lyr in LyrList:
-    LyrName.append(lyr.name)
-
-if "Cellular" in LyrName:
-    refGroupLayerA = arcpy.mapping.ListLayers(mxd,'*Cellular*',df)[0]
-else:
-    refGroupLayerA = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis',df)[0]
-
-if "Point_Features" in LyrName:
-    refGroupLayerB = arcpy.mapping.ListLayers(mxd,'*Point_Features*',df)[0]
-
-if "CellTowers" in LyrName:
-    in_fc = arcpy.mapping.Layer(CellTowers)
+    planPt = arcpy.mapping.Layer("Planning Point")
     # Use Describe to get a SpatialReference object
-else:
-    # Create a CellTowers Feature Class and Layer in the coordinate system defined by Planning Point
-    arcpy.CreateFeatureclass_management(wrkspc, CellTowers, "POINT", "", "DISABLED", "DISABLED", PlanPtCS)
-    in_fc = arcpy.mapping.Layer(CellTowers)
-    arcpy.mapping.AddLayerToGroup(df,refGroupLayerB,in_fc,'BOTTOM')
+    descPlanPt = arcpy.Describe(planPt)
+    shapefieldname = descPlanPt.ShapeFieldName
+    PlanPtCS = descPlanPt.SpatialReference
 
-desc = arcpy.Describe(in_fc)
-shapefieldname = desc.ShapeFieldName
-outCS = desc.SpatialReference
+    # Check to see if the cell Tower Layer exists
+    #
+    # Get a List of Layers
+    LyrList=arcpy.mapping.ListLayers(mxd, "*", df)
+    LyrName=[]
+    for lyr in LyrList:
+        LyrName.append(lyr.name)
+        if "CellTowers" in lyr.name:
+            arcpy.SelectLayerByAttribute_management(lyr, "CLEAR_SELECTION")
 
-# Check the field names in the Cell
-AddViewFields(in_fc, fldNamesA)
-AddViewFields(in_fc, fldNamesA)
+    if "Cellular" in LyrName:
+        refGroupLayerA = arcpy.mapping.ListLayers(mxd,'*Cellular*',df)[0]
+        arcpy.AddMessage("refGroupLayer = {0}".format(refGroupLayerA))
+        arcpy.AddMessage("line 297")
+    else:
+        refGroupLayerA = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis',df)[0]
 
+    if "Point_Features" in LyrName:
+        refGroupLayerB = arcpy.mapping.ListLayers(mxd,'*Point_Features*',df)[0]
+    ########################################################
 
-if inFeature == "New Location":
-    try:
-        AntInfo = ValidateNewInfo(NewInfo,tParam,towerParam)
-        arcpy.AddMessage(AntInfo)
-        # Use is AntInfo.get("aBearing")
-    except SystemError as err:
-        pass
+    if NewGenSector =="false" and NewViewshed == "false":
+        sys.exit(arcpy.AddError("You must select either to generate a Cell Sector or Estimate Coverage"))
 
-    try:
-        xCrd, yCrd = ValidateNewLocation(NewPoint,NewCoord)
-    except SystemError as err:
-        pass
-    #################################
-    ## Write geometry if NewLocation is True
-    cTower = "Temp_{0}".format(timestamp)
-    ## Create a temporary layer with either Projected c
-    if NewCoord=="Geographic (Long / Lat)":
-        ## Write new points to this temporary dataset
-        ## Is the Map in GCS?
-        if outCS == unProjCoordSys:
-            ## Directly write geometry to CellTowers using UpdateCursor
+    if NewViewshed == "true":
+        if DEM=="empty":
+            sys.exit(arcpy.AddError("Need to select DEM to estimate Cellular Coverage"))
+
+############################################################
+    if inFeature == "Use Cell Towers Layer":
+        if cellTowers=="empty":
+            sys.exit(arcpy.AddError("Please select one or more Cell Tower to consider if no towers are listed check that the 'DESCRIPTION' field in the 'CellTowers' layer is populated.  If there is no CellTower Layer than use 'New Location'\n "))
         else:
-            arcpy.CreateFeatureclass_management(wrkspc, cTower, "POINT", "", "DISABLED", "DISABLED", unProjCoordSys)
-            arcpy.Project_management(cTower, TempPoints, outCS)
-            arcpy.Append_management(TempPoints, CellTowers,"NO_TEST")
-            deleteFeature([fcList])
+            cTower = cellTowers.split(";")
+            cTower=[x.replace("'","") for x in cTower]
+            cTower=[x.encode('ascii') for x in cTower]
 
-    elif NewCoord == "Projected":
-        ## Assume New Locations in projected in same coordinate system as outCS
-        ## Directly write geometry to CellTowers using UpdateCursor
+            arcpy.AddMessage(cTower)
+            [arcpy.AddMessage(type(kk)) for kk in cTower]
+            if "CellTowers" in LyrName:
+                in_fc = arcpy.mapping.Layer(CellTowers)
 
-##  ^
-## ^|^
+                desc = arcpy.Describe(in_fc)
+                shapefieldname = desc.ShapeFieldName
+                outCS = desc.SpatialReference
 
-## Need to think about the above
+                chkListB = AddViewFields(in_fc, fldNamesB)
 
+                if len(chkListB)>0:
+                    for chk in chkListB:
+                        arcpy.AddError('You need to enter a value in {0}'.format(chk))
+                    sys.exit(1)
+                else:
+                    for tower in cTower:
+                        try:
+                            where_clause="DESCRIPTION = %s" % tower
+                            cursor = arcpy.SearchCursor(in_fc, where_clause)
+                        except:
+                            where_clause="DESCRIPTION = '%s'" % tower
+                            cursor = arcpy.SearchCursor(in_fc, where_clause)
+                        for row in cursor:
+                            aDescrip = row.getValue('DESCRIPTION')
+                            if len(aDescrip)<1:
+                                sys.exit(arcpy.AddError("Check DESCRIPTION in CellTower Layer for the selected Tower"))
 
+                            aHeight=row.getValue('HEIGHT')
+                            if aHeight is None:
+                                sys.exit(arcpy.AddError("Check HEIGHT in CellTower Layer for the selected Tower"))
+                            aBearing=row.getValue('ANTSEC_DIR')
+                            if aBearing is None:
+                                sys.exit(arcpy.AddError("Check ANTSEC_DIR in CellTower Layer for the selected Tower"))
 
+                            aSecAng =row.getValue('ANTSEC_DISP')
+                            if aSecAng is None:
+                                sys.exit(arcpy.AddError("Check ANTSEC_DISP in CellTower Layer for the selected Tower"))
 
+                            aRange =row.getValue('RANGE_MAX')
+                            if aRange is None:
+                                sys.exit(arcpy.AddError("Check RANGE_MAX in CellTower Layer for the selected Tower"))
 
-## Stopped Here
+                        nInfo=[aDescrip,aHeight,aBearing, aSecAng, aRange]
+                        AntInfo = ValidateNewInfo(nInfo,tParam,towerParam)
+            else:
+                sys.exit(arcpy.AddError("There is no CellTower Layer.  Run this tool using 'New Location'\n "))
+    ########################################################
+    elif inFeature == "New Location":
+        #First check to see if CellTowers Layer exists, if not create it.
+        if "CellTowers" in LyrName:
+            in_fc = arcpy.mapping.Layer(CellTowers)
+        else:
+            # Create a CellTowers Feature Class and Layer in the coordinate system defined by Planning Point
+            # Use default values to populate the data fields
+            arcpy.CreateFeatureclass_management(wrkspc, CellTowers, "POINT", "", "DISABLED", "DISABLED", PlanPtCS)
+            in_fc = arcpy.mapping.Layer(CellTowers)
+            arcpy.mapping.AddLayerToGroup(df,refGroupLayerB,in_fc,'BOTTOM')
+### Use Describe to get a SpatialReference object
+        desc = arcpy.Describe(in_fc)
+        shapefieldname = desc.ShapeFieldName
+        outCS = desc.SpatialReference
 
-# Default values for Cell Towers
-OFFSETA = aHeight
-OFFSETB = 2
-AZIMUTH1 = aBearing - aSecAng/2
-AZIMUTH2 = aBearing + aSecAng/2
-VERT1 = 90
-VERT2 = -90
-RADIUS1 = 0
-RADIUS2 = aRange
-obsvrDef=[OFFSETA,OFFSETB,AZIMUTH1,AZIMUTH2,VERT1,VERT2,RADIUS1,RADIUS2]
+        try:
+            if NewInfo=='empty':
+                sys.exit(arcpy.AddError("Please check the tower/antenna information \n"))
 
+            arcpy.AddMessage('Tower / Antenna Properties')
+            nInfo=NewInfo.split(',')
+            aDescrip = ["NL_{0}".format(timestamp)]
+            nInfo = aDescrip + nInfo
 
+            AntInfo = ValidateNewInfo(nInfo,tParam,towerParam)
+            # Use is AntInfo.get("aBearing")
+            # Default values for Cell Towers
+        except SystemError as err:
+            pass
 
+        try:
+            xCrd, yCrd = ValidateNewLocation(NewPoint,NewCoord)
+            xy=(xCrd,yCrd)
+        except SystemError as err:
+            pass
+        #################################
+        ## Write geometry if NewLocation is True
+        aTower = "Temp_{0}".format(timestamp)
+        ## Create a temporary feature class for the new point until it can be
+        ## appended into the existing CellTower feature class
+        if NewCoord=="Geographic (Long / Lat)":
+            ## Write new points to this temporary dataset
+            ## Is the Map in GCS?
+            if outCS != unProjCoordSys:
+                arcpy.CreateFeatureclass_management(wrkspc, aTower, "POINT", "", "DISABLED", "DISABLED", unProjCoordSys)
+                # use update Cursor to write the new geometry
+                indx = WritePointGeometry(aTower,xy)
+                # Project the temporary feature class to the OutCS coordinate system
+                arcpy.Project_management(aTower, TempPoints, outCS)
+                # Append points from temporary FC to the CellTowers layer
+                arcpy.Append_management(TempPoints, CellTowers,"NO_TEST")
+                # Delete the two temporary FC's
+                fcList = [aTower,TempPoints]
+                deleteFeature([fcList])
 
+            else:
+                ## Directly write geometry to CellTowers using UpdateCursor
+                WritePointGeometry(CellTowers,xy)
 
+        else:
+            ## Assume New Locations in projected in same coordinate system as outCS
+            ## Directly write geometry to CellTowers using UpdateCursor
+            WritePointGeometry(CellTowers,xy)
 
-
-
-
-
-
-
-
-## Check to see if all the values required are present
-## Get Values
-for cell in cTower:
-    expression = "DESCRIPTION = {0}".format(cell)
-
-    cursor=arcpy.UpdateCursor(in_fc, expression)
-    for row in cursor:
-        aHeight=row.getValue('gridcode')
-        gArea=row.getValue('Shape_Area')
-        firstName="RptrPt{0}_{1}".format(gCode,rowCt)
-        row.setValue("DESCRIPTION", firstName)
-        newList.append([firstName, gCode, gArea])
-        rowCt+=1
-        cursor.updateRow(row)
-    del cursor, row, rowCt
-#################################
-## Generate Sector
-if NewGenSector.upper()=="TRUE":
-    for cell in cTower:
-        expression = "DESCRIPTION = {0}".format(cell)
-        arcpy.AddMessage(expression)
-        arcpy.AddMessage(in_fc.name)
-        cursor=arcpy.SearchCursor(in_fc, expression)
+        indx=[]
+        cursor = arcpy.SearchCursor(CellTowers)
+        ################################ To DO #################
+        ## Check the field list and update values using the most recent point added
         for row in cursor:
+            indx.append(row.getValue("OBJECTID"))
+        CellID=max(indx)
+        del cursor
+        where1 = 'OBJECTID = {0}'.format(CellID)
+        cursor = arcpy.UpdateCursor(CellTowers,where1)
+        cTower=[AntInfo.get('aDescrip')]
+        for row in cursor:
+            for kk in range(len(fldNamesB)):
+                row.setValue(fldNamesB[kk][0],AntInfo.get(tParam[kk]))
+            # Calculate UTM and LAT/LONG
+            if outCS.type=='Projected':
+                pnt=row.Shape.getPart(0)
+                row.setValue('UTM_Easting',pnt.X)
+                row.setValue('UTM_Northing',pnt.Y)
+            else:
+                pnt=row.Shape.getPart(0)
+                row.setValue('LONGITUDE',pnt.X)
+                row.setValue('LATITUDE',pnt.Y)
+            cursor.updateRow(row)
 
-        AntInfo=dict((tParam[i],int(nInfo[i])) for i in range(len(tParam)))
-        # Use is AntInfo.get("aBearing")
+    nList=arcpy.mapping.ListLayers(mxd,'*CellTowers*',df)
+    for nL in nList:
+        cellTower_Layer=nL
+    arcpy.SelectLayerByAttribute_management(cellTower_Layer, "CLEAR_SELECTION")
 
-        arcpy.SelectLayerByAttribute_management(in_fc, "NEW_SELECTION", expression)
-        Geodesic(in_fc,unProjCoordSys,AntInfo,timestamp)
-#################################
-sys.exit()
-#################################
-## Viewshed Analysis
-if NewViewshed==True:
-    RepeaterViewshed(RptrPts_Lyr, DEM, nList,refGroupLayer, df, mxd)
+    arcpy.AddMessage('\n')
+    for tower in cTower:
+        where_clause="DESCRIPTION = '%s'" % tower
+        cursor = arcpy.UpdateCursor(cellTower_Layer, where_clause)
+        for row in cursor:
+            descript =row.getValue('DESCRIPTION')
+            aHeight =row.getValue('HEIGHT')
+            aBearing=row.getValue('ANTSEC_DIR')
+            aSecAng =row.getValue('ANTSEC_DISP')
+            aRange =row.getValue('RANGE_MAX')
+            AziChkL = aBearing - (1.1*aSecAng)/2
+            if AziChkL<0:
+                AziChkL=360+AziChkL
+            AziChkH = aBearing + (1.1*aSecAng)/2
+            if AziChkH>360:
+                AziChkH=AziChkH-360
 
-######################################################
+            row.setValue('OFFSETA',int(aHeight))
+            row.setValue('OFFSETB',2)
+
+            row.setValue('AZIMUTH1',AziChkL)
+            row.setValue('AZIMUTH2',AziChkH)
+            row.setValue('VERT1',90)
+            row.setValue('VERT2',-90)
+            row.setValue('RADIUS1',0)
+            row.setValue('RADIUS2',aRange)
+            cursor.updateRow(row)
+        del cursor
+        if not descript:
+            sys.exit(arcpy.AddError('Problem most likely do to improperly selected features'))
+        expression = 'DESCRIPTION = \'{0}\''.format(descript)
+        arcpy.SelectLayerByAttribute_management(cellTower_Layer, "NEW_SELECTION", expression)
+
+        out_fc="{0}_B{1}_Ang{2}_Rng{3}".format(descript.replace(" ","")[0:10],str(aBearing),str(aSecAng),str(int(aRange)))
+        inDataset="{0}\{1}".format(wrkspc, descript.replace(" ","")[0:5])
+        if NewGenSector=="true":
+            arcpy.AddMessage("Genrate Sector for {0}".format(descript))
+        ##        out_fc="B{0}_Ang{1}_Rng{2}".format(str(aBearing),str(aSecAng),str(int(aRange)))
+            IGT4SAR_geodesic_Cell.Geodesic_Main(cellTower_Layer, out_fc, aBearing, aSecAng, aRange,wrkspc)
+            out_fc_lyr="{0}_Lyr".format(out_fc)
+            arcpy.MakeFeatureLayer_management(out_fc,out_fc_lyr)
+            nList_Lyr = arcpy.mapping.Layer(out_fc)
+            nList_Lyr.name=out_fc
+            arcpy.mapping.RemoveLayer(df,nList_Lyr)
+        ##    deleteLayer(df,[nList_Lyr])
+            arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
+            try:
+                lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
+                symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\15 Cell Sector.lyr"
+                arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+            except:
+                pass
+
+        else:
+            arcpy.AddWarning("User did not select Sector")
+
+        if NewViewshed == "true":
+            if DEM=="empty":
+                sys.exit(arcpy.AddError("No DEM Selected"))
+            else:
+                arcpy.AddMessage("Estimate coverage for {0}\n".format(descript))
+                zFactor = 1; useEarthCurvature = "CURVED_EARTH"; refractivityCoefficient = 0.15
+
+                # Execute Viewshed
+                outViewshed = Viewshed(DEM, cellTower_Layer, zFactor, useEarthCurvature, refractivityCoefficient)
+                # Save the output
+                outRstr = "{0}_rstr".format(out_fc)
+                outViewshed.save(outRstr)
+                arcpy.RefreshCatalog(outRstr)
+
+                outRstrb = "{0}_rstrb".format(out_fc)
+                arcpy.MakeRasterLayer_management(Raster(outRstr),outRstrb)
+                nList_Lyr = arcpy.mapping.Layer(outRstrb)
+                nList_Lyr.name=outRstrb
+                arcpy.mapping.RemoveLayer(df,nList_Lyr)
+            ##    deleteLayer(df,[nList_Lyr])
+                arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
+                try:
+                    lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
+                    symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\10 Coverage Area.lyr"
+                    arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+                except:
+                    pass
+
+
+        else:
+            arcpy.AddWarning("User did not select Viewshed")
+        arcpy.SelectLayerByAttribute_management(cellTower_Layer, "CLEAR_SELECTION")
+

@@ -37,6 +37,7 @@ arcpy.env.overwriteOutput = "True"
 fc1="Search_Segments"
 fc2="Assignments"
 fc4 = "Hasty_Segments"
+fc5="AirSearchPattern"
 
 fieldName1="Area_Description"
 
@@ -56,6 +57,15 @@ while row1:
     AreaN =row1.Area_Name
     AreaN.encode('ascii','ignore')
     HSeg.append(str(AreaN))
+    row1 = rows1.next()
+
+ASeg = []
+rows1 = arcpy.SearchCursor(fc5)
+row1 = rows1.next()
+while row1:
+    AreaN =row1.Area_Name
+    AreaN.encode('ascii','ignore')
+    ASeg.append(str(AreaN))
     row1 = rows1.next()
 
 Areas=[]
@@ -104,7 +114,7 @@ for SegName in SName:
                 row1 = rows1.next()
             del row1, rows1
 
-        elif SgtName in HSeg:
+        elif SgName in HSeg:
             rows1 = arcpy.SearchCursor(fc4,where1)
             row1 = rows1.next()
             while row1:
@@ -112,6 +122,17 @@ for SegName in SName:
                 Area_Name.encode('ascii','ignore')
                 arcpy.AddMessage("Segment: " + Area_Name)
                 Area_Description = ""
+                row1 = rows1.next()
+            del row1, rows1
+
+        elif SgName in ASeg:
+            rows1 = arcpy.SearchCursor(fc5,where1)
+            row1 = rows1.next()
+            while row1:
+                Area_Name = row1.getValue("Area_Name")
+                Area_Name.encode('ascii','ignore')
+                arcpy.AddMessage("Segment: " + Area_Name)
+                Area_Description = row1.getValue(fieldName1)
                 row1 = rows1.next()
             del row1, rows1
 
