@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Name:        TheoreticalSearchArea.py
+# Name:        IGT4SAR_TheoreticalSearchArea.py
 # Purpose:
 #  This tool utilizes the output from the Cost Distance Model to
 #  determine a least cost Path Distance surface from a point.
@@ -150,7 +150,17 @@ else:
     Travspd_Layer=arcpy.MakeRasterLayer_management(Travspd_mph, "Travel Speed in mph")
     del outSpeed
 
-refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+LyrList=arcpy.mapping.ListLayers(mxd, "*", df)
+LyrName=[]
+for lyr in LyrList:
+    LyrName.append(lyr.name)
+
+if "Mobility" in LyrName:
+    refGroupLayer = arcpy.mapping.ListLayers(mxd,'Mobility',df)[0]
+else:
+    refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+
+
 arcpy.mapping.AddLayerToGroup(df,refGroupLayer,Travspd_Layer.getOutput(0),'TOP')
 arcpy.RefreshActiveView()
 

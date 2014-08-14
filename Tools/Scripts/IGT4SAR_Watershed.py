@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Name:        CostDistanceModel.py
+# Name:        IGT4SAR_Watershed.py
 # Purpose:
 #  This tool identifies the watershed that contains the IPP, as well as the
 #  adjacent watershed and watersheds that are "1" watershed away.  The

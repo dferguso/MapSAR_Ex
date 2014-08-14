@@ -209,7 +209,16 @@ if __name__ == '__main__':
     OutRas=(Raster(Elev_Same)+Raster(Elev_Up)+Raster(Elev_Down))
     OutRas.save(Elev_Model)
 
-    refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+    LyrList=arcpy.mapping.ListLayers(mxd, "*", df)
+    LyrName=[]
+    for lyr in LyrList:
+        LyrName.append(lyr.name)
+
+    if "Elevation Model" in LyrName:
+        refGroupLayer = arcpy.mapping.ListLayers(mxd,'Elevation Model',df)[0]
+    else:
+        refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+
 ##    ElevModel_Lyr = arcpy.MakeRasterLayer_management(Elev_Model, "Elevation Model")
 ##    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,ElevModel_Lyr.getOutput(0),'TOP')
     ElevModel_Lyr = arcpy.mapping.Layer(Elev_Model)

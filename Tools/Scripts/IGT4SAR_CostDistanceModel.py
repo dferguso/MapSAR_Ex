@@ -501,7 +501,7 @@ try:
             arcpy.Delete_management(wrkspc + '\\' + pStrExp)
 
         else:
-            outDivide = Raster(pStrImpd)*99.0
+            outDivide = Raster(pStrImpd)*75.0
             outDivide.save(pStream_Impd)
             del outDivide
 
@@ -675,7 +675,6 @@ except:
 VeggieImpd_Layer=arcpy.mapping.Layer(Veggie_Impd)
 arcpy.mapping.AddLayer(df,VeggieImpd_Layer,"BOTTOM")
 
-arcpy.Delete_management(wrkspc + '\\' + IPP_dist)
 
 # Process: Raster Calculator (9)
 arcpy.Compact_management(wrkspc)

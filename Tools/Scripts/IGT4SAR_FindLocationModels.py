@@ -499,8 +499,8 @@ OutRaster.save(FindFeat_Name)
 FindLayer=arcpy.mapping.Layer(FindFeat_Name)
 
 #Insert layer into Reference layer Group
-arcpy.AddMessage("Add layer to '13 Incident_Analysis\{0}'".format(FindFeat_Name))
-refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
+arcpy.AddMessage("Add layer to '13 Incident_Analysis\FindFeatures\{0}'".format(FindFeat_Name))
+refGroupLayer = arcpy.mapping.ListLayers(mxd,'*FindFeatures*',df)[0]
 arcpy.mapping.AddLayerToGroup(df, refGroupLayer, FindLayer,'TOP')
 
 
@@ -520,7 +520,7 @@ arcpy.CalculateField_management(FindFeat_Name,"Pden","!POA!/!Area_!","PYTHON_9.3
 ##    pass
 
 fcList=[IPP_dist, Water_Find, pStreams_Find, Road_Find, Trail_Find, Elec_Find, ConstRstr, ConstRstr_Temp, Linear_Find, NLCD_Reclass]
-fcLayer=["IPPTheoDistance", "SetNull_Cons1"]
+fcLayer=["IPPTheoDistance", "SetNull_Cons1", WaterFind_Layer]
 
 for lyr in fcLayer:
     for ii in arcpy.mapping.ListLayers(mxd, lyr):
