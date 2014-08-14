@@ -134,10 +134,11 @@ def AddViewFields(obsvrPts, antHeight, rad2):
     return()
 
 
-def RandomPts(outName, wrkspc, fcExtent, numPoints=10):
+def RandomPts(outName, wrkspc, fcExtent, numPoints=5):
     #Creates random points throughout fcExtent
     obsvrName=[]
-    minDistance = "100 Meters"
+    minDistance = "250 Meters"
+    arcpy.AddMessage("System generate {0} points with a minimum spacing of {1}".format(numPoints,minDistance))
     arcpy.CreateRandomPoints_management(wrkspc, outName, fcExtent, "", numPoints, minDistance)
     return()
 
@@ -217,7 +218,7 @@ def RepeaterAreas(RptrPoly_Lyr,DEM, nList, df):
             del cPtChk001
         except:
             cPtChk = 0
-        arcpy.AddMessage("Maximum of DEM in this region is: {0} m\n".format(demMax2))
+        arcpy.AddMessage("Maximum Elevation in this region is: {0} m\n".format(demMax2))
         rdNum-=1
 
     nList=[]
@@ -335,18 +336,22 @@ if __name__ == '__main__':
     if UserSelect == '#' or not UserSelect:
         UserSelect = "System" # provide a default value if unspecified
 
-    inputFeature = arcpy.GetParameterAsText(2)  # If not using System points then define
+    NumPts = arcpy.GetParameterAsText(2)
+    if NumPts == '#' or not NumPts:
+        NumPts = 5 # provide a default value if unspecified
 
-    DEM2 = arcpy.GetParameterAsText(3)
+    inputFeature = arcpy.GetParameterAsText(3)  # If not using System points then define
+
+    DEM2 = arcpy.GetParameterAsText(4)
     if DEM2 == '#' or not DEM2:
         arcpy.AddMessage("You need to provide a valid DEM")
 
-    antHeight = arcpy.GetParameterAsText(4)
+    antHeight = arcpy.GetParameterAsText(5)
     if antHeight == '#' or not antHeight:
         antHeight = 15 # provide a default value if unspecified
     antHeight = int(antHeight)
 
-    maxDist = arcpy.GetParameterAsText(5) # Desired units
+    maxDist = arcpy.GetParameterAsText(6) # Desired units
     if maxDist == '#' or not maxDist:
         maxDist = 5000 # provide a default value if unspecified
     maxDist = int(maxDist)
@@ -385,7 +390,7 @@ if __name__ == '__main__':
     if UserSelect=="System":
         #Does the Search Boundary exist?
         cSearchArea=arcpy.GetCount_management(fcExtent)
-        numPoints = 10
+        numPoints = int(NumPts)
         if int(cSearchArea.getOutput(0)) == 1:
             RandomPts(outName, wrkspc, fcExtent,numPoints)
             obsvrPts= outName
@@ -463,7 +468,7 @@ if __name__ == '__main__':
     tempList = nameList
     if len(tempList)>5:
         nameList=[]
-        nameList=tempList[0:4]
+        nameList=tempList[0:7]
     del tempList
 
     arcpy.AddMessage("There will be {0} regions considered\n".format(len(nameList)))
@@ -479,14 +484,14 @@ if __name__ == '__main__':
         for row in cursor:
             row.setValue('DESCRIPTION', nList[0])
             cursor.updateRow(row)
-        if RepeaterLocations:
+        if arcpy.Exists(RepeaterLocations):
             arcpy.Append_management(RptrPts, RepeaterLocations,"NO_TEST")
         else:
             arcpy.Copy_management(RptrPts,RepeaterLocations)
             RptrPts_Lyr = arcpy.mapping.Layer(RepeaterLocations)
             arcpy.mapping.AddLayerToGroup(df,refGroupLayer,RptrPts_Lyr,'BOTTOM')
-
         deleteFeature([RptrPts])
+
 
     for nList in nameList:
         UpdateSpatialFields(RepeaterLocations,nList[0])
@@ -496,6 +501,12 @@ if __name__ == '__main__':
     arcpy.mapping.RemoveLayer(df,lyr)
     arcpy.RefreshTOC()
     arcpy.mapping.AddLayerToGroup(df,refGroupLayer,RptrPoly_Lyr,'BOTTOM')
+
+    try:
+        symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\RptrLocations.lyr"
+        arcpy.ApplySymbologyFromLayer_management(RptrPts_Lyr, symbologyLayer)
+    except:
+        pass
 ##
 ##    fcList=[rptrPolys]
 ##    deleteFeature(fcList)

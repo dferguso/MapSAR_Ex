@@ -195,6 +195,11 @@ if LeadAgency:
 else:
     arcpy.AddMessage("You have not provided a valid Lead Agency")
 
+dfSpatial_Ref = df.spatialReference.name
+dfSpatial_Type = df.spatialReference.type
+arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type + "\n")
+arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref + "\n")
+
 
 if IncidName and IncidNum:
     IncidInfo =os.path.join(wrkspc,"Incident_Info")
@@ -203,9 +208,12 @@ if IncidName and IncidNum:
         row.setValue('Incident_Name', IncidName)
         row.setValue('Incident_Number', IncidNum)
         row.setValue('Lead_Agency', LeadAgency)
+        row.setValue("MapDatum", dfSpatial_Ref)
         cursor.updateRow(row)
 else:
     arcpy.AddMessage("You have not provided a valid Incident Name and/or Number")
+
+del dfSpatial_Ref, dfSpatial_Type
 
 arcpy.AddMessage("update Incident Information domain")
 arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
@@ -240,5 +248,3 @@ if IncidName and IncidNum:
 
 
 del mxd
-
-##

@@ -288,11 +288,9 @@ if __name__ == '__main__':
         LyrName.append(lyr.name)
         if "CellTowers" in lyr.name:
             arcpy.SelectLayerByAttribute_management(lyr, "CLEAR_SELECTION")
-
-    if "Cellular" in LyrName:
-        refGroupLayerA = arcpy.mapping.ListLayers(mxd,'*Cellular*',df)[0]
+    if "Cellphone Coverage" in LyrName:
+        refGroupLayerA = arcpy.mapping.ListLayers(mxd,'Cellphone Coverage',df)[0]
         arcpy.AddMessage("refGroupLayer = {0}".format(refGroupLayerA))
-        arcpy.AddMessage("line 297")
     else:
         refGroupLayerA = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis',df)[0]
 
@@ -316,8 +314,8 @@ if __name__ == '__main__':
             cTower=[x.replace("'","") for x in cTower]
             cTower=[x.encode('ascii') for x in cTower]
 
-            arcpy.AddMessage(cTower)
-            [arcpy.AddMessage(type(kk)) for kk in cTower]
+#            arcpy.AddMessage(cTower)
+#            [arcpy.AddMessage(type(kk)) for kk in cTower]
             if "CellTowers" in LyrName:
                 in_fc = arcpy.mapping.Layer(CellTowers)
 
@@ -493,6 +491,7 @@ if __name__ == '__main__':
 
         out_fc="{0}_B{1}_Ang{2}_Rng{3}".format(descript.replace(" ","")[0:10],str(aBearing),str(aSecAng),str(int(aRange)))
         inDataset="{0}\{1}".format(wrkspc, descript.replace(" ","")[0:5])
+
         if NewGenSector=="true":
             arcpy.AddMessage("Genrate Sector for {0}".format(descript))
         ##        out_fc="B{0}_Ang{1}_Rng{2}".format(str(aBearing),str(aSecAng),str(int(aRange)))

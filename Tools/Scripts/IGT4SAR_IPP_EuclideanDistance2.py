@@ -426,14 +426,15 @@ if __name__ == '__main__':
         refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
         arcpy.mapping.AddLayerToGroup(df, refGroupLayer, insertLayer,'TOP')
 
-        try:
-            # Set layer that output symbology will be based on
-            symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\StatisticalArea.lyr"
-
-            # Apply the symbology from the symbology layer to the input layer
-            arcpy.ApplySymbologyFromLayer_management (tryLayer, symbologyLayer)
-        except:
-            pass
+##        try:
+        # Set layer that output symbology will be based on
+        lyr = arcpy.mapping.ListLayers(mxd, insertLayer.name, df)[0]
+        symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\StatisticalArea.lyr"
+        # Apply the symbology from the symbology layer to the input layer
+        arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+        arcpy.AddMessage("Add default symbology")
+##        except:
+##            pass
 
     if k == 0:
         arcpy.AddMessage("There was no " + IPP + " defined")

@@ -45,4 +45,7 @@
   <Layer>
     <Name>DecisionPts</Name>
   </Layer>
+  <Layer>
+    <Name>Search Pattern Extent</Name>
+  </Layer>
 </Layers>
