@@ -86,35 +86,35 @@ if __name__ == '__main__':
     MagDecTxt = str(abs(MagDeclinlination)) + " " + Cardinal
     arcpy.AddMessage(MagDecTxt)
 
-##            try:  #Update Incident Name and Number with the file name and dataframe name
-    IncName = df.name
-    IncNumA = mxd.filePath.split("\\")
-    IncNum=IncNumA[-1].strip(".mxd")
-    arcpy.AddMessage("The Incident Name is " + IncName + "\n")
-    arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
-    MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
-    MapName.text = " "
+    try:  #Update Incident Name and Number with the file name and dataframe name
+        IncName = df.name
+        IncNumA = mxd.filePath.split("\\")
+        IncNum=IncNumA[-1].strip(".mxd")
+        arcpy.AddMessage("The Incident Name is " + IncName + "\n")
+        arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
+        MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+        MapName.text = " "
 
-    PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
-    PlanNum.text = " "
+        PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+        PlanNum.text = " "
 
-    AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
-    AssignNum.text = " "
+        AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+        AssignNum.text = " "
 
-    fld2 = "Incident_Name"
-    fld3 = "Incident_Number"
-    cursor = arcpy.UpdateCursor(fc2)
-    for row in cursor:
-        incidName=row.getValue(fld2)
-        if incidName != IncName:
-            row.setValue(fld2, IncName)
-            row.setValue(fld3, IncNum)
-            cursor.updateRow(row)
-        del incidName
-    del cursor, row
-    del IncName, IncNum, fld2, fld3
-##            except:
-##                arcpy.AddMessage("Error: Update Incident Name and Number manually\n")
+        fld2 = "Incident_Name"
+        fld3 = "Incident_Number"
+        cursor = arcpy.UpdateCursor(fc2)
+        for row in cursor:
+            incidName=row.getValue(fld2)
+            if incidName != IncName:
+                row.setValue(fld2, IncName)
+                row.setValue(fld3, IncNum)
+                cursor.updateRow(row)
+            del incidName
+        del cursor, row
+        del IncName, IncNum, fld2, fld3
+    except:
+        arcpy.AddMessage("Error: Update Incident Name and Number manually\n")
 
     try:
         cIncident=arcpy.GetCount_management("Incident_Information")
@@ -176,7 +176,7 @@ if __name__ == '__main__':
         cursor = arcpy.UpdateCursor(fc2)
         for row in cursor:
             row.setValue(fld2, dfSpatial_Ref)
-##                row.setValue(fld3, dfSpatial_Type)
+        ##                row.setValue(fld3, dfSpatial_Type)
             if "UTM_ZONE" in field:
                 row.setValue("UTM_ZONE", UTMZn.text)
             if "USNG_GRID" in field:
@@ -186,8 +186,6 @@ if __name__ == '__main__':
         del dfSpatial_Ref, dfSpatial_Type
     except:
         arcpy.AddMessage("Error: Update Map Datum and Map Coordinates (Projected/Geogrpahic) Manually\n")
-##    except:
-##        arcpy.AddWarning("There was an error")
 
     try:
         del UTMZn
