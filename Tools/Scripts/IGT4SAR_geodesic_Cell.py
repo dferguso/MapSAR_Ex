@@ -35,6 +35,25 @@ def getDataframe():
     except SystemExit as err:
             pass
 
+def deleteFeature(fcList):
+    for gg in fcList:
+        if arcpy.Exists(gg):
+            try:
+                arcpy.Delete_management(wrkspc + '\\' + gg)
+            except:
+                pass
+
+    return()
+
+def deleteLayer(df,fcLayer):
+    for lyr in fcLayer:
+        for ii in arcpy.mapping.ListLayers(mxd, lyr):
+            try:
+                print "Deleting layer", ii
+                arcpy.mapping.RemoveLayer(df , ii)
+            except:
+                pass
+    return()
 
 def Geodesic(pnt, in_bearing, in_angle, in_dist):
     LongDD = pnt.X
@@ -109,9 +128,10 @@ def Geodesic(pnt, in_bearing, in_angle, in_dist):
 
     return coordList
 
-def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc):
-##    inDataset = "Sector.shp"
+def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc, UncertBuff, out_fcUNC):
     inDataset = os.path.join(wrkspc,"Sector")
+    inDatasetUNC = os.path.join(wrkspc,"Uncert")
+    out_Line=out_fc+'UNC_Temp'
     # Use Describe to get a SpatialReference object
     desc = arcpy.Describe(in_fc)
     shapefieldname = desc.ShapeFieldName
@@ -144,6 +164,7 @@ def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc):
     # A list that will hold each of the Polygon objects
     #
     featureList = []
+    featureListUNC=[]
 
     for feature in coordList:
         for coordPair in feature:
@@ -165,12 +186,35 @@ def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc):
         #
         featureList.append(polygon)
 
+        if len(UncertBuff)>0:
+            for coordPair in feature[1:-1]:
+                point = arcpy.Point(float(coordPair[0]),float(coordPair[1]))
+                array.add(point)
+            polyline=arcpy.Polyline(array,unProjCoordSys)
+            array.removeAll()
+            featureListUNC.append(polyline)
+
     # Create a copy of the Polygon objects, by using featureList as input to
     #  the CopyFeatures tool.
     #
     arcpy.CopyFeatures_management(featureList, inDataset)
     arcpy.Project_management(inDataset, out_fc, outCS)
     arcpy.Delete_management(inDataset)
+
+    if len(featureListUNC)>0:
+        arcpy.CopyFeatures_management(featureListUNC, inDatasetUNC)
+        arcpy.Project_management(inDatasetUNC, out_Line, outCS)
+
+        # Buffer areas of impact around major roads
+        arcpy.AddMessage("Create Uncertainty Buffer")
+        if str(arcpy.ProductInfo()) == ("ArcInfo"):
+            arcpy.Buffer_analysis(out_Line, out_fcUNC, UncertBuff, "FULL", "FLAT")
+        else:
+            arcpy.Buffer_analysis(out_Line, out_fcUNC, UncertBuff)
+
+        arcpy.Delete_management(inDatasetUNC)
+        arcpy.Delete_management(wrkspc + '\\' + out_Line)
+        del featureListUNC
 
     del coordList
     del polygon

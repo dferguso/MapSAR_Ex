@@ -241,11 +241,23 @@ if __name__ == '__main__':
     if NewGenSector == '#' or not NewGenSector:
         NewGenSector = "empty"
 
-    NewViewshed = arcpy.GetParameterAsText(6)
+    CellUncert = arcpy.GetParameterAsText(6)
+    if CellUncert == '#' or not CellUncert:
+        CellUncert = "empty"
+
+    UncertDist = arcpy.GetParameterAsText(7)
+    if UncertDist == '#' or not UncertDist:
+        UncertDist = "empty"
+
+    UncertUnits = arcpy.GetParameterAsText(8)
+    if UncertUnits == '#' or not UncertUnits:
+        UncertUnits = "empty"
+
+    NewViewshed = arcpy.GetParameterAsText(9)
     if NewViewshed == '#' or not NewViewshed:
         NewViewshed = "empty"
 
-    DEM = arcpy.GetParameterAsText(7)
+    DEM = arcpy.GetParameterAsText(10)
     if DEM == '#' or not DEM:
         DEM = "empty"
 
@@ -297,6 +309,9 @@ if __name__ == '__main__':
     if "Point_Features" in LyrName:
         refGroupLayerB = arcpy.mapping.ListLayers(mxd,'*Point_Features*',df)[0]
     ########################################################
+
+    if CellUncert.lower() == "true":  #Must generate a New Sector to use Uncertainty
+        NewGenSector=="true"
 
     if NewGenSector =="false" and NewViewshed == "false":
         sys.exit(arcpy.AddError("You must select either to generate a Cell Sector or Estimate Coverage"))
@@ -495,7 +510,15 @@ if __name__ == '__main__':
         if NewGenSector=="true":
             arcpy.AddMessage("Genrate Sector for {0}".format(descript))
         ##        out_fc="B{0}_Ang{1}_Rng{2}".format(str(aBearing),str(aSecAng),str(int(aRange)))
-            IGT4SAR_geodesic_Cell.Geodesic_Main(cellTower_Layer, out_fc, aBearing, aSecAng, aRange,wrkspc)
+            if UncertDist>0:
+                UncertBuff = "{0} {1}".format(str(UncertDist),UncertUnits)
+                out_fcUNC = out_fc + '_Uncert'
+            else:
+                UncertBuff=""
+                out_fcUNC =""
+
+            IGT4SAR_geodesic_Cell.Geodesic_Main(cellTower_Layer, out_fc, aBearing, aSecAng, aRange, wrkspc, UncertBuff, out_fcUNC)
+
             out_fc_lyr="{0}_Lyr".format(out_fc)
             arcpy.MakeFeatureLayer_management(out_fc,out_fc_lyr)
             nList_Lyr = arcpy.mapping.Layer(out_fc)
@@ -503,6 +526,16 @@ if __name__ == '__main__':
             arcpy.mapping.RemoveLayer(df,nList_Lyr)
         ##    deleteLayer(df,[nList_Lyr])
             arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
+
+            if UncertDist>0:
+                out_fc_lyrUn="{0}_Lyr".format(out_fcUNC)
+                arcpy.MakeFeatureLayer_management(out_fcUNC,out_fc_lyrUn)
+                nList_LyrUn = arcpy.mapping.Layer(out_fcUNC)
+                nList_LyrUn.name=out_fcUNC
+                arcpy.mapping.RemoveLayer(df,nList_LyrUn)
+            ##    deleteLayer(df,[nList_Lyr])
+                arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_LyrUn,'BOTTOM')
+
             try:
                 lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
                 symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\15 Cell Sector.lyr"
