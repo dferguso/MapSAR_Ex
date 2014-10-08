@@ -103,7 +103,7 @@ def ValidateNewInfo(nInfo,tParam, towerParam):
             if k==0:
                 nInfo[k] = str(nInfo[k])
             else:
-                nInfo[k]=int(nInfo[k])
+                nInfo[k]=float(nInfo[k])
         except:
             sys.exit(arcpy.AddError('Tower properties need to be numeric\n'))
 
@@ -185,7 +185,8 @@ def deleteFeature(fcList):
     for gg in fcList:
         if arcpy.Exists(gg):
             try:
-                arcpy.Delete_management(wrkspc + '\\' + gg)
+                #arcpy.Delete_management(wrkspc + '\\' + gg)
+                arcpy.Delete_management(gg)
             except:
                 pass
 
@@ -415,6 +416,7 @@ if __name__ == '__main__':
         #################################
         ## Write geometry if NewLocation is True
         aTower = "Temp_{0}".format(timestamp)
+        TempPoints="TempPints"
         ## Create a temporary feature class for the new point until it can be
         ## appended into the existing CellTower feature class
         if NewCoord=="Geographic (Long / Lat)":
@@ -538,6 +540,7 @@ if __name__ == '__main__':
 
             try:
                 lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
+                arcpy.AddMessage("Change symbology of Cell Sector")
                 symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\15 Cell Sector.lyr"
                 arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
             except:
