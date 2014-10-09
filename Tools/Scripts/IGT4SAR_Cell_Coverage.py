@@ -416,7 +416,7 @@ if __name__ == '__main__':
         #################################
         ## Write geometry if NewLocation is True
         aTower = "Temp_{0}".format(timestamp)
-        TempPoints="TempPints"
+        TempPoints="TempPoints"
         ## Create a temporary feature class for the new point until it can be
         ## appended into the existing CellTower feature class
         if NewCoord=="Geographic (Long / Lat)":
@@ -431,8 +431,10 @@ if __name__ == '__main__':
                 # Append points from temporary FC to the CellTowers layer
                 arcpy.Append_management(TempPoints, CellTowers,"NO_TEST")
                 # Delete the two temporary FC's
-                fcList = [aTower,TempPoints]
-                deleteFeature([fcList])
+                #fcList = [aTower,TempPoints]
+                #deleteFeature([fcList])
+                arcpy.Delete_management(aTower)
+                arcpy.Delete_management(TempPoints)
 
             else:
                 ## Directly write geometry to CellTowers using UpdateCursor
@@ -512,7 +514,7 @@ if __name__ == '__main__':
         if NewGenSector=="true":
             arcpy.AddMessage("Genrate Sector for {0}".format(descript))
         ##        out_fc="B{0}_Ang{1}_Rng{2}".format(str(aBearing),str(aSecAng),str(int(aRange)))
-            if UncertDist>0:
+            if CellUncert.lower() == "true":
                 UncertBuff = "{0} {1}".format(str(UncertDist),UncertUnits)
                 out_fcUNC = out_fc + '_Uncert'
             else:
@@ -521,31 +523,36 @@ if __name__ == '__main__':
 
             IGT4SAR_geodesic_Cell.Geodesic_Main(cellTower_Layer, out_fc, aBearing, aSecAng, aRange, wrkspc, UncertBuff, out_fcUNC)
 
-            out_fc_lyr="{0}_Lyr".format(out_fc)
-            arcpy.MakeFeatureLayer_management(out_fc,out_fc_lyr)
-            nList_Lyr = arcpy.mapping.Layer(out_fc)
-            nList_Lyr.name=out_fc
-            arcpy.mapping.RemoveLayer(df,nList_Lyr)
-        ##    deleteLayer(df,[nList_Lyr])
-            arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
+            if arcpy.Exists(out_fc):
+                out_fc_lyr="{0}_Lyr".format(out_fc)
+                arcpy.MakeFeatureLayer_management(out_fc,out_fc_lyr)
+                nList_Lyr = arcpy.mapping.Layer(out_fc)
+                nList_Lyr.name=out_fc
+                arcpy.mapping.RemoveLayer(df,nList_Lyr)
+                arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
 
-            if UncertDist>0:
+                try:
+                    lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
+                    arcpy.AddMessage("Change symbology of Cell Sector")
+                    symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\15 Cell Sector.lyr"
+                    arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+                except:
+                    pass
+
+            if arcpy.Exists(out_fcUNC):
                 out_fc_lyrUn="{0}_Lyr".format(out_fcUNC)
                 arcpy.MakeFeatureLayer_management(out_fcUNC,out_fc_lyrUn)
                 nList_LyrUn = arcpy.mapping.Layer(out_fcUNC)
                 nList_LyrUn.name=out_fcUNC
                 arcpy.mapping.RemoveLayer(df,nList_LyrUn)
-            ##    deleteLayer(df,[nList_Lyr])
                 arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_LyrUn,'BOTTOM')
-
-            try:
-                lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
-                arcpy.AddMessage("Change symbology of Cell Sector")
-                symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\15 Cell Sector.lyr"
-                arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
-            except:
-                pass
-
+                try:
+                    lyr = arcpy.mapping.ListLayers(mxd, nList_LyrUn.name, df)[0]
+                    arcpy.AddMessage("Change symbology of Uncertainty")
+                    symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\Cell_Uncertainty.lyr"
+                    arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+                except:
+                    pass
         else:
             arcpy.AddWarning("User did not select Sector")
 
@@ -576,7 +583,6 @@ if __name__ == '__main__':
                     arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
                 except:
                     pass
-
 
         else:
             arcpy.AddWarning("User did not select Viewshed")
