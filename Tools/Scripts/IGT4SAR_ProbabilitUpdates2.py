@@ -42,6 +42,8 @@ def ProbabilityUpdate(fc1):
     arcpy.CalculateField_management(fc1, "Area", "!shape.area@acres!", "PYTHON_9.3", "")
 
     POCList=[]
+    updtPOA = False
+
     rows = arcpy.SearchCursor(fc1)
     for row in rows:
         if type(row.getValue("POCaSsign")) is NoneType:
@@ -55,7 +57,6 @@ def ProbabilityUpdate(fc1):
 
     rows1 = arcpy.UpdateCursor(fc1)
     row1 = rows1.next()
-
     while row1:
         # you need to insert correct field names in your getvalue function
         RegionName = row1.Region_Name
@@ -63,13 +64,22 @@ def ProbabilityUpdate(fc1):
         if POCTotal==0.0:
             POCTotal=1.0
         POCReg = row1.POCaSsign/POCTotal * 100.0
-        row1.POA = POCReg
-        row1.POAcum = POCReg
-        if RegArea != 0.0:
-            PdenReg = round(POCReg/RegArea,3)
-        else:
-            PdenReg = 0.0
-        row1.Pden=PdenReg
+        POAnow = row1.getValue("POA")
+
+        if type(POAnow) is NoneType:
+            row1.POA = POCReg
+            updtPOA = True
+        elif round(POCReg,2)!= round(POAnow,2):
+            row1.POA = POCReg
+            updtPOA = True
+
+        if type(row.getValue("POAcum")) is NoneType:
+            row1.POAcum = POCReg
+            if RegArea != 0.0:
+                PdenReg = round(POCReg/RegArea,3)
+            else:
+                PdenReg = 0.0
+            row1.Pden=PdenReg
 
         rows1.updateRow(row1)
         row1 = rows1.next()
@@ -81,14 +91,7 @@ def ProbabilityUpdate(fc1):
 #workspc = arcpy.GetParameterAsText(0)
 
 
-def DebriefUpdate():
-    fc1 = "Debriefing"
-    fc3 = "Search_Segments"
-    fc4 = "Assignments"
-
-    where1 = '"Recorded" = 0'
-
-
+def DebriefUpdate(fc1, fc3, fc4):
     POCN=[]
     rows1 = arcpy.SearchCursor(fc3)
     row1 = rows1.next()
@@ -101,7 +104,7 @@ def DebriefUpdate():
     del row1
     del rows1
 
-
+    where1 = '"Recorded" = 0'
     rows1 = arcpy.UpdateCursor(fc1, where1)
     row1 = rows1.next()
     arcpy.AddMessage(pocSum)
@@ -220,13 +223,9 @@ def DebriefUpdate():
     del POCN
     return()
 
-def ProbabilityRegions():
+def ProbabilityRegions(fc1, fc2):
     ####  Now do the Probability Regions
-
-    fc1 = "Probability_Regions"
-    fc2 = "Search_Segments"
-
-    rows1 = arcpy.UpdateCursor(fc1,"","","",sort_fields="Region_Name A")
+    rows1 = arcpy.UpdateCursor(fc1,"","","",sort_fields="Region_Name")
     row1 = rows1.next()
 
     while row1:
@@ -288,16 +287,13 @@ def ProbabilityRegions():
 ########
 # Main Program starts here
 #######
-#fc3 = "8 Segments_Group\\Probability Regions"
-fc1 = "Probability_Regions"
-chckr=0
-rows = arcpy.SearchCursor(fc1)
-for row in rows:
-    if type(row.getValue("POAcum")) is NoneType:
-        chckr+=1
+if __name__ == '__main__':
+    #fc3 = "8 Segments_Group\\Probability Regions"
+    fc1 = "Probability_Regions"
+    fc2 = "Debriefing"
+    fc3 = "Search_Segments"
+    fc4 = "Assignments"
 
-if chckr > 0:
     ProbabilityUpdate(fc1)
-else:
-    DebriefUpdate()
-    ProbabilityRegions()
+    DebriefUpdate(fc2, fc3, fc4)
+    ProbabilityRegions(fc1, fc3)
