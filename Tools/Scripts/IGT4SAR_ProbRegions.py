@@ -31,14 +31,17 @@ import sys
 ##workspc = arcpy.GetParameterAsText(0)
 ##arcpy.env.workspace = workspc
 
-fc1 = "Probability_Regions"
+ProbRegions = arcpy.GetParameterAsText(0)
+if ProbRegions == '#' or not ProbRegions:
+    ProbRegions = "8 Segments_Group\Probability Regions" # provide a default value if unspecified
+
 fc2 = "Search_Segments"
-fc3 = "8 Segments_Group\\Probability Regions"
+fc3 = ProbRegions
 
 arcpy.CalculateField_management(fc3, "Area", "!shape.area@acres!", "PYTHON_9.3", "")
 
 POCList=[]
-rows = arcpy.SearchCursor(fc1)
+rows = arcpy.SearchCursor(fc3)
 for row in rows:
     if type(row.getValue("POCaSsign")) is NoneType:
         RegName = row.getValue("Region_Name")

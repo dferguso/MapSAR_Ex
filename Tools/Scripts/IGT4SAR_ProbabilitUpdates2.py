@@ -289,7 +289,10 @@ def ProbabilityRegions(fc1, fc2):
 #######
 if __name__ == '__main__':
     #fc3 = "8 Segments_Group\\Probability Regions"
-    fc1 = "Probability_Regions"
+    ProbRegions = arcpy.GetParameterAsText(0)
+    if ProbRegions == '#' or not ProbRegions:
+        ProbRegions = "8 Segments_Group\Probability Regions" # provide a default value if unspecified
+    fc1 = ProbRegions
     fc2 = "Debriefing"
     fc3 = "Search_Segments"
     fc4 = "Assignments"
