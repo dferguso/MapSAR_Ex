@@ -121,7 +121,7 @@ for SegName in SName:
                 Area_Name = row1.getValue("Area_Name")
                 Area_Name.encode('ascii','ignore')
                 arcpy.AddMessage("Segment: " + Area_Name)
-                Area_Description = ""
+                Area_Description = row1.getValue(fieldName1)
                 row1 = rows1.next()
             del row1, rows1
 
