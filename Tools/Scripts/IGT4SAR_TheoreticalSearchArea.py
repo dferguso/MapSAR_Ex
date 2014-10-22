@@ -87,8 +87,9 @@ travtimhr_rcl = "Travtimhr_rcl_{0}".format(timestamp)
 traveltime_hrs_poly = "traveltime_hrs_poly"
 
 ##May 07, 2013#########################
-TimeTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\TimeTable"
+##TimeTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\TimeTable"
 ##TimeTable = "Time_Table_3hr"
+TimeTable = "TimeTable"
 ##May 07, 2013#########################
 
 arcpy.env.cellSize = DEM2
@@ -109,7 +110,7 @@ if bufferUnit =='kilometers':
     TravTimePoly_hrs = "MobilityModel_{0}kph_{1}".format(int(float(deSiredSpdA)*10.0), timestamp)
     mult = 1.0
 else:
-    TravTimePoly_hrs = "MobilityModel_{0}mph_{1}".format(int(float(deSiredSpdA*10.0)), timestamp)
+    TravTimePoly_hrs = "MobilityModel_{0}mph_{1}".format(int(float(deSiredSpdA)*10.0), timestamp)
     mult = 1.6093472
 
 deSiredSpd = mult * float(deSiredSpdA)
@@ -189,8 +190,8 @@ arcpy.AddMessage("Path Distance")
 # velocity is determined by the Travspd_spm layer ands the "cost" of directional
 # slope dtravel is obtained from the VF.  Path Distance Tool applies directionality.
 
-##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler.txt")'
-InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler_Bike.txt")'
+InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler.txt")'
+##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler_Bike.txt")'
 ##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\ToblerTest.txt")'
 
 ############Test Section##################
@@ -209,7 +210,7 @@ del outPathDist
 
 # Process: Divide (6)
 ##May 07, 2013#########################
-outDivide = Raster(PthDis_travsp)/3600.0*10.0
+outDivide = Int(Raster(PthDis_travsp)/3600.0*10.0)
 ##May 07, 2013#########################
 outDivide.save(TravTime_hrs)
 del outDivide
