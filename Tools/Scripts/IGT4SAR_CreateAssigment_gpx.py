@@ -32,6 +32,7 @@ from types import *
 wrkspc=arcpy.env.workspace
 env.overwriteOutput = "True"
 arcpy.env.extent = "MAXOF"
+##arcpy.env.parallelProcessingFactor = "100%"
 
 def getDataframe():
     """ get current mxd and dataframe returns mxd, frame"""

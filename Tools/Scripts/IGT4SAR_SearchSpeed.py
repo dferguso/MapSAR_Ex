@@ -53,7 +53,7 @@ arcpy.CheckOutExtension("Spatial")
 inConstant=3.0/5.0
 outSpd=Times(TSpd_kph, inConstant)
 outSpd.save(TravSpd_kph)
-arcpy.Delete_management(workspc + '\\' + TSpd_kph)
+#arcpy.Delete_management(workspc + '\\' + TSpd_kph)
 
 # Execute ZonalStatistics
 arcpy.AddMessage("Zonal Statistics")
