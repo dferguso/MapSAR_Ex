@@ -52,6 +52,8 @@ todaydate = now.strftime("%m_%d")
 todaytime = now.strftime("%H_%M_%p")
 timestamp = '{0}_{1}'.format(todaydate,todaytime)
 
+arcpy.AddMessage("\n")
+
 #out_fc  - Target Folder
 out_fc = arcpy.GetParameterAsText(0)
 if out_fc == '#' or not out_fc:
@@ -69,19 +71,19 @@ transformation = arcpy.GetParameterAsText(2)
 # Number and Lead Agency
 SubName = arcpy.GetParameterAsText(3)
 if SubName == '#' or not SubName:
-    arcpy.AddMessage("Subject information can be entered at a later time")
+    arcpy.AddMessage("No Subject information provided.  It can be entered at a later time.\n")
 
 IncidName = arcpy.GetParameterAsText(4)
 if IncidName == '#' or not IncidName:
-    arcpy.AddMessage("Incident information can be entered at a later time")
+    arcpy.AddMessage("No Incident Name provided. It can be entered at a later time.\n")
 
 IncidNum = arcpy.GetParameterAsText(5)
 if IncidNum == '#' or not IncidNum:
-    arcpy.AddMessage("Incident information can be entered at a later time")
+    arcpy.AddMessage("No Incident Number provided. It can be entered at a later time.\n")
 
 LeadAgency = arcpy.GetParameterAsText(6)
 if LeadAgency == '#' or not LeadAgency:
-    arcpy.AddMessage("Lead Agency information can be entered at a later time")
+    arcpy.AddMessage("No Lead Agency information provided. It can be entered at a later time.\n")
 
 if (output_coordinate_system != "") and (output_coordinate_system != "#"):
     sr = output_coordinate_system
@@ -96,14 +98,13 @@ copyanything(in_fc, out_fc)
 # Set environment settings
 templ= os.path.join(in_fc,'SAR_Default.gdb')
 wrkspc = os.path.join(out_fc,'SAR_Default.gdb')
-##templ= in_fc  + '\\SAR_Default.gdb'
-##wrkspc = out_fc + '\\SAR_Default.gdb'
 env.workspace = wrkspc
 
-
 # Set local variables
-arcpy.RefreshCatalog(wrkspc)
+#arcpy.RefreshCatalog(wrkspc)
 datasetList = arcpy.ListDatasets()
+
+spatial_ref = arcpy.Describe("Base_Data").spatialReference
 
 try:
     for fclist in datasetList:
@@ -118,25 +119,24 @@ except Exception as e:
     print("Line {0}".format(tb.tb_lineno))
     print(e.message)
 
-arcpy.RefreshCatalog(wrkspc)
-
+##arcpy.RefreshCatalog(wrkspc)
+arcpy.AddMessage("Projecting feature datasets to the desired coordinate system")
 try:
     for fclist in datasetList:
         # Execute GetCount and if some features have been selected, then
         #  execute DeleteFeatures to remove the selected features.
-        arcpy.AddMessage(fclist)
-        # Determine the new output feature class path and name
+        arcpy.AddMessage(fclist)        # Determine the new output feature class path and name
         outData = os.path.join(wrkspc, fclist)
         inData = os.path.join(templ, fclist)
         arcpy.Project_management(inData, outData, sr, transformation)
 
 except Exception as e:
     # If an error occurred, print line number and error message
-    import traceback
-    import sys
     tb = sys.exc_info()[2]
     print("Line {0}".format(tb.tb_lineno))
     print(e.message)
+    arcpy.AddMessage("Unable to create a new incident due to problems with Projection")
+    sys.exit()
 
 arcpy.Compact_management(templ)
 arcpy.Compact_management(wrkspc)
@@ -145,9 +145,9 @@ mxd_nA = os.path.join(out_fc,'IncidentNo.mxd')
 mxd = arcpy.mapping.MapDocument(mxd_nA)
 
 df = arcpy.mapping.ListDataFrames(mxd)[0]
-df.name = IncidName # Set the name of the main dataframe to the Incident Name
-
 df.spatialReference = sr
+if IncidName:
+    df.name = IncidName # Set the name of the main dataframe to the Incident Name
 
 # Add the SARToolBox
 # arcpy.AddToolbox("C:\\MapSAR_Ex\\Tools\\SAR_Toolbox100.tbx")
@@ -155,7 +155,7 @@ df.spatialReference = sr
 mxd.save()
 
 if IncidNum:
-    mxd_nB = os.path.join(out_fc, (IncidNum + '.mxd'))
+    mxd_nB = os.path.join(out_fc, (IncidNum.replace(" ","") + '.mxd'))
     arcpy.AddMessage('Save map as {0}'.format(mxd_nB))
     mxd.saveACopy(mxd_nB)
     del mxd
@@ -201,6 +201,7 @@ arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type
 arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref + "\n")
 
 
+## Update Incident Information if it is provided by user
 if IncidName and IncidNum:
     IncidInfo =os.path.join(wrkspc,"Incident_Info")
     cursor = arcpy.UpdateCursor(IncidInfo)
@@ -210,22 +211,16 @@ if IncidName and IncidNum:
         row.setValue('Lead_Agency', LeadAgency)
         row.setValue("MapDatum", dfSpatial_Ref)
         cursor.updateRow(row)
-else:
-    arcpy.AddMessage("You have not provided a valid Incident Name and/or Number")
 
-del dfSpatial_Ref, dfSpatial_Type
+    arcpy.AddMessage("update Incident Information domain")
+    arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
+    try:
+        arcpy.SortCodedValueDomain_management(wrkspc, "Incident_Name", "DESCRIPTION", "ASCENDING")
+    except:
+        pass
 
-arcpy.AddMessage("update Incident Information domain")
-arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
-try:
-    arcpy.SortCodedValueDomain_management(wrkspc, "Incident_Name", "DESCRIPTION", "ASCENDING")
-except:
-    pass
-
-
-if IncidName and IncidNum:
+    ## Update Opertion Period Information
     OpInfo = os.path.join(wrkspc,"Operation_Period")
-
     cursor = arcpy.UpdateCursor(OpInfo)
     for row in cursor:
         row.setValue('Period', 1)
@@ -246,5 +241,7 @@ if IncidName and IncidNum:
     except:
         pass
 
+
+del dfSpatial_Ref, dfSpatial_Type
 
 del mxd

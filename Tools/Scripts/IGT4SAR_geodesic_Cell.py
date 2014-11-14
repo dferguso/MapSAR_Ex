@@ -251,5 +251,7 @@ if __name__ == '__main__':
     if in_dist == '#' or not in_dist:
         in_dist = "empty"
 
-    Geodesic_Main(in_fc, out_fc, float(in_bearing), float(in_angle), float(in_dist), wrkspc)
+    UncertBuff=""
+    out_fcUNC =""
+    Geodesic_Main(in_fc, out_fc, float(in_bearing), float(in_angle), float(in_dist), wrkspc,UncertBuff, out_fcUNC)
 
