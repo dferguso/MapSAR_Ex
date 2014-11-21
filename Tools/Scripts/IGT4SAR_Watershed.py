@@ -72,6 +72,15 @@ wShedLyr = arcpy.GetParameterAsText(3)
 if wShedLyr == '#' or not wShedLyr:
     arcpy.AddMessage("You need to provide a valid Watershed Boundary Layer")
 
+fieldList = arcpy.ListFields(wShedLyr)
+chckr=0
+for field in fieldList:
+    if field.name.upper() == 'NAME' and field.type== 'String':
+        chckr=1
+if chckr==0:
+    arcpy.AddError('User provided Watershed data layer must contain a TEXT (String) field titled "NAME" with a unique identifier for each feature.')
+
+
 #File Names:
 IPP = "Planning Point"
 waterShed = "Watershed"
@@ -88,22 +97,17 @@ arcpy.SelectLayerByAttribute_management(IPP, "NEW_SELECTION", where)
 arcpy.SelectLayerByLocation_management(wShedLyr, "CONTAINS", IPP)
 arcpy.Append_management(wShedLyr, waterShed, "NO_TEST")
 
-wshd_fld0 = "HU_12_NAME"
 wshd_fld1 = "NAME"
 wshd_fld2 = "CLASSIFICATION"
 wshd_fld3 ="POA"
 cursor = arcpy.UpdateCursor(waterShed)
 for row in cursor:
-    HUname = row.getValue(wshd_fld0)
-##    if row.getValue(wshd_fld0):
-##        HUname = row.getValue(wshd_fld0)
-##    else:
-##        HUname =row.getValue(wshd_fld3)
+    HUname = row.getValue(wshd_fld1)
     row.setValue(wshd_fld2,1)
     row.setValue(wshd_fld3, 48)
     cursor.updateRow(row)
 
-where3 ='"HU_12_NAME" = ' +"'" + HUname + "'"
+where3 ='"NAME" = ' +"'" + HUname + "'"
 
 arcpy.SelectLayerByLocation_management(wShedLyr, "BOUNDARY_TOUCHES", waterShed)
 arcpy.SelectLayerByAttribute_management(wShedLyr, "REMOVE_FROM_SELECTION", where3)
@@ -118,7 +122,8 @@ if matchCount > 0:
     for row in cursor:
         row.setValue(wshd_fld2,2)
         row.setValue(wshd_fld3,38/matchCount)
-        HuNm.append(row.getValue(wshd_fld0))
+        HUname = row.getValue(wshd_fld1)
+        HuNm.append(HUname)
         cursor.updateRow(row)
 
 arcpy.SelectLayerByAttribute_management(wShedLyr, "CLEAR_SELECTION")
@@ -126,7 +131,7 @@ arcpy.SelectLayerByAttribute_management(waterShed, "CLEAR_SELECTION")
 arcpy.SelectLayerByLocation_management(wShedLyr, "BOUNDARY_TOUCHES", waterShed)
 
 for name in HuNm:
-    where5 ='"HU_12_NAME" = ' +"'" + name + "'"
+    where5 ='"NAME" = ' +"'" + name + "'"
     arcpy.SelectLayerByAttribute_management(wShedLyr, "REMOVE_FROM_SELECTION", where5)
 arcpy.Append_management(wShedLyr, waterShed, "NO_TEST")
 
@@ -146,10 +151,8 @@ del row, HuNm, HUname, matchCount, cursor, name
 
 wshd_fld4 = "AREA_"
 wshd_fld5 = "Pden"
-express1 = '"'+ wshd_fld0+'"'
 express2 ="float(!SHAPE.AREA@ACRES!)"
 express3 = 'float(!' + wshd_fld3 + '!/!' + wshd_fld4 +'!)'
-arcpy.CalculateField_management(waterShed,wshd_fld1,express1, "PYTHON" )
 arcpy.CalculateField_management(waterShed,wshd_fld4,express2, "PYTHON" )
 arcpy.CalculateField_management(waterShed,wshd_fld5,express3, "PYTHON" )
 

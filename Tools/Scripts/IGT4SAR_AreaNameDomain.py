@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # Name:        AreaNameDomain.py
 # Purpose:     Updates the list of names for search areas.  Values obtained from
-#  Hasty Points, Hasty Lines, Hasty Segments and Search Segments
+#  QRT Points, QRT Lines, QRT Segments, Air Search Patterns and Search Segments
 #
 # Author:      Don Ferguson
 #
@@ -57,7 +57,22 @@ def appendName(pFeat,myList):
 
 def AreaNamesUpdate(workspc):
     fc1= "Area_Names"
-    fc = ["Hasty_Points", "Hasty_Line", "Hasty_Segments", "Search_Segments", "AirSearchPattern"]
+    if arcpy.Exists("QRT_Points"):
+        fcPTS="QRT_Points"
+    elif arcpy.Exists("Hasty_Points"):
+        fcPTS="Hasty_Points"
+
+    if arcpy.Exists("QRT_Lines"):
+        fcLINE="QRT_Lines"
+    elif arcpy.Exists("Hasty_Line"):
+        fcLINE="Hasty_Line"
+
+    if arcpy.Exists("QRT_Segments"):
+        fcSEG="QRT_Segments"
+    elif arcpy.Exists("Hasty_Segments"):
+        fcSEG="Hasty_Segments"
+
+    fc = [fcPTS, fcLINE, fcSEG, "Search_Segments", "AirSearchPattern"]
     myList =[]
 
     #arcpy.AddMessage("Area Name ")
