@@ -226,7 +226,7 @@ def AppendPolyLineFeatures(df, outFc, spRef):
         fClass=os.path.join(wrkspc,"Planning")
         arcpy.CreateFeatureclass_management(fClass, AirPatterns, "POLYLINE", spatial_reference=spRef)
 
-        fldNames=[('AREA_NAME', 'TEXT'),('AREA_DESCRIPTION','TEXT','','',500),('PATTERN','TEXT'), \
+        fldNames=[('Area_Name', 'TEXT'),('Area_Description','TEXT','','',500),('PATTERN','TEXT'), \
                   ('SWEEPWIDTH', 'SHORT'),('SEARCHED', 'SHORT'),('SEARCHSPEED', 'SHORT'), ('PATHLENGTH','FLOAT')]
         for field in fldNames:
             arcpy.AddField_management(*(AirPatterns,) + field)
@@ -251,7 +251,7 @@ def AppendPolyLineFeatures(df, outFc, spRef):
         pDescrip = "The flight path is {0} km".format(round(pLength,2))
         row.setValue("SEARCHED",0)
         row.setValue("SEARCHSPEED",0)
-        row.setValue("AREA_DESCRIPTION",pDescrip)
+        row.setValue("Area_Description",pDescrip)
         cursor.updateRow(row)
     del cursor, row
 
@@ -551,14 +551,14 @@ if __name__ == '__main__':
     # create the polylines which make up the desired pattern.
     arcpy.PointsToLine_management(tempFC,outFC)
 
-    fldNames=[('AREA_NAME', 'TEXT'),('SWEEPWIDTH', 'SHORT'),('PATTERN','TEXT')]
+    fldNames=[('Area_Name', 'TEXT'),('SWEEPWIDTH', 'SHORT'),('PATTERN','TEXT')]
     for field in fldNames:
         arcpy.AddField_management(*(outFC,) + field) #often creates new Lyer
     deleteLayer(df,[outFC])
 
     cursor = arcpy.UpdateCursor(outFC)
     for row in cursor:
-        row.setValue("AREA_NAME",outFC)
+        row.setValue("Area_Name",outFC)
         row.setValue("SWEEPWIDTH",sWeep)
         row.setValue("PATTERN",pAttern)
         cursor.updateRow(row)

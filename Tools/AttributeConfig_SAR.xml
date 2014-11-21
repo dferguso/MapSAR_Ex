@@ -10,10 +10,20 @@
     <Name>Planning Point</Name>
   </Layer>
   <Layer>
-    <Name>Hasty_Line</Name>
+    <Name>Team_Status</Name>
   </Layer>
   <Layer>
-    <Name>Team_Status</Name>
+    <Name>QRT_Lines</Name>
+  </Layer>
+  <Layer>
+    <Name>QRT_Points</Name>
+  </Layer>
+  <Layer>
+    <Name>QRT_Segments</Name>
+  </Layer>
+
+  <Layer>
+    <Name>Hasty_Line</Name>
   </Layer>
   <Layer>
     <Name>Hasty_Points</Name>

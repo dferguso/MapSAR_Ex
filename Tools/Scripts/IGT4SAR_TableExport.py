@@ -84,11 +84,27 @@ if outFolder == '#' or not outFolder:
 
 
 Group = ["Incident","Operations", "Planning", "Resources_Comms"]
+if arcpy.Exists("QRT_Points"):
+    fcPts="QRT_Points"
+elif arcpy.Exists("Hasty_Points"):
+    fcPts="Hasty_Points"
+
+if arcpy.Exists("QRT_Lines"):
+    fcLine="QRT_Lines"
+elif arcpy.Exists("Hasty_Line"):
+    fcLine="Hasty_Line"
+
+if arcpy.Exists("QRT_Segments"):
+    fcSeg="QRT_Segments"
+elif arcpy.Exists("Hasty_Segments"):
+    fcSeg="Hasty_Segments"
+
+
 TableName = [["Plan_Point", "Found", "Incident_Info", "Incident_Staff",
     "Lead_Agency", "Plan_Point", "RP", "Subject_Information"],
     ["Air_operations", "Assignments", "Clues_Point", "Debriefing", "Teams",
-    "Operation_Period", "Team_Members"], ["Hasty_Line", "Hasty_Points",
-    "Hasty_Segments", "Probability_Regions", "Scenarios", "Search_Segments"],
+    "Operation_Period", "Team_Members"], [fcLine, fcPts,
+    fcSeg, "Probability_Regions", "Scenarios", "Search_Segments"],
     ["Assets", "Radio_Log", "Resource_Status"]]
 
 kk=0
