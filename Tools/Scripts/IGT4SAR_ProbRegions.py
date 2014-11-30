@@ -27,90 +27,122 @@ import arcpy
 import string
 from types import *
 import sys
+from arcpy import env
 
-##workspc = arcpy.GetParameterAsText(0)
-##arcpy.env.workspace = workspc
+# Environment variables
+wrkspc=arcpy.env.workspace
+env.overwriteOutput = "True"
+arcpy.env.extent = "MAXOF"
+##arcpy.env.parallelProcessingFactor = "100%"
 
-ProbRegions = arcpy.GetParameterAsText(0)
-if ProbRegions == '#' or not ProbRegions:
-    ProbRegions = "8 Segments_Group\Probability Regions" # provide a default value if unspecified
+def getDataframe():
+    """ get current mxd and dataframe returns mxd, frame"""
+    try:
+        mxd = arcpy.mapping.MapDocument('CURRENT');df = arcpy.mapping.ListDataFrames(mxd,"*")[0]
 
-fc2 = "Search_Segments"
-fc3 = ProbRegions
+        return(mxd,df)
 
-arcpy.CalculateField_management(fc3, "Area", "!shape.area@acres!", "PYTHON_9.3", "")
+    except SystemExit as err:
+            pass
 
-POCList=[]
-rows = arcpy.SearchCursor(fc3)
-for row in rows:
-    if type(row.getValue("POCaSsign")) is NoneType:
-        RegName = row.getValue("Region_Name")
-        arcpy.AddError("POC has not been assigned for Region: " + RegName + ".  Set POC Assign to '0' if you do not want to include in Probability calculations.")
-        sys.exit()
+def ProbabilityDomain(Probability_Regions):
+    cProb=arcpy.GetCount_management(Probability_Regions)
+    if int(cProb.getOutput(0)) > 0:
+    # Process: Table To Domain (9)
+        arcpy.AddMessage("update Probability Region Name domain")
+        arcpy.TableToDomain_management(Probability_Regions, "Region_Name", "Region_Name", wrkspc, "Region_Name", "Region_Name", "REPLACE")
+        try:
+            arcpy.SortCodedValueDomain_management(wrkspc, "Region_Name", "DESCRIPTION", "ASCENDING")
+        except:
+            pass
     else:
-        POCList.append(row.POCaSsign)
+        arcpy.AddMessage("No Probability Region information to update")
 
-POCTotal = sum(POCList)
+###########Main############
+if __name__ == '__main__':
+    mxd, df = getDataframe()
 
-rows1 = arcpy.UpdateCursor(fc3)
-row1 = rows1.next()
+    ProbRegions = arcpy.GetParameterAsText(0)
+    if ProbRegions == '#' or not ProbRegions:
+        ProbRegions = "8 Segments_Group\Probability Regions" # provide a default value if unspecified
 
-while row1:
-    # you need to insert correct field names in your getvalue function
-    RegionName = row1.Region_Name
-    RegArea = row1.Area
-    if POCTotal==0.0:
-        POCTotal=1.0
-    POCReg = row1.POCaSsign/POCTotal * 100.0
-    row1.POA = POCReg
-    row1.POAcum = POCReg
-    if RegArea != 0.0:
-        PdenReg = round(POCReg/RegArea,3)
-    else:
-        PdenReg = 0.0
+    fc2 = "Search_Segments"
+    fc3 = ProbRegions
 
-    row1.Pden=PdenReg
+    ProbabilityDomain(ProbRegions)
+    arcpy.CalculateField_management(fc3, "Area", "!shape.area@acres!", "PYTHON_9.3", "")
 
-    where2 = '"Region_Name" = ' + "'" + RegionName + "'"
-    arcpy.AddMessage(where2)
-    rows2 = arcpy.SearchCursor(fc2, where2)
-    row2 = rows2.next()
+    POCList=[]
+    rows = arcpy.SearchCursor(fc3)
+    for row in rows:
+        if type(row.getValue("POCaSsign")) is NoneType:
+            RegName = row.getValue("Region_Name")
+            arcpy.AddError("POC has not been assigned for Region: " + RegName + ".  Set POC Assign to '0' if you do not want to include in Probability calculations.")
+            sys.exit()
+        else:
+            POCList.append(row.POCaSsign)
 
-    arcpy.SelectLayerByAttribute_management(fc3,"NEW_SELECTION",where2)
+    POCTotal = sum(POCList)
 
-    if row2:
-        arcpy.AddMessage(RegionName + " already exists as a Segment")
-        row2 = rows2.next()
-
-    else:
-        arcpy.SelectLayerByAttribute_management(fc3,"NEW_SELECTION",where2)
-        arcpy.Append_management(fc3, fc2, "NO_TEST", "", "")
-        rows3 = arcpy.UpdateCursor(fc2,where2)
-        for row3 in rows3:
-            if RegionName == 'ROW':
-                row3.Area_Name = RegionName
-            else:
-                row3.Area_Name = RegionName + "01"
-            row3.Area_seg = RegArea
-            row3.POA = POCReg
-            row3.sPOC_Orig = POCReg
-            row3.POC_Now = POCReg
-            row3.Pden = PdenReg
-            row3.Status = "Not Assigned"
-            row3.Searched = 0
-            row3.Display = 1
-            row3.PODcum = 0
-            row3.PODcumunrsp = 0
-            rows3.updateRow(row3)
-        del row3
-        del rows3
-
-    del where2
-    del row2
-    del rows2
-
-    rows1.updateRow(row1)
+    rows1 = arcpy.UpdateCursor(fc3)
     row1 = rows1.next()
 
-del rows1
-del row1
+    while row1:
+        # you need to insert correct field names in your getvalue function
+        RegionName = row1.Region_Name
+        RegArea = row1.Area
+        if POCTotal==0.0:
+            POCTotal=1.0
+        POCReg = row1.POCaSsign/POCTotal * 100.0
+        row1.POA = POCReg
+        row1.POAcum = POCReg
+        if RegArea != 0.0:
+            PdenReg = round(POCReg/RegArea,3)
+        else:
+            PdenReg = 0.0
+
+        row1.Pden=PdenReg
+
+        where2 = '"Region_Name" = ' + "'" + RegionName + "'"
+        arcpy.AddMessage(where2)
+        rows2 = arcpy.SearchCursor(fc2, where2)
+        row2 = rows2.next()
+
+        arcpy.SelectLayerByAttribute_management(fc3,"NEW_SELECTION",where2)
+
+        if row2:
+            arcpy.AddMessage(RegionName + " already exists as a Segment")
+            row2 = rows2.next()
+
+        else:
+            arcpy.SelectLayerByAttribute_management(fc3,"NEW_SELECTION",where2)
+            arcpy.Append_management(fc3, fc2, "NO_TEST", "", "")
+            rows3 = arcpy.UpdateCursor(fc2,where2)
+            for row3 in rows3:
+                if RegionName == 'ROW':
+                    row3.Area_Name = RegionName
+                else:
+                    row3.Area_Name = RegionName + "01"
+                row3.Area_seg = RegArea
+                row3.POA = POCReg
+                row3.sPOC_Orig = POCReg
+                row3.POC_Now = POCReg
+                row3.Pden = PdenReg
+                row3.Status = "Not Assigned"
+                row3.Searched = 0
+                row3.Display = 1
+                row3.PODcum = 0
+                row3.PODcumunrsp = 0
+                rows3.updateRow(row3)
+            del row3
+            del rows3
+
+        del where2
+        del row2
+        del rows2
+
+        rows1.updateRow(row1)
+        row1 = rows1.next()
+
+    del rows1
+    del row1

@@ -93,6 +93,7 @@ def AreaNamesUpdate(workspc):
 
     arcpy.DeleteRows_management(fc1)
 
+    arcpy.AddMessage("\n")
     for xd in myList:
         arcpy.AddMessage(xd)
 

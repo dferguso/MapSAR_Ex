@@ -63,6 +63,23 @@ def joinCheck(FName, fc, mxd, df, TaskMap):
                     return('"' + f.name + '" = ' + "'" + TaskMap + "'")
     arcpy.AddError("No field named '{0}' in {1}".format(FName,lyr))
 
+def updateAssignmentDomain():
+        # Process: Table To Domain (10)
+    Assignments = "Assignments"
+    try:
+        cAssign=arcpy.GetCount_management(Assignments)
+        if int(cAssign.getOutput(0)) > 0:
+            arcpy.AddMessage("update Assignment Numbers domain")
+            arcpy.TableToDomain_management(Assignments, "Assignment_Number", "Assignment_Number", wrkspc, "Assignment_Number", "Assignment_Number", "REPLACE")
+            try:
+                arcpy.SortCodedValueDomain_management(wrkspc, "Assignment_Number", "DESCRIPTION", "ASCENDING")
+            except:
+                pass
+        else:
+            arcpy.AddMessage("No Assignment Numbers to update")
+    except:
+        arcpy.AddMessage("Error in Assignment Numbers update: may be two Assignments with same number or multiple blanks")
+
 
 if __name__ == '__main__':
     #######
@@ -94,6 +111,8 @@ if __name__ == '__main__':
 
     kmlMap = 'No'
     gpxMap = 'No'
+
+    updateAssignmentDomain()
 
     clearLyrs = [fc4, fc5, fc6, fc7, fc10]
     lyrvis = [0,0,0,0,0]

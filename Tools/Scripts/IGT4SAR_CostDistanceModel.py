@@ -205,7 +205,6 @@ IPPDist_Layer=arcpy.mapping.Layer(IPP_dist)
 arcpy.mapping.AddLayer(df,IPPDist_Layer,"BOTTOM")
 spatialRef = arcpy.Describe(IPPDist_Layer).SpatialReference
 spn =spatialRef.name
-#arcpy.AddMessage(spn)
 
 desc = arcpy.Describe(IPP_dist)
 extent = desc.extent
@@ -217,8 +216,7 @@ spRefDEM = arcpy.Describe(DEM2).SpatialReference
 spnDEM =spRefDEM.name
 arcpy.AddMessage("DEM Spatial Reference is: " + spnDEM)
 
-
-if spnDEM != spn:
+if spnDEM.upper() != spn.upper():
     State1 = "Project DEM using 'Project Raster tool' with the output coord system:"
     State2 = "Select the appropriate coord transformation for your data and"
     State3 = "use the default Cell Size. Use the projected DEM for this tool."
@@ -596,10 +594,10 @@ try:
     else:
         # Fence line processing
         # Process: Clip Fences
-        arcpy.AddMessage("Clip Fences and buffer to 15 meters")
+        arcpy.AddMessage("Clip Fences and buffer to 5 meters")
         arcpy.Clip_analysis(Fence, IPP_dist, Fence_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "15 Meters")
+        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "5 Meters")
 
         # Check to see if the Fence polyline already has a "Impd" field.  If not create on
         FenceImpedance = 99

@@ -21,7 +21,6 @@
   <Layer>
     <Name>QRT_Segments</Name>
   </Layer>
-
   <Layer>
     <Name>Hasty_Line</Name>
   </Layer>
@@ -57,5 +56,8 @@
   </Layer>
   <Layer>
     <Name>Search Pattern Extent</Name>
+  </Layer>
+  <Layer>
+    <Name>CellTowers</Name>
   </Layer>
 </Layers>

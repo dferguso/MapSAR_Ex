@@ -26,6 +26,7 @@
 
 # Take courage my friend help is on the way
 import arcpy
+import IGT4SAR_AreaNameDomain
 
 # Environment variables
 wrkspc=arcpy.env.workspace
@@ -352,4 +353,5 @@ if __name__ == '__main__':
     if SegCount==0:
         arcpy.AddError("No Points, Lines or Segments Selected\n")
 
-    arcpy.AddMessage("\n")
+    arcpy.AddMessage("\nUpdate Area Name Domain\n")
+    IGT4SAR_AreaNameDomain.AreaNamesUpdate(wrkspc)
