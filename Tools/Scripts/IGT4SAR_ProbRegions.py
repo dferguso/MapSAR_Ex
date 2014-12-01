@@ -28,6 +28,7 @@ import string
 from types import *
 import sys
 from arcpy import env
+import IGT4SAR_AreaNameDomain
 
 # Environment variables
 wrkspc=arcpy.env.workspace
@@ -146,3 +147,13 @@ if __name__ == '__main__':
 
     del rows1
     del row1
+    arcpy.SelectLayerByAttribute_management(fc3,"CLEAR_SELECTION")
+
+    arcpy.AddMessage("\nUpdate Area Name Domain\n")
+    try:
+        IGT4SAR_AreaNameDomain.AreaNamesUpdate(wrkspc)
+    except:
+        sys.exit("Did not update Search Area Names Domain")
+        arcpy.AddWarning("Failed to update the Search Area Names Domain")
+
+

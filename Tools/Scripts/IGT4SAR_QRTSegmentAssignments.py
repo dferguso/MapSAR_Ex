@@ -25,7 +25,7 @@
 #!/usr/bin/env python
 
 # Take courage my friend help is on the way
-import arcpy
+import arcpy, sys
 import IGT4SAR_AreaNameDomain
 
 # Environment variables
@@ -103,16 +103,21 @@ def AllPoints(Areas, SegmentName):
                 Area_Name = row1.getValue("Area_Name")
                 Area_Name.encode('ascii','ignore')
                 arcpy.AddMessage("QRT Points: " + Area_Name)
+                if row1.getValue("Area_Description"):
+                    Descrip3 =row1.getValue("Area_Description")
+                else:
+                    Descrip3=""
 
                 PtA_X = row1.getValue(fieldName2)
                 PtA_Y = row1.getValue(fieldName3)
 
                 Descrip1 = "Search in / around " + Area_Name
-                Descrip2 = " located at: " + str(int(PtA_X)) + " " + str(int(PtA_Y)) + "."
+                Descrip2 = " located at: " + str(int(PtA_X)) + " " + str(int(PtA_Y)) + ". "
 
-                Area_Description = Descrip1 + Descrip2
+                Area_Description = Descrip1 + Descrip2 + Descrip3
 
                 WriteToAssignments(Areas,Area_Name, Area_Description,Ttype)
+                del Descrip1, Descrip2, Descrip3, Area_Description, Area_Name
 
             except:
                 # Get the tool error messages
@@ -174,15 +179,20 @@ def AllLines(Areas, SegmentName):
                 PtA_Y = row1.getValue("PointA_Y")
                 PtB_X = row1.getValue("PointB_X")
                 PtB_Y = row1.getValue("PointB_Y")
+                if row1.getValue("Area_Description"):
+                    Descrip5 =row1.getValue("Area_Description")
+                else:
+                    Descrip5=""
 
                 Descrip1 = "Search along " + Area_Name + " for a distance of " + str(int(Length_miles*100.0)/100.0) + " miles"
                 Descrip2 = " between point 1: " + str(int(PtA_X)) + " " + str(int(PtA_Y)) + ", and point2: "
                 Descrip3 = str(int(PtB_X)) + " " +str(int(PtB_Y)) + "."
-                Descrip4 = "  Sweep 10 - 20 ft on each side of road/trail.  Look for decision points and location where someone may leave the trail."
+                Descrip4 = "  Sweep 10 - 20 ft on each side of road/trail.  Look for decision points and location where someone may leave the trail. "
 
-                Area_Description = Descrip1 + Descrip2 + Descrip3 + Descrip4
+                Area_Description = Descrip1 + Descrip2 + Descrip3 + Descrip4 + Descrip5
 
                 WriteToAssignments(Areas,Area_Name, Area_Description,Ttype)
+                del Descrip1, Descrip2, Descrip3, Descrip4, Descrip5, Area_Description, Area_Name, Ttype
 
             except:
                 # Get the tool error messages
@@ -354,4 +364,8 @@ if __name__ == '__main__':
         arcpy.AddError("No Points, Lines or Segments Selected\n")
 
     arcpy.AddMessage("\nUpdate Area Name Domain\n")
-    IGT4SAR_AreaNameDomain.AreaNamesUpdate(wrkspc)
+    try:
+        IGT4SAR_AreaNameDomain.AreaNamesUpdate(wrkspc)
+    except:
+        sys.exit("Did not update Search Area Names Domain")
+        arcpy.AddWarning("Failed to update the Search Area Names Domain")

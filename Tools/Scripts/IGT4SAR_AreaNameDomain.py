@@ -27,9 +27,6 @@
 import arcpy
 import string
 
-workspc = arcpy.GetParameterAsText(0)
-
-arcpy.env.workspace = workspc
 arcpy.env.overwriteOutput = "True"
 
 def appendName(pFeat,myList):
@@ -117,27 +114,15 @@ def AreaNamesUpdate(workspc):
     # Process: Create a domain from an existing table
     arcpy.TableToDomain_management(domTable, codeField, descField, dWorkspace, domName, domDesc,"REPLACE")
 
-
     del fc1
 
-
-
-    ##except:
-    ##    # Get the tool error messages
-    ##    #
-    ##    msgs = "All tasks have been processed"
-    ##
-    ##    # Return tool error messages for use with a script tool
-    ##    #
-    ##    arcpy.AddWarning(msgs)
-    ##    # Print tool error messages for use in Python/PythonWin
-    ##    #
-    ##    print msgs
 
 ########
 # Main Program starts here
 #######
 if __name__ == '__main__':
+    workspc = arcpy.GetParameterAsText(0)
+    arcpy.env.workspace = workspc
     AreaNamesUpdate(workspc)
 
 
