@@ -32,7 +32,7 @@ arcpy.env.overwriteOutput = "True"
 def appendName(pFeat,myList):
     cFeat=arcpy.GetCount_management(pFeat)
     if int(cFeat.getOutput(0)) > 0:
-        arcpy.AddMessage("Add area names from " + pFeat)
+##        arcpy.AddMessage("Add area names from " + pFeat)
         rows1 = arcpy.SearchCursor(pFeat)
         row1 = rows1.next()
         AName_list=[]
@@ -40,7 +40,6 @@ def appendName(pFeat,myList):
             AName = row1.getValue("Area_Name")
             if AName != "ROW":
                 AName_list.append(AName)
-            #arcpy.AddMessage(AName)
 
             row1 = rows1.next()
         del row1
@@ -90,7 +89,6 @@ def AreaNamesUpdate(workspc):
 
     arcpy.DeleteRows_management(fc1)
 
-    arcpy.AddMessage("\n")
     for xd in myList:
         arcpy.AddMessage(xd)
 

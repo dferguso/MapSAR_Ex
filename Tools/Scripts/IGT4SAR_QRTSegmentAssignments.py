@@ -33,7 +33,12 @@ wrkspc=arcpy.env.workspace
 arcpy.env.overwriteOutput = "True"
 arcpy.env.extent = "MAXOF"
 
-def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype):
+now = datetime.datetime.now()
+todaydate = now.strftime("%m%d")
+timestamp = 'P{0}'.format(todaydate)
+
+
+def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype,pNumbr):
     fc3 = "Operation_Period"
     Perd=[0]
     Safety = " "
@@ -50,6 +55,13 @@ def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype):
     fc2="Assignments"
     rows = arcpy.InsertCursor(fc2)
     row = rows.newRow()
+    if pNumbr is not None:
+        pNum='{0}-{1}'.format(timestamp,str(pNumbr).zfill(3))
+    else:
+        pNum = pNumbr
+##    arcpy.AddMessage("pNum: {0} - Line 62".format(pNum))
+    row.Planning_Number=pNum
+
     row.Description = Area_Description
     row.Area_Name = Area_Name
     try:
@@ -77,8 +89,9 @@ def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype):
     del rows
     del row
 
-def AllPoints(Areas, SegmentName):
+def AllPoints(Areas, SegmentName, pNumb):
     arcpy.AddMessage("\nProcessing Point Assignments")
+
     if arcpy.Exists("QRT_Points"):
         fc1="QRT_Points"
     elif arcpy.Exists("Hasty_Points"):
@@ -88,6 +101,11 @@ def AllPoints(Areas, SegmentName):
 
     fieldName2="UTM_Easting"
     fieldName3="UTM_Northing"
+
+    fields = arcpy.ListFields(fc1)
+    fieldNames=[]
+    for field in fields:
+        fieldNames.append(field.name)
 
     # Get a list of areas that have already been assigned
     SName = SegmentName.split(";")
@@ -103,7 +121,7 @@ def AllPoints(Areas, SegmentName):
                 Area_Name = row1.getValue("Area_Name")
                 Area_Name.encode('ascii','ignore')
                 arcpy.AddMessage("QRT Points: " + Area_Name)
-                if row1.getValue("Area_Description"):
+                if "Area_Description" in fieldNames:
                     Descrip3 =row1.getValue("Area_Description")
                 else:
                     Descrip3=""
@@ -116,7 +134,9 @@ def AllPoints(Areas, SegmentName):
 
                 Area_Description = Descrip1 + Descrip2 + Descrip3
 
-                WriteToAssignments(Areas,Area_Name, Area_Description,Ttype)
+                if pNumb is not None:
+                    pNumb+=1
+                WriteToAssignments(Areas,Area_Name, Area_Description,Ttype, pNumb)
                 del Descrip1, Descrip2, Descrip3, Area_Description, Area_Name
 
             except:
@@ -133,9 +153,10 @@ def AllPoints(Areas, SegmentName):
 
         del row1
         del rows1
+        return(pNumb)
 
 
-def AllLines(Areas, SegmentName):
+def AllLines(Areas, SegmentName, pNumb):
     arcpy.AddMessage("\nProcessing Line Assignments")
     if arcpy.Exists("QRT_Lines"):
         fc1="QRT_Lines"
@@ -143,6 +164,11 @@ def AllLines(Areas, SegmentName):
         fc1 = "Hasty_Line"
     else:
         arcpy.AddError("No QRT / Hasty Lines Feature Exists")
+
+    fields = arcpy.ListFields(fc1)
+    fieldNames=[]
+    for field in fields:
+        fieldNames.append(field.name)
 
     fieldName1="Length_miles"
     fieldName2="PointA_X"
@@ -179,7 +205,7 @@ def AllLines(Areas, SegmentName):
                 PtA_Y = row1.getValue("PointA_Y")
                 PtB_X = row1.getValue("PointB_X")
                 PtB_Y = row1.getValue("PointB_Y")
-                if row1.getValue("Area_Description"):
+                if "Area_Description" in fieldNames:
                     Descrip5 =row1.getValue("Area_Description")
                 else:
                     Descrip5=""
@@ -191,7 +217,9 @@ def AllLines(Areas, SegmentName):
 
                 Area_Description = Descrip1 + Descrip2 + Descrip3 + Descrip4 + Descrip5
 
-                WriteToAssignments(Areas,Area_Name, Area_Description,Ttype)
+                if pNumb is not None:
+                    pNumb+=1
+                WriteToAssignments(Areas,Area_Name, Area_Description,Ttype, pNumb)
                 del Descrip1, Descrip2, Descrip3, Descrip4, Descrip5, Area_Description, Area_Name, Ttype
 
             except:
@@ -209,9 +237,10 @@ def AllLines(Areas, SegmentName):
 
         del row1
         del rows1
+        return(pNumb)
 
 
-def AllSegments(Areas, SegmentName):
+def AllSegments(Areas, SegmentName, pNumb):
     arcpy.AddMessage("\nProcessing Area (Segment) Assignments")
     fc1="Search_Segments"
 
@@ -298,7 +327,9 @@ def AllSegments(Areas, SegmentName):
                 del row1, rows1
 
             ####
-            WriteToAssignments(Areas,Area_Name,Area_Description,Ttype)
+            if pNumb is not None:
+                pNumb+=1
+            WriteToAssignments(Areas,Area_Name,Area_Description,Ttype,pNumb)
 
         except:
             # Get the tool error messages
@@ -311,6 +342,7 @@ def AllSegments(Areas, SegmentName):
             # Print tool error messages for use in Python/PythonWin
             #
             print msgs
+    return(pNumb)
 
 
 ########
@@ -325,45 +357,56 @@ if __name__ == '__main__':
 
     SegmentName = arcpy.GetParameterAsText(2)  # Get the subject number
 
+    surpressPNumb =arcpy.GetParameterAsText(3)  # Get the subject number
+
     fc2="Assignments"
 
     Areas=[]
+    pNumbr=[]
+    k=0
     rows1 = arcpy.SearchCursor(fc2)
     row1 = rows1.next()
     while row1:
+        if surpressPNumb.upper()=="FALSE":
+            k+=1
+            try:
+                pN=row1.Planning_Number
+                pNumbr.append(int(pN.split("-")[1]))
+            except:
+                pNumbr.append(k)
+            planNum=max(pNumbr)
+        else:
+            planNum=None
         AreaN =row1.Area_Name
         AreaN.encode('ascii','ignore')
         Areas.append(AreaN)
         row1 = rows1.next()
 
-    arcpy.AddMessage("\nCreating assignments from selected areas\n")
+    arcpy.AddMessage("\nCreating assignments from selected areas")
 
     SegCount=0
     if PointName:
-        AllPoints(Areas,PointName)
         SegCount+=1
-        arcpy.AddMessage("\n")
+        planNum = AllPoints(Areas,PointName,planNum)
     else:
         arcpy.AddMessage("No QRT Points Selected\n")
 
     if LineName:
-        AllLines(Areas,LineName)
         SegCount+=1
-        arcpy.AddMessage("\n")
+        planNum = AllLines(Areas,LineName,planNum)
     else:
         arcpy.AddMessage("No QRT Lines Selected\n")
 
     if SegmentName:
-        AllSegments(Areas, SegmentName)
         SegCount+=1
-        arcpy.AddMessage("\n")
+        planNum = AllSegments(Areas, SegmentName,planNum)
     else:
         arcpy.AddMessage("No Segments Selected\n")
 
     if SegCount==0:
         arcpy.AddError("No Points, Lines or Segments Selected\n")
 
-    arcpy.AddMessage("\nUpdate Area Name Domain\n")
+    arcpy.AddMessage("\n\nUpdate Area Name Domain\n")
     try:
         IGT4SAR_AreaNameDomain.AreaNamesUpdate(wrkspc)
     except:
