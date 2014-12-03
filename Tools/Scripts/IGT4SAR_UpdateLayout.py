@@ -30,8 +30,7 @@ import geomag
 def getDataframe():
     ## Get current mxd and dataframe
     try:
-        mxd = arcpy.mapping.MapDocument('CURRENT')
-        df = arcpy.mapping.ListDataFrames(mxd)[0]
+        mxd = arcpy.mapping.MapDocument('CURRENT'); df = arcpy.mapping.ListDataFrames(mxd)[0]
 
         return(mxd,df)
 
@@ -168,7 +167,10 @@ if __name__ == '__main__':
     try:
         dfSpatial_Ref = df.spatialReference.name
         dfSpatial_Type = df.spatialReference.type
-        arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type + "\n")
+        if dfSpatial_Type=='Projected':
+            arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type + ".  Be sure to turn on USNG Grid in Data Frame Properties.\n")
+        else:
+            arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type + "\n")
         arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref + "\n")
 
         fld2 = "MapDatum"

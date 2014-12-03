@@ -678,7 +678,8 @@ if __name__ == '__main__':
                                 for part in row6.getValue(shapeName):
                                     txt.write('<trkseg>\n')
                                     for pnt in part:
-                                        txt.write('<trkpt lat="' + str(pnt.Y) + '" lon= "'+ str(pnt.X) + '"/>\n')
+                                        if pnt is not None:
+                                            txt.write('<trkpt lat="' + str(pnt.Y) + '" lon= "'+ str(pnt.X) + '"/>\n')
                                     txt.write('</trkseg>\n')
                                     k+=1
                                 txt.write('</trk>\n')
@@ -714,7 +715,7 @@ if __name__ == '__main__':
                             filekml = output + "/" + str(PlanNo) + "_KML.kmz"
 
                         fc_lyr = arcpy.mapping.Layer(fc)
-                        where4 = joinCheck("Area_Name",fc_lyr, mxd, df,TaskMap)
+                        where4 = joinCheck("Area_Name",fc, mxd, df,TaskMap)
                         arcpy.SelectLayerByAttribute_management(fc_lyr,"NEW_SELECTION",where4)
                         fc_lyr.visible=True
                         arcpy.AddMessage("Creating KML/KMZ file for Assignment Number: " +str(AssNum) +'\n')
@@ -729,6 +730,7 @@ if __name__ == '__main__':
 
 
             arcpy.AddMessage(" ")
+            arcpy.SelectLayerByAttribute_management(fc_lyr, "CLEAR_SELECTION")
             row = rows.next()
     mxd.activeView = disView
     arcpy.RefreshActiveView()
