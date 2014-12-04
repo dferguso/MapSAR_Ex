@@ -38,6 +38,7 @@ def checkNoneType(variable, varName):
 
 #workspc = arcpy.GetParameterAsText(0)
 output = arcpy.GetParameterAsText(0)
+addInfo = arcpy.GetParameterAsText(1)
 
 #arcpy.env.workspace = workspc
 arcpy.env.overwriteOutput = "True"
@@ -125,12 +126,14 @@ while row:
     Jacket = checkNoneType(row.getValue("Jacket"), '"Subject Jacket"')
     Hat = checkNoneType(row.getValue("Hat"), '"Subject Hat"')
     Footwear = checkNoneType(row.getValue("Footwear"), '"Subject Footwear"')
-    Info = checkNoneType(row.getValue("Info"), '"Additonal Information"')
+    if addInfo.upper()=="TRUE":
+        Info = checkNoneType(row.getValue("Info"), '"Additonal Information"')
+    else:
+        Info = checkNoneType("", '"Additonal Information"')
+
     QRCode = checkNoneType(row.getValue("QRCode"), '"QRCode"')
 
-
     filename = output + "/" + str(Subject_Name) + ".fdf"
-
     txt= open (filename, "w")
     txt.write("%FDF-1.2\n")
     txt.write("%????\n")

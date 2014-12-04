@@ -197,11 +197,12 @@ else:
 
 dfSpatial_Ref = df.spatialReference.name
 dfSpatial_Type = df.spatialReference.type
-arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type)
+arcpy.AddMessage("\nThe Coordinate System for the dataframe is: " + dfSpatial_Type)
 dfSpatial_Type = df.spatialReference.type
-arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref + "\n")
+arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref)
 if dfSpatial_Type=='Projected':
     arcpy.AddMessage("Be sure to turn on USNG Grid in Data Frame Properties.")
+arcpy.AddMessage("\n")
 
 ## Update Incident Information if it is provided by user
 if IncidName and IncidNum:

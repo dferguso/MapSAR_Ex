@@ -217,7 +217,7 @@ def VectorMath(ExtPts):
 
     return(eParts)
 
-def AppendPolyLineFeatures(df, outFc, spRef):
+def AppendPolyLineFeatures(df, outFc, spRef, Descrip1):
     # First test to see if the AirSearchPatterns Feature class exists
     fcList=arcpy.ListFeatureClasses("*","POLYLINE","Planning")
     AirPatterns="AirSearchPattern"
@@ -248,10 +248,10 @@ def AppendPolyLineFeatures(df, outFc, spRef):
     cursor = arcpy.UpdateCursor(AirPatterns,where4)
     for row in cursor:
         pLength = row.getValue("PATHLENGTH")
-        pDescrip = "The flight path is {0} km".format(round(pLength,2))
+        pDescrip = "The flight path is {0} km. ".format(round(pLength,2))
         row.setValue("SEARCHED",0)
         row.setValue("SEARCHSPEED",0)
-        row.setValue("Area_Description",pDescrip)
+        row.setValue("Area_Description",pDescrip + Descrip1)
         cursor.updateRow(row)
     del cursor, row
 
@@ -434,9 +434,18 @@ if __name__ == '__main__':
     if not spatial_reference.type == "Projected":
         sys.exit(arcpy.AddError("This tool requires a Projected Cooridnate System"))
 
+    fields = arcpy.ListFields(PtrnExt)
+    fieldNames=[]
+    for field in fields:
+        fieldNames.append(field.name)
+
     # Determine the centroid of the prescribed search area
     cursor=arcpy.SearchCursor(PtrnExt)
     for row in cursor:
+        if "Area_Description" in fieldNames:
+            Descrip1 =row.getValue("Area_Description")
+        else:
+            Descrip1=""
         Extnt=row.Shape.extent
         Centrd =row.Shape.centroid
     extCentroid = [Centrd.X,Centrd.Y]
@@ -564,7 +573,7 @@ if __name__ == '__main__':
         cursor.updateRow(row)
     del cursor, row
 
-    AppendPolyLineFeatures(df,outFC, spatial_reference)
+    AppendPolyLineFeatures(df,outFC, spatial_reference, Descrip1)
 
     if createKML.upper() == "TRUE":
         CreateKML(wrkspc,outFC)

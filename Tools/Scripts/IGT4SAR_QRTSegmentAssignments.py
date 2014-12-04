@@ -80,6 +80,7 @@ def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype,pNumbr):
         row.Map_Scale = 24000
     row.Create_Map = "Yes"
     row.Create_gpx = "Yes"
+    row.Create_KML = "Yes"
     if Area_Name in Areas:
         row.Previous_Search = "Yes"
     else:
@@ -153,7 +154,7 @@ def AllPoints(Areas, SegmentName, pNumb):
 
         del row1
         del rows1
-        return(pNumb)
+    return(pNumb)
 
 
 def AllLines(Areas, SegmentName, pNumb):
@@ -237,7 +238,7 @@ def AllLines(Areas, SegmentName, pNumb):
 
         del row1
         del rows1
-        return(pNumb)
+    return(pNumb)
 
 
 def AllSegments(Areas, SegmentName, pNumb):
@@ -363,6 +364,7 @@ if __name__ == '__main__':
 
     Areas=[]
     pNumbr=[]
+    planNum=0
     k=0
     rows1 = arcpy.SearchCursor(fc2)
     row1 = rows1.next()
