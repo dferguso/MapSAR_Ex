@@ -54,9 +54,9 @@ bufferUnit = arcpy.GetParameterAsText(3) # Desired units
 if bufferUnit == '#' or not bufferUnit:
     bufferUnit = "miles" # provide a default value if unspecified
 
-deSiredSpdA = arcpy.GetParameterAsText(4) # Desired units
+deSiredSpdA = arcpy.GetParameterAsText(4) # Nominal walking speed
 if deSiredSpdA == '#' or not deSiredSpdA:
-    deSiredSpdA = "miles" # provide a default value if unspecified
+    deSiredSpdA = "3.0" # provide a default value if unspecified
 
 
 DEM2 = arcpy.GetParameterAsText(5)

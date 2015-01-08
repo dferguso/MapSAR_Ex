@@ -226,6 +226,8 @@ def RingDistances(Subject_Category, EcoReg, Terrain):
         Distances = [0.3,0.7,2.6,6.0]
 
     else:
+        arcpy.AddMessage("NO SUBJECT CATEGORY PROVIDED - USING DEFAULT VALUES")
+        arcpy.AddMessage("25% - 0.4, 50% - 1.1, 75% - 2.0, 95% - 6.1 : units = miles")
         Distances = [0.4,1.1,2.0,6.1]
 
     return(Distances)
