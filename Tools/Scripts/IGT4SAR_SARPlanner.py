@@ -153,10 +153,16 @@ if __name__ == '__main__':
         arcpy.SelectLayerByAttribute_management(fcS_lyr,"CLEAR_SELECTION")
         if arcpy.Exists("StatisticalArea"):
             StatSeg = SelectStat.split(";")
+            StatArea={}
             for SS in StatSeg:
                 whereClause = '\'{0}\''.format(SS.replace("'",""))
                 arcpy.AddMessage("Select Layers that intersect the {0} Ring".format(SS.replace("'","")))
                 arcpy.MakeFeatureLayer_management(fcS_lyr, "TempLyr", '"Descrip" = ' + whereClause)
+                cursorStat=arcpy.SearchCursor(fcStat, '"Descrip" = ' + whereClause)
+                for row in cursorStat:
+                    aArea = row.getValue("Area_SqKm")
+
+                    StatArea[SS.replace("'","")]=[aArea]
 
                 for fc in fcList:
                     if fc != 'None':
@@ -227,6 +233,8 @@ if __name__ == '__main__':
     arcpy.AddMessage(lIne01)
     arcpy.AddMessage(lIne02)
     nSrchSum=0
+    nSegSum = 0
+    nAreaSum=0
     for SegName in sNameUnq:
         lArea = sSeg[SegName][0]
         lSpd = sSeg[SegName][1]
@@ -234,17 +242,59 @@ if __name__ == '__main__':
         eFfort = lArea/EffSpcng
         nSrchr = math.ceil(eFfort/TrkLngth)
         nSrchSum+=nSrchr
-        lIne03 = "Area(km^2): {0}, Search Speed (kph): {1}, Searchers Required: {2}".format(SegName, lSpd, nSrchr)
+        nSegSum+=1
+        nAreaSum+=lArea
+        lIne03 = "Area: {0}".format(SegName)
+        lIne03b = "Size(km^2): {0}, Search Speed (kph): {1}, # Searchers: {2}".format(round(lArea,3), lSpd, nSrchr)
         arcpy.AddMessage(lIne03)
+        arcpy.AddMessage(lIne03b)
         target.write(lIne03)
         target.write("\n")
-    lIne04 = '\nA total of {0} Searchers as required to complete the desired task\n\n'.format(nSrchSum)
+        target.write(lIne03b)
+        target.write("\n")
+    lIne04 = '\nA total of {0} Searchers as required to complete the desired task(s).\n'.format(nSrchSum)
+    lIne05 = 'A total of {0} Segemnts equally {1} square kilometers.\n'.format(nSegSum, round(nAreaSum,3))
+    lIne05b = 'Note that the total area of these Segments may exceed the Statistical Search Area (if defined)\n\n'
     arcpy.AddMessage(lIne04)
-    target.write(lIne04)
+    arcpy.AddMessage(lIne05)
+    arcpy.AddMessage(lIne05b)
+    target.write(lIne04);target.write("\n")
+    target.write(lIne05);target.write("\n")
+    target.write(lIne05b)
 
+    nSrchSum=0
+    nSegSum = 0
+    nAreaSum=0
+    if SelectStat:
+        lSpd = SrchSpd
+        lIne06A='\n\nStatistical Search Area Considerations'
+        lIne06B='Estimate Searcher Speed (kph): {0} - This speed may differ from the estimated Segment speeds\n\n'.format(lSpd)
+        arcpy.AddMessage(lIne06A)
+        target.write(lIne06A);target.write("\n")
+        arcpy.AddMessage(lIne06B)
+        target.write(lIne06B)
+
+        for stt in StatSeg:
+            lArea = StatArea[stt][0]
+            TrkLngth = lSpd * float(SrchTime)
+            eFfort = lArea/EffSpcng
+            nSrchr = math.ceil(eFfort/TrkLngth)
+            nSrchSum+=nSrchr
+            nSegSum+=1
+            nAreaSum+=lArea
+            lIne06 = "To Search the {0} Statistical Search Area (Area = {1} sq KM), would require {2} Searchers".format(stt, round(lArea,2), nSrchr)
+            arcpy.AddMessage(lIne06)
+            target.write(lIne06)
+            target.write("\n")
+        lIne07 = (
+        "\nA total of {0} Searchers area required to search the desired Statistical Search Areas of {1} in the alloted time.  A total area of {2} sq KM\n\n"
+        ).format(nSrchSum, SelectStat, round(nAreaSum,3))
+
+        arcpy.AddMessage(lIne07)
+        target.write(lIne07)
 
     target.close()
-    arcpy.AddMessage("Output file written to: {0}".format(pRoducts))
+    arcpy.AddMessage("Output file written to: {0}\n\n".format(pRoducts))
 
 
 
