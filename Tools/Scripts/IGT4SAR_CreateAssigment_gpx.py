@@ -63,6 +63,23 @@ def joinCheck(FName, fc, mxd, df, TaskMap):
                     return('"' + f.name + '" = ' + "'" + TaskMap + "'")
     arcpy.AddError("No field named '{0}' in {1}".format(FName,lyr))
 
+def updateAssignmentDomain():
+        # Process: Table To Domain (10)
+    Assignments = "Assignments"
+    try:
+        cAssign=arcpy.GetCount_management(Assignments)
+        if int(cAssign.getOutput(0)) > 0:
+            arcpy.AddMessage("update Assignment Numbers domain")
+            arcpy.TableToDomain_management(Assignments, "Assignment_Number", "Assignment_Number", wrkspc, "Assignment_Number", "Assignment_Number", "REPLACE")
+            try:
+                arcpy.SortCodedValueDomain_management(wrkspc, "Assignment_Number", "DESCRIPTION", "ASCENDING")
+            except:
+                pass
+        else:
+            arcpy.AddMessage("No Assignment Numbers to update")
+    except:
+        arcpy.AddMessage("Error in Assignment Numbers update: may be two Assignments with same number or multiple blanks")
+
 
 if __name__ == '__main__':
     #######
@@ -94,6 +111,8 @@ if __name__ == '__main__':
 
     kmlMap = 'No'
     gpxMap = 'No'
+
+    updateAssignmentDomain()
 
     clearLyrs = [fc4, fc5, fc6, fc7, fc10]
     lyrvis = [0,0,0,0,0]
@@ -659,7 +678,8 @@ if __name__ == '__main__':
                                 for part in row6.getValue(shapeName):
                                     txt.write('<trkseg>\n')
                                     for pnt in part:
-                                        txt.write('<trkpt lat="' + str(pnt.Y) + '" lon= "'+ str(pnt.X) + '"/>\n')
+                                        if pnt is not None:
+                                            txt.write('<trkpt lat="' + str(pnt.Y) + '" lon= "'+ str(pnt.X) + '"/>\n')
                                     txt.write('</trkseg>\n')
                                     k+=1
                                 txt.write('</trk>\n')
@@ -695,7 +715,7 @@ if __name__ == '__main__':
                             filekml = output + "/" + str(PlanNo) + "_KML.kmz"
 
                         fc_lyr = arcpy.mapping.Layer(fc)
-                        where4 = joinCheck("Area_Name",fc_lyr, mxd, df,TaskMap)
+                        where4 = joinCheck("Area_Name",fc, mxd, df,TaskMap)
                         arcpy.SelectLayerByAttribute_management(fc_lyr,"NEW_SELECTION",where4)
                         fc_lyr.visible=True
                         arcpy.AddMessage("Creating KML/KMZ file for Assignment Number: " +str(AssNum) +'\n')
@@ -710,6 +730,7 @@ if __name__ == '__main__':
 
 
             arcpy.AddMessage(" ")
+            arcpy.SelectLayerByAttribute_management(fc_lyr, "CLEAR_SELECTION")
             row = rows.next()
     mxd.activeView = disView
     arcpy.RefreshActiveView()

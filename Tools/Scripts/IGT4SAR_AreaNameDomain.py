@@ -27,15 +27,12 @@
 import arcpy
 import string
 
-workspc = arcpy.GetParameterAsText(0)
-
-arcpy.env.workspace = workspc
 arcpy.env.overwriteOutput = "True"
 
 def appendName(pFeat,myList):
     cFeat=arcpy.GetCount_management(pFeat)
     if int(cFeat.getOutput(0)) > 0:
-        arcpy.AddMessage("Add area names from " + pFeat)
+##        arcpy.AddMessage("Add area names from " + pFeat)
         rows1 = arcpy.SearchCursor(pFeat)
         row1 = rows1.next()
         AName_list=[]
@@ -43,7 +40,6 @@ def appendName(pFeat,myList):
             AName = row1.getValue("Area_Name")
             if AName != "ROW":
                 AName_list.append(AName)
-            #arcpy.AddMessage(AName)
 
             row1 = rows1.next()
         del row1
@@ -116,27 +112,15 @@ def AreaNamesUpdate(workspc):
     # Process: Create a domain from an existing table
     arcpy.TableToDomain_management(domTable, codeField, descField, dWorkspace, domName, domDesc,"REPLACE")
 
-
     del fc1
 
-
-
-    ##except:
-    ##    # Get the tool error messages
-    ##    #
-    ##    msgs = "All tasks have been processed"
-    ##
-    ##    # Return tool error messages for use with a script tool
-    ##    #
-    ##    arcpy.AddWarning(msgs)
-    ##    # Print tool error messages for use in Python/PythonWin
-    ##    #
-    ##    print msgs
 
 ########
 # Main Program starts here
 #######
 if __name__ == '__main__':
+    workspc = arcpy.GetParameterAsText(0)
+    arcpy.env.workspace = workspc
     AreaNamesUpdate(workspc)
 
 
