@@ -50,7 +50,7 @@ GOTO :eof
 
 :install
 
-xcopy "%_igtpath%tools\addins\*.esriaddin" "%~1\bin\Addins\"
-xcopy "%_igtpath%tools\SAR_Toolbox100.tbx" "%~1\ArcToolbox\Toolboxes\"
+	xcopy "%_igtpath%tools\addins\*.esriaddin" "%~1\bin\Addins\"
+	xcopy "%_igtpath%tools\SAR_Toolbox100.tbx" "%~1\ArcToolbox\Toolboxes\"
 
 ENDLOCAL

@@ -45,13 +45,13 @@ goto :eof
 
 :remove
 
-del "%~1\bin\Addins\Search_Editor.esriAddIn"
-del "%~1\bin\Addins\MapSAREX_Config.esriAddIn"
-del "%~1\bin\Addins\GPX.esriAddIn"
-del "%~1\bin\Addins\Get_Map_Point_Addin_Tool.esriAddIn"
-del "%~1\bin\Addins\ConstructwithBuffer.esriAddIn"
-del "%~1\bin\Addins\AttributeAssistant.esriAddIn"
+	del "%~1\bin\Addins\Search_Editor.esriAddIn"
+	del "%~1\bin\Addins\MapSAREX_Config.esriAddIn"
+	del "%~1\bin\Addins\GPX.esriAddIn"
+	del "%~1\bin\Addins\Get_Map_Point_Addin_Tool.esriAddIn"
+	del "%~1\bin\Addins\ConstructwithBuffer.esriAddIn"
+	del "%~1\bin\Addins\AttributeAssistant.esriAddIn"
 
-del "%~1\ArcToolbox\Toolboxes\SAR_Toolbox100.tbx"
+	del "%~1\ArcToolbox\Toolboxes\SAR_Toolbox100.tbx"
 
 ENDLOCAL
