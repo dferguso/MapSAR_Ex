@@ -21,8 +21,6 @@ copy "%_igtpath%tools\aaloaded.config" %_config%\loaded.config /y
 set _regasmdir="%_programs%\Common Files\ArcGIS\bin\"
 start "Register Measure Angle Addin" /D%_regasmdir% /W %_regasmdir%\ESRIRegAsm /p:Desktop "%_igtpath%Tools\AddIns\MeasureAngle.dll"
 
-"%_igtpath%tools\geomag-0.9.win32.exe"
-
 GOTO :eof
 
 
