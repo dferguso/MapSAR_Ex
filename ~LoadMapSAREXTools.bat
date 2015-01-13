@@ -31,10 +31,10 @@ ECHO %_programs%
 
 set _igtpath=%~dp0
 
-IF EXIST "%_programs%\ArcGIS\Desktop10.0" CALL :install "%_programs%\ArcGIS\Desktop10.0"
-IF EXIST "%_programs%\ArcGIS\Desktop10.1" CALL :install "%_programs%\ArcGIS\Desktop10.1"
-IF EXIST "%_programs%\ArcGIS\Desktop10.2" CALL :install "%_programs%\ArcGIS\Desktop10.2"
-IF EXIST "%_programs%\ArcGIS\Desktop10.3" CALL :install "%_programs%\ArcGIS\Desktop10.3"
+IF EXIST "%_programs%\ArcGIS\Desktop10.0\License" CALL :install "%_programs%\ArcGIS\Desktop10.0"
+IF EXIST "%_programs%\ArcGIS\Desktop10.1\License" CALL :install "%_programs%\ArcGIS\Desktop10.1"
+IF EXIST "%_programs%\ArcGIS\Desktop10.2\License" CALL :install "%_programs%\ArcGIS\Desktop10.2"
+IF EXIST "%_programs%\ArcGIS\Desktop10.3\License" CALL :install "%_programs%\ArcGIS\Desktop10.3"
 
 set _config="%APPDATA%\ArcGIS4LocalGovernment\ConfigFiles"
 IF NOT EXIST %_config% (
