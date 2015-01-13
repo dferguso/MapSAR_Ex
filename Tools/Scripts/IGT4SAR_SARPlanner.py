@@ -153,6 +153,20 @@ if __name__ == '__main__':
         arcpy.SelectLayerByAttribute_management(fcS_lyr,"CLEAR_SELECTION")
         if arcpy.Exists("StatisticalArea"):
             StatSeg = SelectStat.split(";")
+
+            spRefDEM = arcpy.Describe(fcStat).SpatialReference
+            uNits=spRefDEM.linearUnitName
+            if uNits.upper() == 'METER':
+                mult = 1.0
+            elif uNits.upper() == 'KILOMETER':
+                mult = 0.001
+            elif units.upper()== "FOOT":
+                mult = 3.28084 # feet to meter
+            elif units.upper()== "FEET":
+                mult = 3.28084 # feet to meter
+            else:
+                arcpy.AddMessage(' could not compute requirements for {0} due to inconsistent units'.format(DEM2))
+
             StatArea={}
             for SS in StatSeg:
                 whereClause = '\'{0}\''.format(SS.replace("'",""))
@@ -160,9 +174,10 @@ if __name__ == '__main__':
                 arcpy.MakeFeatureLayer_management(fcS_lyr, "TempLyr", '"Descrip" = ' + whereClause)
                 cursorStat=arcpy.SearchCursor(fcStat, '"Descrip" = ' + whereClause)
                 for row in cursorStat:
-                    aArea = row.getValue("Area_SqKm")
 
-                    StatArea[SS.replace("'","")]=[aArea]
+                    aArea = row.getValue("SHAPE_Area")
+
+                    StatArea[SS.replace("'","")]=[aArea*(mult/1000.0)**2]
 
                 for fc in fcList:
                     if fc != 'None':
