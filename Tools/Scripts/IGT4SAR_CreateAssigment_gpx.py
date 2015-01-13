@@ -179,6 +179,8 @@ if __name__ == '__main__':
         rows0 = arcpy.SearchCursor(fc2)
         row0 = rows0.next()
         while row0:
+            AssNum=AssNum.split(",")[0]
+            AssNum = AssNum.replace("'","")
             if row0.getValue("Assignment_Number")==AssNum:
                 fname = True
                 field1 = "Assignment_Number"
