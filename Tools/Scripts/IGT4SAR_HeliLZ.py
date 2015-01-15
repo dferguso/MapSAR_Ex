@@ -88,11 +88,9 @@ def LZandHAZ(where1, fcLyr, BuffName, fldName, rValue, RstrName, CellSize, Messa
             arcpy.AddMessage(BuffName)
             if BuffName in SpecNames:
                 BuffDist='{0} Meters'.format(int(2*CellSize))
-                arcpy.Buffer_analysis(fcClpLyr, BuffName, BuffDist,"","","ALL")
-            elif BuffName=='ExstLZ_Buff':
-                arcpy.Buffer_analysis(fcClpLyr, BuffName, "50 Meters","","","ALL")
             else:
-                arcpy.Buffer_analysis(fcClpLyr, BuffName, "250 Meters","","","ALL")
+                BuffDist='{0} Meters'.format(int(100.0))
+            arcpy.Buffer_analysis(fcClpLyr, BuffName, BuffDist,"","","ALL")
             arcpy.AddField_management(BuffName, "Value","SHORT")
             arcpy.CalculateField_management(BuffName, "Value", rValue)
             arcpy.FeatureToRaster_conversion(BuffName, "Value", RstrName, CellSize)
@@ -242,15 +240,6 @@ if __name__ == '__main__':
     Slope5a = SetNull(lookUpGrp,100,setNullValue)
     Slope5a.save('Slope5')
 
-##    arcpy.RasterToPolygon_conversion(outSlope5, "Slp5dFC", "SIMPLIFY","VALUE")
-##
-##    Slp5FC_Layer=arcpy.mapping.Layer("Slp5dFC")
-##    arcpy.mapping.AddLayer(df,Slp5FC_Layer,"BOTTOM")
-##
-##    where0 = '"{0}" >= 600'.format("Shape_Area")
-##    arcpy.SelectLayerByAttribute_management("Slp5dFC","NEW_SELECTION", where0)
-##
-##    arcpy.PolygonToRaster_conversion("Slp5dFC", "gridcode", "Slope5", "MAXIMUM_AREA", "", CellSize)
     del outSlope, outSlope5, outRgnGrp, lookUpGrp, Slope5a
 #############################################
     # Create a constant value Raster which is used in calculations when required
