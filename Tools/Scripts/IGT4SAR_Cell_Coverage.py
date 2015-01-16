@@ -56,16 +56,19 @@ def getDataframe():
 def checkSR(inRaster):   #From Jon Peddar - MapSAR
     """ Check to see if the raster is GCS or PCS, if GCS it's converted """
     try:
-        mxd, frame = getDataframe()
+        mxd, df = getDataframe()
 
         # Check to see if DEM is projected or geographic
         sr = arcpy.Describe(inRaster).spatialreference
-        if sr.PCSName == '':   # if geographic throw an error and convert to projected to match the dataframe
-            inSR = frame.spatialReference
-            inPCSName = frame.spatialReference.PCSName
-            arcpy.AddWarning('This elevation file (DEM) is NOT projected. Converting DEM to {0}\n'.format(inPCSName))
-            inRaster = arcpy.ProjectRaster_management(inRaster, "{0}\DEM_{1}".format(scratchdb,inPCSName),inSR, "BILINEAR", "#","#", "#", "#")
+        inSR = df.spatialReference
+        inPCSName = df.spatialReference.PCSName
 
+        if sr.PCSName == '':   # if geographic throw an error and convert to projected to match the dataframe
+            arcpy.AddWarning('This elevation file (DEM) is NOT projected. Converting DEM to {0}\n'.format(inPCSName))
+            inRaster = arcpy.ProjectRaster_management(inRaster, "DEM_{0}".format(inPCSName),inSR, "BILINEAR", "#","#", "#", "#")
+        elif sr.PCSName != inPCSName:
+            arcpy.AddWarning('This elevation file (DEM) is in a different projection than the data frame. Converting DEM to {0}\n'.format(inPCSName))
+            inRaster = arcpy.ProjectRaster_management(inRaster, "DEM_{0}".format(inPCSName),inSR, "BILINEAR", "#","#", "#", "#")
         return(inRaster)
 
     except SystemExit as err:
@@ -153,25 +156,28 @@ def WritePointGeometry(fc,xy):  #Only works for single point
     del cur
     return()
 
-def CellViewshed(CellPts_Lyr, DEM, refGroupLayer, df, mxd):
+def CellViewshed(CellPts_Lyr, DEM, refGroupLayer, out_fc):
+    mxd,df = getDataframe()
     # Set layer that output symbology will be based on
     # Set local variables
     zFactor = 1; useEarthCurvature = "CURVED_EARTH"; refractivityCoefficient = 0.15
-
+    # Check spatial reference
+    DEM=checkSR(DEM)
     # Execute Viewshed
     outViewshed = Viewshed(DEM, CellPts_Lyr, zFactor, useEarthCurvature, refractivityCoefficient)
+
     # Save the output
-    outViewshed.save(nList)
-    arcpy.RefreshCatalog(nList)
+    outRstr = "{0}_rstr".format(out_fc)
+    outViewshed.save(outRstr)
+    arcpy.RefreshCatalog(outRstr)
 
-    nRstr = nList+'rstr'
-    arcpy.MakeRasterLayer_management(Raster(nList), nRstr)
-    nList_Lyr = arcpy.mapping.Layer(nRstr)
-    nList_Lyr.name=nList
+    outRstrb = "{0}_rstrb".format(out_fc)
+    arcpy.MakeRasterLayer_management(Raster(outRstr),outRstrb)
+    nList_Lyr = arcpy.mapping.Layer(outRstrb)
+    nList_Lyr.name=outRstrb
     arcpy.mapping.RemoveLayer(df,nList_Lyr)
-##    deleteLayer(df,[nList_Lyr])
-    arcpy.mapping.AddLayerToGroup(df,refGroupLayer,nList_Lyr,'BOTTOM')
 
+    arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
     try:
         lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
         symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\10 Coverage Area.lyr"
@@ -561,28 +567,8 @@ if __name__ == '__main__':
                 sys.exit(arcpy.AddError("No DEM Selected"))
             else:
                 arcpy.AddMessage("Estimate coverage for {0}\n".format(descript))
-                zFactor = 1; useEarthCurvature = "CURVED_EARTH"; refractivityCoefficient = 0.15
-
                 # Execute Viewshed
-                outViewshed = Viewshed(DEM, cellTower_Layer, zFactor, useEarthCurvature, refractivityCoefficient)
-                # Save the output
-                outRstr = "{0}_rstr".format(out_fc)
-                outViewshed.save(outRstr)
-                arcpy.RefreshCatalog(outRstr)
-
-                outRstrb = "{0}_rstrb".format(out_fc)
-                arcpy.MakeRasterLayer_management(Raster(outRstr),outRstrb)
-                nList_Lyr = arcpy.mapping.Layer(outRstrb)
-                nList_Lyr.name=outRstrb
-                arcpy.mapping.RemoveLayer(df,nList_Lyr)
-            ##    deleteLayer(df,[nList_Lyr])
-                arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,nList_Lyr,'BOTTOM')
-                try:
-                    lyr = arcpy.mapping.ListLayers(mxd, nList_Lyr.name, df)[0]
-                    symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\10 Coverage Area.lyr"
-                    arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
-                except:
-                    pass
+                CellViewshed(cellTower_Layer, DEM, refGroupLayerA, out_fc, aRange)
 
         else:
             arcpy.AddWarning("User did not select Viewshed")
