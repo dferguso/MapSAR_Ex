@@ -24,7 +24,7 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 # Import arcpy module
-import math
+import math, re
 import arcpy, sys, arcgisscripting, os
 import arcpy.mapping
 from arcpy import env
@@ -486,15 +486,16 @@ if __name__ == '__main__':
         where_clause="DESCRIPTION = '%s'" % tower
         cursor = arcpy.UpdateCursor(cellTower_Layer, where_clause)
         for row in cursor:
-            descript =row.getValue('DESCRIPTION')
+            descript01 =row.getValue('DESCRIPTION')
+            descript = re.sub("[^\w-]","",descript01)
             aHeight =row.getValue('HEIGHT')
             aBearing=row.getValue('ANTSEC_DIR')
             aSecAng =row.getValue('ANTSEC_DISP')
             aRange =row.getValue('RANGE_MAX')
-            AziChkL = aBearing - (1.1*aSecAng)/2
+            AziChkL = aBearing - (1.05*aSecAng)/2
             if AziChkL<0:
                 AziChkL=360+AziChkL
-            AziChkH = aBearing + (1.1*aSecAng)/2
+            AziChkH = aBearing + (1.05*aSecAng)/2
             if AziChkH>360:
                 AziChkH=AziChkH-360
 
@@ -509,16 +510,15 @@ if __name__ == '__main__':
             row.setValue('RADIUS2',aRange)
             cursor.updateRow(row)
         del cursor
-        if not descript:
+        if not descript01:
             sys.exit(arcpy.AddError('Problem most likely do to improperly selected features'))
-        expression = 'DESCRIPTION = \'{0}\''.format(descript)
+        expression = 'DESCRIPTION = \'{0}\''.format(descript01)
         arcpy.SelectLayerByAttribute_management(cellTower_Layer, "NEW_SELECTION", expression)
-
-        out_fc="{0}_B{1}_Ang{2}_Rng{3}".format(descript.replace(" ","")[0:10],str(aBearing),str(aSecAng),str(int(aRange)))
-        inDataset="{0}\{1}".format(wrkspc, descript.replace(" ","")[0:5])
+        out_fc="{0}_B{1}_Ang{2}_Rng{3}".format(descript[0:10],str(aBearing),str(aSecAng),str(int(aRange)))
+        inDataset="{0}\{1}".format(wrkspc, descript[0:5])
 
         if NewGenSector=="true":
-            arcpy.AddMessage("Genrate Sector for {0}".format(descript))
+            arcpy.AddMessage("Genrate Sector for {0} as {1}".format(descript01, out_fc))
         ##        out_fc="B{0}_Ang{1}_Rng{2}".format(str(aBearing),str(aSecAng),str(int(aRange)))
             if CellUncert.lower() == "true":
                 UncertBuff = "{0} {1}".format(str(UncertDist),UncertUnits)
@@ -566,9 +566,9 @@ if __name__ == '__main__':
             if DEM=="empty":
                 sys.exit(arcpy.AddError("No DEM Selected"))
             else:
-                arcpy.AddMessage("Estimate coverage for {0}\n".format(descript))
+                arcpy.AddMessage("Estimate coverage for {0}\n".format(descript01))
                 # Execute Viewshed
-                CellViewshed(cellTower_Layer, DEM, refGroupLayerA, out_fc, aRange)
+                CellViewshed(cellTower_Layer, DEM, refGroupLayerA, out_fc)
 
         else:
             arcpy.AddWarning("User did not select Viewshed")
