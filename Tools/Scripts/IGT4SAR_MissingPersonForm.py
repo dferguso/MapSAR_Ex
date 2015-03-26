@@ -24,7 +24,7 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
-import arcpy
+import arcpy, png, pyqrcode
 from types import *
 from datetime import datetime
 
@@ -80,6 +80,7 @@ if k==0:
     arcpy.AddWarning('"Reporting Information (Lead Agency: call in phone # or e-mail)" is not defined')
     Callback =" "
 
+arcpy.AddMessage("\nSubject Information")
 
 fc1="Subject_Information"
 rows = arcpy.SearchCursor(fc1)
@@ -87,8 +88,13 @@ row = rows.next()
 while row:
     # you need to insert correct field names in your getvalue function
     Subject_Name = checkNoneType(row.getValue("Name"),"Subject Name")
-    if len(Subject_Name)<1:
-        arcpy.AddWarning('Need to provide a Subject Name')
+    Subject_Name = row.getValue("Name")
+    if Subject_Name is not None:
+
+        arcpy.AddMessage("Subject Name: {0}".format(Subject_Name))
+    else:
+        arcpy.AddWarning('Need to provide a Subject Name ~ "Subject" was used')
+        Subject_Name="Subject"
 
     if type(row.getValue("Date_Seen")) is NoneType:
         arcpy.AddWarning('"Date last seen" is not defined')
@@ -131,7 +137,15 @@ while row:
     else:
         Info = checkNoneType("", '"Additonal Information"')
 
-    QRCode = checkNoneType(row.getValue("QRCode"), '"QRCode"')
+    qrCode = row.getValue("QRCode")
+    if qrCode is not None:
+        url=pyqrcode.create(qrCode)
+        qrFile = output + "/" + str(Subject_Name) + ".png"
+        url.png(qrFile, scale=8)
+    else:
+        qrFile=" "
+
+    #QRCode = checkNoneType(row.getValue("QRCode"), '"QRCode"')
 
     filename = output + "/" + str(Subject_Name) + ".fdf"
     txt= open (filename, "w")
@@ -165,7 +179,6 @@ while row:
     txt.write("<</T(topmostSubform[0].Page1[0].Layer[0].Layer[0].MPF_FootClothing[0])/V(" + str(Footwear) + ")>>\n")
     txt.write("<</T(topmostSubform[0].Page1[0].Layer[0].Layer[0].MPF_OtherInfo[0])/V(" + str(Info) + ")>>\n")
     txt.write("<</T(topmostSubform[0].Page1[0].Layer[0].Layer[0].MPF_CallNumber[0])/V(" + str(Callback) + ")>>\n")
-    #txt.write("<</T(topmostSubform[0].Page1[0].Layer[0].Layer[0].ImageField1[0])/V(" + str(Incident_Name) + ")>>\n")
 
     txt.write("]\n")
     txt.write("endobj\n")

@@ -166,7 +166,9 @@ arcpy.mapping.AddLayerToGroup(df,refGroupLayer,Travspd_Layer.getOutput(0),'TOP')
 arcpy.RefreshActiveView()
 
 arcpy.AddMessage("Calculate Travel Time in Seconds per Meter")
-outDivide = Con(Raster(Travspd_kph) == 0.0,36000,3600.0/(Raster(Travspd_kph) * 1000.0))
+outDivideA=SetNull(Raster(Travspd_kph) == 0.0,Raster(Travspd_kph))
+#outDivide = Con(Raster(Travspd_kph) == 0.0,36000,3600.0/(Raster(Travspd_kph) * 1000.0))
+outDivide = 3600.0/(outDivideA*1000.0)
 outDivide.save(Travspd_spm)
 del outDivide
 

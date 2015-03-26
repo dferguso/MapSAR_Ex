@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Name:        IGT4SAR_Geodesic.py
+# Name:        IGT4SAR_Geodesic_Cell.py
 # Purpose:     Script usess the Vincenty's formulae to create polygons representing
 #              geodesic sectors on the Earth surface.  These pie sectors could
 #              represent cellphone signal transmitted from a point source or

@@ -32,7 +32,7 @@ wrkspc=arcpy.env.workspace
 arcpy.env.overwriteOutput = "True"
 arcpy.env.extent = "MAXOF"
 
-def AllSegments(fc, SrchSpd):
+def AllSegments(fc, SrchSpd, SwpWdth):
     SearchSpd = float(SrchSpd)
     sSeg = {}
     desc=arcpy.Describe(fc)
@@ -72,7 +72,11 @@ def AllSegments(fc, SrchSpd):
                     SearchSpd = min(row.SearchSpd,SrchSpd)
         else:
                 SearchSpd = SrchSpd
-        sSeg[AreaN] = [SsegArea/(1000.0**2), SearchSpd]
+
+        if "SweepWidth" in field_names:
+            if row.SweepWidth > 0:
+                    SwpWdth = row.SweepWidth
+        sSeg[AreaN] = [SsegArea/(1000.0**2), SearchSpd, SwpWdth]
 
     return(sSeg)
 
@@ -123,25 +127,25 @@ if __name__ == '__main__':
     sSeg = {}
     if arcpy.Exists("QRT_Lines"):
         fc1 = "QRT_Lines"
-        sSeg.update(AllSegments(fc1, float(SrchSpd)))
+        sSeg.update(AllSegments(fc1, float(SrchSpd), SwpWdth))
     elif arcpy.Exists("Hasty_Line"):
         fc1 = "Hasty_Line"
-        sSeg.update(AllSegments(fc1, float(SrchSpd)))
+        sSeg.update(AllSegments(fc1, float(SrchSpd), SwpWdth))
     else:
         fc1 = "None"
 
     if arcpy.Exists("Search_Segments"):
         fc2 = "Search_Segments"
-        sSeg.update(AllSegments(fc2, float(SrchSpd)))
+        sSeg.update(AllSegments(fc2, float(SrchSpd), SwpWdth))
     else:
         fc2 = "None"
 
     if arcpy.Exists("QRT_Segments"):
         fc3 = "QRT_Segments"
-        sSeg.update(AllSegments(fc3, float(SrchSpd)))
+        sSeg.update(AllSegments(fc3, float(SrchSpd), SwpWdth))
     elif arcpy.Exists("Hasty_Segments"):
         fc3 = "Hasty_Segments"
-        sSeg.update(AllSegments(fc3, float(SrchSpd)))
+        sSeg.update(AllSegments(fc3, float(SrchSpd), SwpWdth))
     else:
         fc3 = "None"
 
@@ -226,7 +230,6 @@ if __name__ == '__main__':
 
     # Calculate Coverage and Spacing
     Coverage=-(math.log(1.0-dPOD/100.0))
-    EffSpcng = float(SwpWdth) / Coverage / 1000.0 # km
 
     # Output file
     dirNm = os.path.dirname(wrkspc)
@@ -238,29 +241,35 @@ if __name__ == '__main__':
     target.write("Resource Estimate - Time: {0}".format(timestamp))
 
     lIne01 = "POD target of {0} with {1} hour(s) of Search Time".format(dPOD, SrchTime)
-    lIne02 = "Assuming a Sweep width of {0} meters\n".format(SwpWdth)
+    lIne02 = "Assuming a general Sweep width of {0} meters".format(SwpWdth)
+    lIne02b = "Specific Sweep Width is used if given for Segment\n"
 
     target.write(lIne01)
     target.write("\n")
     target.write(lIne02)
     target.write("\n")
+    target.write(lIne02b)
+    target.write("\n")
 
     arcpy.AddMessage(lIne01)
     arcpy.AddMessage(lIne02)
+    arcpy.AddMessage(lIne02b)
     nSrchSum=0
     nSegSum = 0
     nAreaSum=0
     for SegName in sNameUnq:
         lArea = sSeg[SegName][0]
         lSpd = sSeg[SegName][1]
+        SwpWdthb = sSeg[SegName][2]
         TrkLngth = lSpd * float(SrchTime)
+        EffSpcng = float(SwpWdthb) / Coverage / 1000.0 # km
         eFfort = lArea/EffSpcng
         nSrchr = math.ceil(eFfort/TrkLngth)
         nSrchSum+=nSrchr
         nSegSum+=1
         nAreaSum+=lArea
         lIne03 = "Area: {0}".format(SegName)
-        lIne03b = "Size(km^2): {0}, Search Speed (kph): {1}, # Searchers: {2}".format(round(lArea,3), lSpd, nSrchr)
+        lIne03b = "Size(km^2): {0}, Search Speed (kph): {1}, Sweep Width: {2}, # Searchers: {3}".format(round(lArea,3), lSpd, round(SwpWdthb,2), nSrchr)
         arcpy.AddMessage(lIne03)
         arcpy.AddMessage(lIne03b)
         target.write(lIne03)
@@ -277,6 +286,7 @@ if __name__ == '__main__':
     target.write(lIne05);target.write("\n")
     target.write(lIne05b)
 
+    EffSpcng = float(SwpWdth) / Coverage / 1000.0 # km
     nSrchSum=0
     nSegSum = 0
     nAreaSum=0
@@ -297,7 +307,7 @@ if __name__ == '__main__':
             nSrchSum+=nSrchr
             nSegSum+=1
             nAreaSum+=lArea
-            lIne06 = "To Search the {0} Statistical Search Area (Area = {1} sq KM), would require {2} Searchers".format(stt, round(lArea,2), nSrchr)
+            lIne06 = "To Search the {0} Statistical Search Area (Area = {1} sq KM), would require {2} Searchers".format(stt, round(lArea,2), math.ceil(nSrchr))
             arcpy.AddMessage(lIne06)
             target.write(lIne06)
             target.write("\n")

@@ -25,7 +25,7 @@
 #!/usr/bin/env python
 
 # Take courage my friend help is on the way
-import arcpy, sys
+import arcpy, sys, datetime
 import IGT4SAR_AreaNameDomain
 
 # Environment variables
@@ -124,6 +124,8 @@ def AllPoints(Areas, SegmentName, pNumb):
                 arcpy.AddMessage("QRT Points: " + Area_Name)
                 if "Area_Description" in fieldNames:
                     Descrip3 =row1.getValue("Area_Description")
+                    if Descrip3 is None:
+                        Descrip3 = ""
                 else:
                     Descrip3=""
 
@@ -208,6 +210,8 @@ def AllLines(Areas, SegmentName, pNumb):
                 PtB_Y = row1.getValue("PointB_Y")
                 if "Area_Description" in fieldNames:
                     Descrip5 =row1.getValue("Area_Description")
+                    if Descrip5 is None:
+                        Descrip5=""
                 else:
                     Descrip5=""
 

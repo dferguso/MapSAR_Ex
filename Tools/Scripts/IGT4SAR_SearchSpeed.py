@@ -125,11 +125,11 @@ if __name__ == '__main__':
 
     arcpy.AddMessage("Join Search Segments with Search Speed Layer")
     arcpy.JoinField_management(Search_Segments, "Area_Name", SegSpd_Joins, "Area_Name", ["SegSpd"])
-    try:
-        arcpy.mapping.RemoveLayer (df, SegSpd_Joins)
-    except:
-        pass
-    arcpy.Delete_management(SegSpd_Joins)
+##    try:
+##        arcpy.mapping.RemoveLayer (df, SegSpd_Joins)
+##    except:
+##        pass
+##    arcpy.Delete_management(SegSpd_Joins)
 
     desc=arcpy.Describe(Search_Segments)
     fieldsList = desc.fields
