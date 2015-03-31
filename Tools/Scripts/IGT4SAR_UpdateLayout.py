@@ -37,9 +37,22 @@ def getDataframe():
     except SystemExit as err:
             pass
 
-###########Main############
-if __name__ == '__main__':
+def gNorth_Check(fc, fname):
+    field_type = "FLOAT"
+    desc=arcpy.Describe(fc)
+    # Get a list of field names from the feature
+    fieldsList = desc.fields
+    field_names=[f.name for f in fieldsList]
+    if fname not in field_names:
+        arcpy.AddField_management (fc, fname, field_type)
+    arcpy.CalculateGridConvergenceAngle_cartography(fc,fname, "GEOGRAPHIC")
+    return
+
+def updateMapLayout():
     mxd, df = getDataframe()
+
+    dfSpatial_Ref = df.spatialReference.name
+    dfSpatial_Type = df.spatialReference.type
 
     # Get UTM and USNG Zones
     # Get declination from Incident Information
@@ -48,7 +61,6 @@ if __name__ == '__main__':
     fc2 = "Incident_Information"
     fc3 = "Assets"
 
-    arcpy.AddMessage("Checking for Planning Point and\or ICP\n")
     cPlanPt = arcpy.GetCount_management(fc1)
     cBasePt = arcpy.GetCount_management(fc3)
     if int(cPlanPt.getOutput(0)) > 0:
@@ -57,24 +69,51 @@ if __name__ == '__main__':
         cPlanPt = cBasePt
         fc1 = fc3
     else:
-        arcpy.AddWarning("Warning: Need to add Planning Point or ICP prior to updating map layout\n")
+        arcpy.AddError("Warning: Need to add Planning Point or ICP prior to updating map layout\n")
+
+    desc = arcpy.Describe(fc1)
+
+    #First determine the grid north value
+    fname = "gNORTH"
+    gNorth_Check(fc1, fname)
+    gridNorth = 0.0
 
     unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
-    desc = arcpy.Describe(fc1)
     shapefieldname = desc.ShapeFieldName
 
     rows1 = arcpy.SearchCursor(fc1, '', unProjCoordSys)
     k = 0
-    declin = 0
+    declin = 0.0
+
     for row1 in rows1:
+        gridN = row1.getValue(fname)
         feat = row1.getValue(shapefieldname)
         pnt = feat.getPart()
         latitude = pnt.Y
         longitude = pnt.X
         declin = geomag.declination(latitude,longitude) + declin
+        gridNorth += gridN
         k+=1
     del rows1
     del row1
+
+    gridN = round((gridNorth / k),2)
+    if gridN > 0:
+        gCard ="W"
+    else:
+        gCard ="E"
+    gNorthTxt = str(abs(gridN)) + " " + gCard
+
+    # Rotate data frame to adjust map layout for True North vs Grid North.
+    try:
+        df.rotation = gridN
+        gridNorth=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]
+        gridNorth.text = gNorthTxt
+        # Remove field
+        dropField=[field_name]
+        arcpy.DeleteField_management(fc1, dropField)
+    except:
+        pass
 
     declin_avg = declin / k
     MagDeclinlination = round(declin_avg,2)
@@ -83,13 +122,12 @@ if __name__ == '__main__':
     else:
         Cardinal ="E"
     MagDecTxt = str(abs(MagDeclinlination)) + " " + Cardinal
-    arcpy.AddMessage(MagDecTxt)
 
     try:  #Update Incident Name and Number with the file name and dataframe name
         IncName = df.name
         IncNumA = mxd.filePath.split("\\")
         IncNum=IncNumA[-1].strip(".mxd")
-        arcpy.AddMessage("The Incident Name is " + IncName + "\n")
+        arcpy.AddMessage("\nThe Incident Name is " + IncName)
         arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
         MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
         MapName.text = " "
@@ -115,10 +153,32 @@ if __name__ == '__main__':
     except:
         arcpy.AddMessage("Error: Update Incident Name and Number manually\n")
 
+    arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type)
+    arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref)
+    if dfSpatial_Type=='Projected':
+        arcpy.AddMessage("Be sure to turn on USNG Grid in Data Frame Properties.\n")
+
+    arcpy.AddMessage("Updating UTM and USNG grid info on map layout")
+    try:
+        mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+        arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT","1 Incident_Group\Planning Point")
+        UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
+        USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
+        arcpy.AddMessage("Maplayers: " + mapLyr.name)
+        rows=arcpy.SearchCursor(mapLyr)
+        row = rows.next()
+        UTMZn.text = row.getValue("GRID1MIL")
+        USNGZn.text = row.getValue("GRID100K")
+        arcpy.AddMessage("UTM Zone is {0} and USNG Grid is {1}".format(UTMZn.text,USNGZn.text))
+        del rows
+        del row
+        del mapLyr
+    except:
+        arcpy.AddMessage("Error: Update USNG Grid and UTM Zone text fields on map layout manually\n")
+
+    arcpy.AddMessage("Grid North correction to True North based on location of IPP or ICP is: {0}".format(gridNorth.text))
     try:
         cIncident=arcpy.GetCount_management("Incident_Information")
-        arcpy.AddMessage("Checking Incident Information")
-
         # Get list of fields in Incident Information
         fieldList = arcpy.ListFields(fc2)
         field=[]
@@ -135,7 +195,7 @@ if __name__ == '__main__':
                     row.setValue(fld1, MagDecTxt)
                     cursor.updateRow(row)
                 MagDeclin.text = MagDecTxt
-                arcpy.AddMessage("Magnetic Declination is " + MagDeclin.text + "\n")
+                arcpy.AddMessage("Magnetic Declination is {0}".format(MagDeclin.text))
                 del cursor, row
                 del MagDeclin
             else:
@@ -146,32 +206,6 @@ if __name__ == '__main__':
         arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
 
     try:
-        arcpy.AddMessage("Updating UTM and USNG grid info on map layout")
-        mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
-        arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT","1 Incident_Group\Planning Point")
-        UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-        USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
-        arcpy.AddMessage("Maplayers: " + mapLyr.name)
-        rows=arcpy.SearchCursor(mapLyr)
-        row = rows.next()
-        UTMZn.text = row.getValue("GRID1MIL")
-        USNGZn.text = row.getValue("GRID100K")
-        arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text + "\n")
-        del rows
-        del row
-        del mapLyr
-        arcpy.AddMessage("Refresh display when complete, View > Refresh or F5\n")
-    except:
-        arcpy.AddMessage("Error: Update USNG Grid and UTM Zone text fields on map layout manually\n")
-
-    try:
-        dfSpatial_Ref = df.spatialReference.name
-        dfSpatial_Type = df.spatialReference.type
-        arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type)
-        arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref)
-        if dfSpatial_Type=='Projected':
-            arcpy.AddMessage("Be sure to turn on USNG Grid in Data Frame Properties.\n")
-
         fld2 = "MapDatum"
         fld3 = "MapCoord"
         cursor = arcpy.UpdateCursor(fc2)
@@ -184,7 +218,6 @@ if __name__ == '__main__':
                 row.setValue("USNG_GRID", USNGZn.text)
             cursor.updateRow(row)
         del cursor, row
-        del dfSpatial_Ref, dfSpatial_Type
     except:
         arcpy.AddMessage("Error: Update Map Datum and Map Coordinates (Projected/Geogrpahic) Manually\n")
 
@@ -195,4 +228,9 @@ if __name__ == '__main__':
         pass
 
     del mxd
-    del df
+    del df, dfSpatial_Ref, dfSpatial_Type
+    return
+
+###########Main############
+if __name__ == '__main__':
+    updateMapLayout()

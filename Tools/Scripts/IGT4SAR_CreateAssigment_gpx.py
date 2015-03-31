@@ -27,6 +27,7 @@
 import arcpy, time, sys, unicodedata
 from types import *
 import IGT4SAR_CreateICS204
+import IGT4SAR_UpdateLayout
 
 # Environment variables
 wrkspc=arcpy.env.workspace
@@ -36,9 +37,9 @@ arcpy.env.extent = "MAXOF"
 
 ###############################
 ## Specify which TAF to use
-#TAF2Use ='NMSAR'
+TAF2Use ='NMSAR'
 #TAF2Use ='MD_SP'
-TAF2Use ='Default_ASRC'
+#TAF2Use ='Default_ASRC'
 ###############################
 
 def getDataframe():
@@ -128,7 +129,6 @@ def ifExist(fClass, mxd, df,TaskMap, fc, symbologyLayer, SegArea_KM, SearchTime)
                     SegArea_KM = (0.1**2) * 3.141592653589793 # Area of circle with radius = 100 m
                     SearchSpd = 2.5 #Assumed search speed for ground team in km per hour
                     SearchTime = SegArea_KM/0.01/SearchSpd
-
                 symbologyLayer = arcpy.mapping.ListLayers(mxd,fClass,df)[0]
     return(fc, symbologyLayer, SegArea_KM, SearchTime)
 
@@ -428,6 +428,11 @@ if __name__ == '__main__':
 
     output = arcpy.GetParameterAsText(0)
     AssignNumber = arcpy.GetParameterAsText(1)
+    updateMap = arcpy.GetParameterAsText(2)
+    if updateMap.upper() == "TRUE":
+        arcpy.AddMessage('\nUpdating Map Layout')
+        IGT4SAR_UpdateLayout.updateMapLayout()
+        arcpy.AddMessage("\n")
 
     output = output.replace("'\'","/")
 
@@ -652,7 +657,8 @@ if __name__ == '__main__':
 
 ################################################################################################
     if len(AssignNum)>0:
-        arcpy.AddMessage("\n\nCreating Documentation for Task Assignments\n")
+        arcpy.AddMessage("\nCreating Documentation for Task Assignments\n")
+
     for AssNum in AssignNum:
         AssNum=AssNum.split(",")[0]
         AssNum = AssNum.replace("'","")
@@ -661,9 +667,9 @@ if __name__ == '__main__':
 
         fc_lyr = "none"
         fc = "none"
-        SegArea_KM=0
-        SearchSpd=0
-        SearchTime=0
+        SegArea_KM = 0.0
+        SearchSpd = 0.0
+        SearchTime = 0.0
         symbologyLayer = arcpy.mapping.ListLayers(mxd,"Search Boundary",df)[0]
 
 ##        try:
@@ -695,8 +701,9 @@ if __name__ == '__main__':
 ##        except:
 ##            arcpy.AddError("failed to get feature layer")
 ##            sys.exit(1)
-        Assign.append(SegArea_KM); Assign.append(SearchTime)
-    ###Create ICS204 - Moved June 23, 2014 by Don Ferguson to accomodate USNG_GRID and UTM_ZONE
+        Assign.append(SegArea_KM); Assign.append(SearchTime);
+
+        ###Create ICS204 - Moved June 23, 2014 by Don Ferguson to accomodate USNG_GRID and UTM_ZONE
         arcpy.AddMessage("Creating Task Assignment Form for Assignment Number: " +str(AssNum))
         incInfo = incidInfo[IncidIdx]
         OpPd=[]
