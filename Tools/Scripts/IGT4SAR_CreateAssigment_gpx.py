@@ -37,9 +37,9 @@ arcpy.env.extent = "MAXOF"
 
 ###############################
 ## Specify which TAF to use
-TAF2Use ='NMSAR'
+#TAF2Use ='NMSAR'
 #TAF2Use ='MD_SP'
-#TAF2Use ='Default_ASRC'
+TAF2Use ='Default_ASRC'
 ###############################
 
 def getDataframe():
