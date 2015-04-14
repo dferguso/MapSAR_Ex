@@ -25,7 +25,14 @@
 #!/usr/bin/env python
 
 # Import arcpy module
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
 import string
 
 #workspc = arcpy.GetParameterAsText(0)

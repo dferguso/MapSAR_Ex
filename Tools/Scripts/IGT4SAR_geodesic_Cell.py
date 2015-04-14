@@ -13,7 +13,19 @@
 # Copyright:   (c) ferguson 2014
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-import math, arcpy, sys, arcgisscripting
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
+import arcgisscripting
 from arcpy import env
 import os
 

@@ -25,7 +25,15 @@
 #!/usr/bin/env python
 
 # Take courage my friend help is on the way
-import arcpy, sys, datetime
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+import datetime
 import IGT4SAR_AreaNameDomain
 
 # Environment variables

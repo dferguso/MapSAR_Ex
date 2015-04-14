@@ -50,9 +50,25 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 # Import arcpy module
-import math, numpy as np
-import arcpy, sys, arcgisscripting, os
-import arcpy.mapping
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
+try:
+    arcpy.mapping
+except NameError:
+    import arcpy.mapping
+import numpy as np
+import datetime
+import arcgisscripting, os
 from arcpy import env
 from arcpy.sa import *
 

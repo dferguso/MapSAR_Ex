@@ -23,8 +23,20 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 # Import arcpy module
-import arcpy, sys, arcgisscripting, os
-import arcpy.mapping
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    arcpy.mapping
+except NameError:
+    import arcpy.mapping
+import arcgisscripting, os
+import datetime
 from arcpy import env
 from arcpy.sa import *
 

@@ -14,12 +14,17 @@ Description:
          will create fields for the shape, time, and elevation and description.
 '''
 
+# Import arcpy module
+try:
+    arcpy
+except NameError:
+    import arcpy
 try:
   from xml.etree import cElementTree as ElementTree
 except:
   from xml.etree import ElementTree
 
-import arcpy, os
+import os
 from arcpy import env
 
 # Check out any necessary licenses

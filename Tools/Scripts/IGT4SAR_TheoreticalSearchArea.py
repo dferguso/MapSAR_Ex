@@ -24,8 +24,15 @@
 #-------------------------------------------------------------------------------
 
 # Import arcpy module
-import arcpy
-import arcpy.mapping
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    arcpy.mapping
+except NameError:
+    import arcpy.mapping
+import datetime
 from arcpy import env
 from arcpy.sa import *
 

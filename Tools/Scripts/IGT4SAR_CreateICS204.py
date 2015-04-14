@@ -8,7 +8,15 @@
 # Copyright:   (c) ferguson 2015
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-import arcpy, time, sys
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+import time
 from datetime import datetime
 from os import listdir
 

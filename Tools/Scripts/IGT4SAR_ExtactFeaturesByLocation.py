@@ -21,7 +21,14 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 # Import arcpy module
-import arcpy, sys
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
 from arcpy import env
 
 # Environment variables

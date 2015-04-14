@@ -23,10 +23,16 @@
 #!/usr/bin/env python
 
 # Import arcpy module
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
 import string
 from types import *
-import sys
 from arcpy import env
 import IGT4SAR_AreaNameDomain
 

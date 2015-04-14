@@ -23,8 +23,11 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
-
-import arcpy, png, pyqrcode
+try:
+    arcpy
+except NameError:
+    import arcpy
+import png, pyqrcode
 from types import *
 from datetime import datetime
 

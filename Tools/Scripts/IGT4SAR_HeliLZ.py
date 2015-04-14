@@ -24,10 +24,25 @@
 
 #-------------------------------------------------------------------------------
 
-
 # Import arcpy module
-import arcpy, sys, arcgisscripting, os, math
-import arcpy.mapping
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
+try:
+    arcpy.mapping
+except NameError:
+    import arcpy.mapping
+import datetime
+import arcgisscripting, os
 from arcpy import env
 from arcpy.sa import *
 

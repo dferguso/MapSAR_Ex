@@ -24,8 +24,14 @@
 #!/usr/bin/env python
 
 # Take courage my friend help is on the way
-import arcpy
-import sys
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
 
 
 #########################################################################

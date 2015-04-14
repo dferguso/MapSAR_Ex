@@ -25,9 +25,20 @@
 #!/usr/bin/env python
 
 # Import arcpy module
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
 import string
-import math
-import arcpy, sys, os
+import os
 from arcpy import env
 from types import *
 

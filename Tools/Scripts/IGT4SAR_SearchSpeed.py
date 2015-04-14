@@ -28,7 +28,10 @@
 #-------------------------------------------------------------------------------
 
 # Import system modules
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
 from arcpy import env
 from arcpy.sa import *
 

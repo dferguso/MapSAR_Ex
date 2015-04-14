@@ -26,8 +26,10 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 # Import arcpy module
-
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
 import string
 
 def RingDistances(Subject_Category, EcoReg, Terrain):

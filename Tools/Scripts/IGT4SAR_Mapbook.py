@@ -22,7 +22,14 @@
 #  The GNU General Public License can be found at
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-import arcpy, sys
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
 import geomag
 from types import *
 

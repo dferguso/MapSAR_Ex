@@ -24,7 +24,10 @@
 #!/usr/bin/env python
 
 # Import arcpy module
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
 import string
 
 arcpy.env.overwriteOutput = "True"

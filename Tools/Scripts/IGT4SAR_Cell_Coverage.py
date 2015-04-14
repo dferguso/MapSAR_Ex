@@ -24,9 +24,24 @@
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 # Import arcpy module
-import math, re
-import arcpy, sys, arcgisscripting, os
-import arcpy.mapping
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
+try:
+    arcpy.mapping
+except NameError:
+    import arcpy.mapping
+import re, datetime
+import arcgisscripting, os
 from arcpy import env
 from arcpy.sa import *
 import IGT4SAR_geodesic_Cell

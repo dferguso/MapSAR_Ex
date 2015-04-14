@@ -23,10 +23,17 @@
 #-------------------------------------------------------------------------------
 
 #!/usr/bin/env python
-import arcpy, os
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+import os, datetime
 import shutil, errno
 import traceback
-import sys
 from arcpy import env
 arcpy.env.overwriteOutput = True
 

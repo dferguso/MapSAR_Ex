@@ -24,7 +24,15 @@
 #-------------------------------------------------------------------------------
 
 # Take courage my friend help is on the way
-import arcpy, time, sys, unicodedata
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+import time, unicodedata
 from types import *
 import IGT4SAR_CreateICS204
 import IGT4SAR_UpdateLayout

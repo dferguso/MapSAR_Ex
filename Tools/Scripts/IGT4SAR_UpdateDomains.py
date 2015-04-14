@@ -34,7 +34,14 @@
 #-------------------------------------------------------------------------------
 
 # Import arcpy module
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
 
 def getDataframe():
     ## Get current mxd and dataframe

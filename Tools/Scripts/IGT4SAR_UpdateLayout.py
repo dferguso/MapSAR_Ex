@@ -24,7 +24,10 @@
 #!/usr/bin/env python
 
 # Take courage my friend help is on the way
-import arcpy
+try:
+    arcpy
+except NameError:
+    import arcpy
 import geomag
 
 def getDataframe():

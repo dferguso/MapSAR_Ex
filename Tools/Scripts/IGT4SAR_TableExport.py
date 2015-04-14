@@ -20,8 +20,11 @@
 #  The GNU General Public License can be found at
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-
-import arcpy
+# Import arcpy module
+try:
+    arcpy
+except NameError:
+    import arcpy
 
 def remove_from_list(the_list, val):
     return [value for value in the_list if value.name.upper() != val.upper()]

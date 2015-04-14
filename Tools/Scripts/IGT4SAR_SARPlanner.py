@@ -25,7 +25,19 @@
 #!/usr/bin/env python
 
 # Take courage my friend help is on the way
-import arcpy,math, os, sys
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
+import os, datetime
 
 # Environment variables
 wrkspc=arcpy.env.workspace

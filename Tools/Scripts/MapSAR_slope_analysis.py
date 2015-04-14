@@ -24,7 +24,15 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Import system modules
-import arcpy, datetime, os
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+import datetime, os
 import time
 from arcpy import env
 from arcpy.sa import *

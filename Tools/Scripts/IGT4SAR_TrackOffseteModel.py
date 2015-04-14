@@ -23,10 +23,17 @@
 #  The GNU General Public License can be found at
 #  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-
-
 # Import arcpy module
-import arcpy, sys, arcgisscripting
+try:
+    arcpy
+except NameError:
+    import arcpy
+try:
+    sys
+except NameError:
+    import sys
+import arcgisscripting
+import datetime
 from arcpy import env
 
 gp = arcgisscripting.create()

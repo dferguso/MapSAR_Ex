@@ -13,7 +13,14 @@
 # Copyright:   (c) ferguson 2014
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-import math, sys
+try:
+    sys
+except NameError:
+    import sys
+try:
+    math
+except NameError:
+    import math
 
 def Geodesic(pnt, in_bearing, in_angle, in_dist):
     LongDD = pnt.X
