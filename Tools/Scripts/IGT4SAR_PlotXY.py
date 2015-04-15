@@ -33,9 +33,9 @@ import datetime
 from arcpy import env
 
 # Environment variables
-wrkspc=arcpy.env.workspace
+wrkspc=env.workspace
 env.overwriteOutput = "True"
-arcpy.env.extent = "MAXOF"
+env.extent = "MAXOF"
 
 def getDataframe():
     """ get current mxd and dataframe returns mxd, frame"""
@@ -99,7 +99,7 @@ def WritePointGeometry(fc,xy,coMMents):  #Only works for single point
     fieldsList = desc.fields
     field_names=[f.name for f in fieldsList]
     field_upper = [f.name.upper() for f in fieldsList]
-    chkFields = ['DESCRIPTION', 'COMMENTS', 'AREA_DESCRIPTION']
+    chkFields = ['DESCRIPTION', 'COMMENTS', 'NOTES', 'AREA_DESCRIPTION']
     indx = [field_upper.index(y) for y in chkFields if y.upper() in field_upper]
 
 ##   Use arcpy.InsertCursor to stay compatible with ArcMAP 10.0
@@ -110,8 +110,9 @@ def WritePointGeometry(fc,xy,coMMents):  #Only works for single point
     if indx:
         fldName = field_names[indx[0]]
         fldLength = fieldsList[indx[0]].length
-        info = (coMMents[:(fldLength-2)] + '..') if len(coMMents) > fldLength else coMMents
-        row.setValue(fldName,info)
+        if coMMents:
+            info = (coMMents[:(fldLength-2)] + '..') if len(coMMents) > fldLength else coMMents
+            row.setValue(fldName,info)
     cursor.insertRow(row)
     del cursor, row
     return()
@@ -168,7 +169,8 @@ if __name__ == '__main__':
         LyrName.append(lyr.name)
     if "Point_Features" in LyrName:
         refGroupLayerB = arcpy.mapping.ListLayers(mxd,'*Point_Features*',df)[0]
-
+    else:
+        refGroupLayerB = None
     # First check if NewCoord is GCS or PCS.
     arcpy.AddMessage("\nThe type of the New Coordinate system: {0}".format(NewCoord.type))
 
@@ -195,7 +197,12 @@ if __name__ == '__main__':
             fieldlength = 250
             arcpy.AddField_management(inFC, "Description", "TEXT", "", "", fieldlength)
             in_fc = arcpy.mapping.Layer(inFC)
-            arcpy.mapping.AddLayerToGroup(df,refGroupLayerB,in_fc,'BOTTOM')
+            if refGroupLayerB:
+                arcpy.mapping.AddLayerToGroup(df,refGroupLayerB,in_fc,'BOTTOM')
+            else:
+                arcpy.mapping.AddLayer(df, in_fc,'TOP')
+
+
 
 
     #Check the format of the coordinates provided and if lat/long convert to D.DD
