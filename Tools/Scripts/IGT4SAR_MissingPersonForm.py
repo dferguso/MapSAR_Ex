@@ -143,7 +143,7 @@ while row:
     qrCode = row.getValue("QRCode")
     if qrCode is not None:
         url=pyqrcode.create(qrCode)
-        qrFile = output + "/" + str(Subject_Name) + ".png"
+        qrFile = output + "/" + str(Subject_Name) + "_QRcode.png"
         url.png(qrFile, scale=8)
     else:
         qrFile=" "
