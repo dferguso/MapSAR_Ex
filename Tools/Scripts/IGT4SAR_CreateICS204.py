@@ -34,8 +34,8 @@ def MD_SP(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
     TAF2Use = 'MSP Form 70-3 Task Assignment 5-15new.pdf'
     if TAF2Use in listdir(output):
         SearchTime = 0
-        assSafety = " "
-        opSafety = " "
+        assSafety = "None "
+        opSafety = "None "
 
         filename = output + "/" + str(AssNum) + "_TAF.fdf"
         txt= open (filename, "w")
@@ -61,7 +61,10 @@ def MD_SP(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
                 pass
         #################
         if len(OpPeriod)>0:
-            txt.write("<</T({0})/V({1})>>\n".format("PRIMARY FREQ",str(OpPeriod[2])))
+            if len(OpPeriod[2])>0:
+                txt.write("<</T({0})/V({1})>>\n".format("PRIMARY FREQ",str(OpPeriod[2])))
+            elif len(incidInfo[6])>0:
+                txt.write("<</T({0})/V({1})>>\n".format("PRIMARY FREQ",str(incidInfo[6])))
             opSafety=OpPeriod[0]
 
         ## Assignment Information
@@ -166,8 +169,8 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
 
     if TAF2Use in listdir(output):
         SearchTime = 0
-        assSafety = " "
-        opSafety = " "
+        assSafety = "None "
+        opSafety = "None "
         TeamPh = " "
 
         filename = output + "/" + str(AssNum) + "_TAF.fdf"
@@ -187,7 +190,10 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
 
         ## Operational Period Information
         if len(OpPeriod)>0:
-            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(OpPeriod[2]))) # TeamFreq
+            if len(OpPeriod[2])>0:
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(OpPeriod[2]))) # TeamFreq
+            elif len(incidInfo[6])>0:
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(incidInfo[6]))) # TeamFreq
 
         ## Team information
         TeamName = " "
@@ -275,8 +281,8 @@ def Default_ASRC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
         txt.write ("\n")
 
         SearchTime = 0
-        assSafety = " "
-        opSafety = " "
+        assSafety = "None "
+        opSafety = "None "
 
         ## Incident Information
         if len(incidInfo) > 0:
@@ -340,7 +346,10 @@ def Default_ASRC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
         ## Operation Period Infomration
         if len(OpPeriod)>0:
             opSafety = OpPeriod[0]
-            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(OpPeriod[2])))
+            if len(OpPeriod[2])>1:
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(OpPeriod[2])))
+            elif len(incidInfo[6])>0:
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(incidInfo[6])))
 
         if len(Team)>0:
             txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("Phone_Team",str(Team[3])))

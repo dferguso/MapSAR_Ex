@@ -49,12 +49,12 @@ timestamp = 'P{0}'.format(todaydate)
 def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype,pNumbr):
     fc3 = "Operation_Period"
     Perd=[0]
-    Safety = " "
+#    Safety = " "
     rows1 = arcpy.SearchCursor(fc3)
     row1 = rows1.next()
     while row1:
         Perd.append(row1.Period)
-        Safety = row1.Safety_Message
+#        Safety = row1.Safety_Message
         row1 = rows1.next()
     OpPerid = max(Perd)
     if OpPerid==0:
@@ -79,7 +79,7 @@ def WriteToAssignments(Areas,Area_Name,Area_Description,Ttype,pNumbr):
 
     if OpPerid>0:
         row.Period = OpPerid
-        row.Safety_Note = Safety
+#        row.Safety_Note = Safety
 
     row.Status = "Planned"
     if Ttype=='Air':
