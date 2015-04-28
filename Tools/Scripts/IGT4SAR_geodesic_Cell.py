@@ -25,16 +25,17 @@ try:
     math
 except NameError:
     import math
+
 import arcgisscripting
-from arcpy import env
 import os
+import geomag
 
 # Create the Geoprocessor objects
 gp = arcgisscripting.create()
 
 # Environment variables
 wrkspc=arcpy.env.workspace
-env.overwriteOutput = "True"
+arcpy.env.overwriteOutput = "True"
 arcpy.env.extent = "MAXOF"
 
 def getDataframe():
@@ -254,16 +255,52 @@ if __name__ == '__main__':
     in_bearing = arcpy.GetParameterAsText(2)
     if in_bearing == '#' or not in_bearing:
         in_bearing = "empty"
+    in_bearing = float(in_bearing)
 
-    in_angle = arcpy.GetParameterAsText(3)
+    use_Mag =arcpy.GetParameterAsText(3)
+    if in_bearing == '#' or not in_bearing:
+        in_bearing = "empty"
+
+    in_angle = arcpy.GetParameterAsText(4)
     if in_angle == '#' or not in_angle:
         in_angle = "empty"
+    in_angle = float(in_angle)
 
-    in_dist = arcpy.GetParameterAsText(4)
+    in_dist = arcpy.GetParameterAsText(5)
     if in_dist == '#' or not in_dist:
         in_dist = "empty"
+    in_dist = float(in_dist)
 
     UncertBuff=""
     out_fcUNC =""
-    Geodesic_Main(in_fc, out_fc, float(in_bearing), float(in_angle), float(in_dist), wrkspc,UncertBuff, out_fcUNC)
+
+    if use_Mag.lower()=='true':
+        desc = arcpy.Describe(in_fc)
+        shapefieldname = desc.ShapeFieldName
+        outCS = desc.SpatialReference
+
+        unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
+        # Execute CreateFeatureclass
+
+        rows = arcpy.SearchCursor(in_fc, '', unProjCoordSys)
+
+        for row in rows:
+            feat = row.getValue(shapefieldname)
+            pnt = feat.getPart()
+            latitude = pnt.Y
+            longitude = pnt.X
+            declin = geomag.declination(latitude,longitude)
+            MagDeclinlination = round(declin,2)
+            if MagDeclinlination < 0:
+                Cardinal ="W"
+            else:
+                Cardinal ="E"
+            MagDecTxt = str(abs(MagDeclinlination)) + " " + Cardinal
+            arcpy.AddMessage("The declination is: {0}".format(MagDecTxt))
+
+            in_bearing = in_bearing - MagDeclinlination
+        else:
+            in_bearing = in_bearing
+
+    Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc,UncertBuff, out_fcUNC)
 
