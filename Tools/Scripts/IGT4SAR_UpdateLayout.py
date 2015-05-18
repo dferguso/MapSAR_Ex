@@ -123,8 +123,10 @@ def updateMapLayout():
     MagDeclinlination = round(declin_avg,2)
     if MagDeclinlination < 0:
         Cardinal ="W"
+        bearingTuple=('ADD','SUBTRACT')
     else:
         Cardinal ="E"
+        bearingTuple=('SUBTRACT','ADD')
     MagDecTxt = str(abs(MagDeclinlination)) + " " + Cardinal
 
     try:  #Update Incident Name and Number with the file name and dataframe name
@@ -193,6 +195,18 @@ def updateMapLayout():
             if "MagDec" in field:
                 fld1 = "MagDec"
                 MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+
+                try:
+                    bearingConv=arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]
+                    bcText=bearingConv.text
+                    # Even though the templates have %s in them, we may have
+                    # clobbered them in a previous run.  So put 'em back.
+                    bcText=bcText.replace('ADD','%s')
+                    bcText=bcText.replace('SUBTRACT','%s')
+                    bearingConv.text= bcText % bearingTuple
+                    del bearingConv
+                except:
+                    arcpy.AddMessage("Failed to update bearing conversion text.")
 
                 cursor = arcpy.UpdateCursor(fc2)
                 for row in cursor:
