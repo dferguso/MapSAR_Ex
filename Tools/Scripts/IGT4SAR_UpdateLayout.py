@@ -110,8 +110,9 @@ def updateMapLayout():
     # Rotate data frame to adjust map layout for True North vs Grid North.
     try:
         df.rotation = gridN
-        gridNorth=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]
-        gridNorth.text = gNorthTxt
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]:
+            gridNorth=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]
+            gridNorth.text = gNorthTxt
         # Remove field
         dropField=[field_name]
         arcpy.DeleteField_management(fc1, dropField)
@@ -179,7 +180,7 @@ def updateMapLayout():
     except:
         arcpy.AddMessage("Error: Update USNG Grid and UTM Zone text fields on map layout manually\n")
 
-    arcpy.AddMessage("Grid North correction to True North based on location of IPP or ICP is: {0}".format(gridNorth.text))
+    arcpy.AddMessage("Grid North correction to True North based on location of IPP or ICP is: {0}".format(gNorthTxt))
     try:
         cIncident=arcpy.GetCount_management("Incident_Information")
         # Get list of fields in Incident Information
