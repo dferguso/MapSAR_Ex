@@ -34,6 +34,7 @@ except NameError:
     import sys
 import time, unicodedata
 from types import *
+from os import path
 import IGT4SAR_CreateICS204
 import IGT4SAR_UpdateLayout
 
@@ -141,196 +142,201 @@ def ifExist(fClass, mxd, df,TaskMap, fc, symbologyLayer, SegArea_KM, SearchTime)
     return(fc, symbologyLayer, SegArea_KM, SearchTime)
 
 def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
-    try:
-        PrintMap = Assign[12]
-        TaskMap = Assign[10]
-        TaskNo = Assign[0]
-        PlanNo = Assign[1]
+#    try:
+    PrintMap = Assign[12]
+    TaskMap = Assign[10]
+    TaskNo = Assign[0]
+    PlanNo = Assign[1]
 
-        arcpy.AddMessage("Creating task map for Assignment Number: " +str(AssNum))
+    arcpy.AddMessage("Creating task map for Assignment Number: " +str(AssNum))
 
-        if fc == "none":
-            arcpy.AddWarning("No features had this area name and No map created.")
-        else:
-            try:
-                reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-                arcpy.mapping.RemoveLayer(df,reMoveLyr)
-                del reMoveLyr
-            except:
-                pass
-
-            arcpy.RefreshTOC()
-            arcpy.RefreshActiveView()
-
-            where4 = joinCheck("Area_Name",fc, mxd, df,TaskMap)
-            arcpy.MakeFeatureLayer_management (fc, "FgTrzG", where4)
-            mkLyr = arcpy.mapping.Layer("FgTrzG")
-            arcpy.mapping.AddLayer(df,mkLyr,"TOP")
-            updateLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-            arcpy.mapping.UpdateLayer(df,updateLayer,symbologyLayer,True)
-            selectLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-            ## Set transparency for the assigned area to 30% - Sept 13, 2013 - DHF
-            selectLayer.transparency = 30
-            try:
-                ##Label Features
-                ##arcpy.AddMessage("Attempt labeling")
-                if selectLayer.supports("LABELCLASSES"):
-                    ##arcpy.AddMessage("Supports Labelclasses\n")
-                    for lblclass in selectLayer.labelClasses:
-                        lblclass.showClassLabels = True
-                    desc=arcpy.Describe("FgTrzG")
-                    # Get a list of field names from the feature
-                    shapeType = desc.shapeType
-                    fieldsList = desc.fields
-                    field_names=[f.name for f in fieldsList]
-                    if "Area_Name" in field_names:
-                        lblclass.expression = "[Area_Name]"
-                    elif "AREA_NAME" in field_names:
-                        lblclass.expression = "[AREA_NAME]"
-                    else:
-                        lblclass.expression = ""
-                    updateLayer.showLabels = True
-                ###########
-            except:
-                pass
-
-            ##########################
-            ## Add segment points to map to help define segment borders
-            ##Add June 11, 2014
-            try:
-                mapLyr002=arcpy.mapping.ListLayers(mxd, "Segment_Points",df)[0]
-                arcpy.SelectLayerByLocation_management(mapLyr002,"WITHIN_A_DISTANCE",selectLayer,"20 meters","NEW_SELECTION")
-                arcpy.MakeFeatureLayer_management ("Segment_Points", "FgTrzPt")
-                mkLyr002 = arcpy.mapping.Layer("FgTrzPt")
-                arcpy.mapping.AddLayer(df,mkLyr002,"TOP")
-                updateLayer002 = arcpy.mapping.ListLayers(mxd,"FgTrzPt",df)[0]
-                ##Label Features
-                ##arcpy.AddMessage("Attempt labeling")
-                if updateLayer002.supports("LABELCLASSES"):
-                    ##arcpy.AddMessage("Supports Labelclasses\n")
-                    for lblclass in updateLayer002.labelClasses:
-                        lblclass.showClassLabels = True
-                    desc=arcpy.Describe("FgTrzPt")
-                    # Get a list of field names from the feature
-                    shapeType = desc.shapeType
-                    fieldsList = desc.fields
-                    field_names=[f.name for f in fieldsList]
-                    if "NAME" in field_names:
-                        lblclass.expression = "[NAME]"
-                    else:
-                        lblclass.expression = ""
-                    updateLayer002.showLabels = True
-                ###########
-
-                arcpy.mapping.UpdateLayer(df,updateLayer002,"Segment_Points",True)
-            except:
-                pass
-            ##########################
-            where4 = joinCheck("Area_Name",selectLayer, mxd, df,TaskMap)
-            arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
-            try:
-                mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
-                arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
-                UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-                USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
-                rows7=arcpy.SearchCursor(mapLyr)
-                row7 = rows7.next()
-                UTMZn.text = row7.getValue("GRID1MIL")
-                UtmZone=UTMZn.text
-                USNGZn.text = row7.getValue("GRID100K")
-                UsngGrid = USNGZn.text
-                ##arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text)
-
-                arcpy.SelectLayerByAttribute_management (mapLyr, "CLEAR_SELECTION")
-
-                del mapLyr
-                del UTMZn
-                del USNGZn
-                del row7
-                del rows7
-            except:
-                arcpy.AddMessage("No update to UTM Zone or USNG Grid")
-                pass
-            where4 = joinCheck("Area_Name",selectLayer, mxd, df,TaskMap)
-            arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
-            df.zoomToSelectedFeatures()
-            arcpy.RefreshActiveView()
-            arcpy.SelectLayerByAttribute_management (selectLayer, "CLEAR_SELECTION")
-
-            mxd.activeView='PAGE_LAYOUT'
-
-            mapScale = Assign[11]
-
-            if mapScale > 0:
-                pScaler = mapScale
-                df.scale = pScaler*1.0
-            else:
-                df.scale = 24000.0
-
-            del symbologyLayer
-            del mkLyr
-            del updateLayer
-            del mapScale
-            del pScaler
-
-            try:
-                cIncident=arcpy.GetCount_management("Incident_Information")
-                if int(cIncident.getOutput(0)) > 0:
-                    mapLyr = arcpy.mapping.ListLayers(mxd, "Incident_Information")[0]
-                    MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-                    if not MagDec:
-                        arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
-                    else:
-                        MagDeclin.text = str(MagDec)
-                    del MagDeclin
-                else:
-                    arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
-            except:
-                arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
-
-            if TaskMap:
-                MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
-                MapName.text = "  " + TaskMap
-            if PlanNo:
-                PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
-                PlanNum.text = "  " + PlanNo
-            if TaskNo:
-                TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
-                TaskNum.text = "  " + TaskNo
-
-            outFile = output + "/" + str(AssNum) + "_MAP.pdf"
-    ##          outFile = output + "/" + str(AssNum) + "_aerial.pdf"
-
-            try:
-                arcpy.mapping.ExportToPDF(mxd, outFile)
-            except:
-                arcpy.AddWarning("  ")
-                arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
-                arcpy.AddWarning("Problem with ExportToPDF")
-                arcpy.AddWarning("  ")
-
+    if fc == "none":
+        arcpy.AddWarning("No features had this area name and No map created.")
+    else:
+        try:
             reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
             arcpy.mapping.RemoveLayer(df,reMoveLyr)
-
-            ###############################
-            ## Add June 11, 2014
-            try:
-                reMoveLyr002 = arcpy.mapping.ListLayers(mxd,"FgTrzPt",df)[0]
-                arcpy.mapping.RemoveLayer(df,reMoveLyr002)
-            except:
-                pass
-            ##############################
-
-            arcpy.RefreshTOC()
-            arcpy.RefreshActiveView()
-
-            del selectLayer
-            del outFile
-            del PlanNo, TaskNo, TaskMap, PrintMap
             del reMoveLyr
-    except:
-        arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
-        pass
+        except:
+            pass
+
+        arcpy.RefreshTOC()
+        arcpy.RefreshActiveView()
+
+        where4 = joinCheck("Area_Name",fc, mxd, df,TaskMap)
+        arcpy.MakeFeatureLayer_management (fc, "FgTrzG", where4)
+        mkLyr = arcpy.mapping.Layer("FgTrzG")
+        arcpy.mapping.AddLayer(df,mkLyr,"TOP")
+        updateLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+        arcpy.mapping.UpdateLayer(df,updateLayer,symbologyLayer,True)
+        selectLayer = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+        ## Set transparency for the assigned area to 30% - Sept 13, 2013 - DHF
+        selectLayer.transparency = 30
+        try:
+            ##Label Features
+            if selectLayer.supports("LABELCLASSES"):
+                for lblclass in selectLayer.labelClasses:
+                    lblclass.showClassLabels = True
+                desc=arcpy.Describe("FgTrzG")
+                # Get a list of field names from the feature
+                shapeType = desc.shapeType
+                fieldsList = desc.fields
+                field_names=[f.name for f in fieldsList]
+                if "Area_Name" in field_names:
+                    lblclass.expression = "[Area_Name]"
+                elif "AREA_NAME" in field_names:
+                    lblclass.expression = "[AREA_NAME]"
+                else:
+                    lblclass.expression = ""
+                updateLayer.showLabels = True
+            ###########
+        except:
+            pass
+
+        ##########################
+        ## Add segment points to map to help define segment borders
+        ##Add June 11, 2014
+        try:
+            arcpy.SelectLayerByLocation_management("Segment_Points","WITHIN_A_DISTANCE","FgTrzG","20 meters","NEW_SELECTION")
+            arcpy.CopyFeatures_management("Segment_Points", "FgTrzPt")
+            mkPtLyr = arcpy.mapping.Layer("FgTrzPt")
+            arcpy.mapping.AddLayer(df,mkPtLyr,"TOP")
+            updateLayer002 = arcpy.mapping.ListLayers(mxd,"FgTrzPt",df)[0]
+            ##Label Features
+            if updateLayer002.supports("LABELCLASSES"):
+                for lblclass in updateLayer002.labelClasses:
+                    lblclass.showClassLabels = True
+                desc=arcpy.Describe("FgTrzPt")
+                # Get a list of field names from the feature
+                shapeType = desc.shapeType
+                fieldsList = desc.fields
+                field_names=[f.name for f in fieldsList]
+                if "NAME" in field_names:
+                    lblclass.expression = "[NAME]"
+                else:
+                    lblclass.expression = ""
+                updateLayer002.showLabels = True
+            ###########
+            sLayer=arcpy.mapping.ListLayers(mxd, "Segment_Points", df)[0]
+            arcpy.mapping.UpdateLayer(df,updateLayer002,sLayer,True)
+            del sLayer
+        except:
+            pass
+        ##########################
+
+        where4 = joinCheck("Area_Name",selectLayer, mxd, df,TaskMap)
+        arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
+        try:
+            mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+            arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
+            UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
+            USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
+            rows7=arcpy.SearchCursor(mapLyr)
+            row7 = rows7.next()
+            UTMZn.text = row7.getValue("GRID1MIL")
+            UtmZone=UTMZn.text
+            USNGZn.text = row7.getValue("GRID100K")
+            UsngGrid = USNGZn.text
+            ##arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text)
+
+            arcpy.SelectLayerByAttribute_management (mapLyr, "CLEAR_SELECTION")
+
+            del mapLyr
+            del UTMZn
+            del USNGZn
+            del row7
+            del rows7
+        except:
+            arcpy.AddMessage("No update to UTM Zone or USNG Grid")
+            pass
+        where4 = joinCheck("Area_Name",selectLayer, mxd, df,TaskMap)
+        arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
+        df.zoomToSelectedFeatures()
+        arcpy.RefreshActiveView()
+        arcpy.SelectLayerByAttribute_management (selectLayer, "CLEAR_SELECTION")
+
+        mxd.activeView='PAGE_LAYOUT'
+
+        mapScale = Assign[11]
+
+        if mapScale > 0:
+            pScaler = mapScale
+            df.scale = pScaler*1.0
+        else:
+            df.scale = 24000.0
+
+        del symbologyLayer
+        del mkLyr
+        del updateLayer
+        del mapScale
+        del pScaler
+
+        try:
+            cIncident=arcpy.GetCount_management("Incident_Information")
+            if int(cIncident.getOutput(0)) > 0:
+                mapLyr = arcpy.mapping.ListLayers(mxd, "Incident_Information")[0]
+                MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+                if not MagDec:
+                    arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
+                else:
+                    MagDeclin.text = str(MagDec)
+                del MagDeclin
+            else:
+                arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
+        except:
+            arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
+
+        if TaskMap:
+            MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+            MapName.text = "  " + TaskMap
+        if PlanNo:
+            PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+            PlanNum.text = "  " + PlanNo
+        if TaskNo:
+            TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+            TaskNum.text = "  " + TaskNo
+
+        outFile = output + "/" + str(AssNum) + "_MAP.pdf"
+##          outFile = output + "/" + str(AssNum) + "_aerial.pdf"
+
+        try:
+            arcpy.mapping.ExportToPDF(mxd, outFile)
+        except:
+            arcpy.AddWarning("  ")
+            arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
+            arcpy.AddWarning("Problem with ExportToPDF")
+            arcpy.AddWarning("  ")
+
+        try:
+            reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
+            arcpy.mapping.RemoveLayer(df,reMoveLyr)
+            del reMoveLyr
+        except:
+            pass
+
+        ###############################
+        ## Add June 11, 2014
+        try:
+            reMoveLyr002 = arcpy.mapping.ListLayers(mxd,"FgTrzPt",df)[0]
+            arcpy.mapping.RemoveLayer(df,reMoveLyr002)
+            del reMoveLyr002
+            fcIsh=path.join(wrkspc,"FgTrzPt")
+            if arcpy.Exists(fcIsh):
+                arcpy.Delete_management(fcIsh)
+        except:
+            pass
+        ##############################
+
+        arcpy.RefreshTOC()
+        arcpy.RefreshActiveView()
+
+        del selectLayer
+        del outFile
+        del PlanNo, TaskNo, TaskMap, PrintMap
+
+##    except:
+##        arcpy.AddWarning("Unable to produce map for Assignment: " + str(AssNum))
+##        pass
     return
 
 def CreatingGPX(fc, mxd, df, TaskMap, AssNum, output):
@@ -471,23 +477,27 @@ if __name__ == '__main__':
     lyrvis = [0,0,0,0,0]
     disView = mxd.activeView
 
-    kk=0
-    for clearLyr in clearLyrs:
-        try:
-            lyr = arcpy.mapping.ListLayers(mxd, clearLyr,df)[0]
-            arcpy.SelectLayerByAttribute_management(lyr, "CLEAR_SELECTION")
-            if lyr.visible == True:
-                lyrvis[kk]=1
-            else:
-                lyrvis[kk]=0
-            kk+=1
-            lyr.visible = False
-        except:
-            arcpy.AddWarning("Problem clearing layer {0}".format(clearLyr))
-            pass
-    del kk
+
+    ## Turn off layers that will not b used directly
+    SrchLayrs = ["Segment_Points", "QRT_Points", "QRT_Lines", "QRT_Segments", "Hasty_Points", "Hasty_Lines", "Hasty_Segments","Search Segments", "Probability Regions", "Search Boundary"]
+    allLyrs = []
+    for lyr in arcpy.mapping.ListLayers(mxd):
+        allLyrs.append(lyr.name)
+    del lyr
+
+    LyrVis = []
+    for lyr in SrchLayrs:
+        if lyr in allLyrs:
+            lyrTest = arcpy.mapping.ListLayers(mxd,lyr,df)[0]
+            arcpy.SelectLayerByAttribute_management(lyrTest, "CLEAR_SELECTION")
+            lyrBool = lyrTest.visible
+            LyrVis.append(lyrBool)
+            if lyrBool == True:
+                lyrTest.visible = False
+                arcpy.mapping.UpdateLayer(df, lyrTest, lyrTest)
 
     ###############
+
     # break up the "Assignments" string to generate a list
     AssignNum = AssignNumber.split(";")
 
@@ -759,13 +769,6 @@ if __name__ == '__main__':
     mxd.activeView = disView
     arcpy.RefreshActiveView()
 
-    try:
-        reMoveLyr = arcpy.mapping.ListLayers(mxd,"FgTrzG",df)[0]
-        arcpy.mapping.RemoveLayer(df,reMoveLyr)
-        del reMoveLyr
-    except:
-        pass
-
     kk=0
     for clearLyr in clearLyrs:
         lyr = arcpy.mapping.ListLayers(mxd, clearLyr,df)[0]
@@ -776,11 +779,20 @@ if __name__ == '__main__':
             lyr.visible = 0
         kk+=1
 
-    del kk
-    del lyr, clearLyr, clearLyrs
+
+
+    kvis = 0
+    for lyr in SrchLayrs:
+        if lyr in allLyrs:
+            lyrTest = arcpy.mapping.ListLayers(mxd,lyr,df)[0]
+            arcpy.SelectLayerByAttribute_management(lyrTest, "CLEAR_SELECTION")
+            lyrTest.visible = LyrVis[kvis]
+            kvis+=1
+    del SrchLayrs, allLyrs, lyr, lyrTest, LyrVis
+
     del AssNum, Assign, TaskMap
     del fc, fc1, fc2, fc3, fc4,fc5,fc6,fc7,fc8,fc9, fc10
-    del lyrvis, disView
+    del disView
     #######
     del mxd
     del df

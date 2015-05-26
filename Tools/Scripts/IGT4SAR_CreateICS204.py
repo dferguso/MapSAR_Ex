@@ -16,9 +16,10 @@ try:
     sys
 except NameError:
     import sys
-import time
+##import time
 from datetime import datetime
-from os import listdir
+from os import listdir, path
+from shutil import copyfile
 
 '''
 Assign =[AssignNumber, PlanNumber, Period, TaskInstruct, Milage, Team,
@@ -30,8 +31,22 @@ Teams= [TeamType,TeamLead,Medic, TeamCell] # Refer to Assign[5] for Team Name
 TeamMember[Responder]=[TeamName, SARTeam, sKills, Role]
 '''
 
+def checkForm(output, TAF2Use):
+    if not TAF2Use in listdir(output):
+        formsDir = 'C:\\MapSAR_Ex\\Forms\\TAF_ICS204'
+        formFile = path.join(formsDir, TAF2Use)
+        destFile = path.join(output, TAF2Use)
+        if TAF2Use in listdir(formsDir):
+            arcpy.AddMessage("\nform {0} added to foler {1}.\n".format(TAF2Use, output))
+            copyfile(formFile, destFile)
+        else:
+            arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(TAF2Use, output, formsDir))
+            sys.exit(1)
+    return
+
 def MD_SP(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
     TAF2Use = 'MSP Form 70-3 Task Assignment 5-15new.pdf'
+    checkForm(output, TAF2Use)
     if TAF2Use in listdir(output):
         SearchTime = 0
         assSafety = "None "
@@ -167,6 +182,8 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
               "K9-TrackTrail":"Chk_DogTeam","Litter":"Chk_LitterTeam","Public Observation":"Chk_Technical","Snowmobile":"Chk_SnowMobile",
               "Tech/Climbing":"Chk_Technical","Tracking":"Chk_TrackingTeam", "":"Chk_AreaTeam"}
 
+    checkForm(output, TAF2Use)
+
     if TAF2Use in listdir(output):
         SearchTime = 0
         assSafety = "None "
@@ -269,6 +286,7 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
 
 def Default_ASRC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod):
     TAF2Use = 'TAF_Page1_Task.pdf'
+    checkForm(output, TAF2Use)
     if TAF2Use in listdir(output):
         filename = output + "/" + str(AssNum) + "_TAF.fdf"
 
