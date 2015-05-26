@@ -31,20 +31,46 @@ try:
     sys
 except NameError:
     import sys
-import os, datetime
-import shutil, errno
-import traceback
+from datetime import datetime
+from os import remove, path, listdir
+from errno import ENOTDIR
+from shutil import copyfile, copytree, copy
+##import traceback
 from arcpy import env
 arcpy.env.overwriteOutput = True
 
 def copyanything(src, dst):
     try:
-        shutil.copytree(src, dst)
+        copytree(src, dst)
     except OSError as exc: # python >2.5
-        if exc.errno == errno.ENOTDIR:
-            shutil.copy(src, dst)
+        if exc.errno == ENOTDIR:
+            copy(src, dst)
         else: raise
 
+def checkForm(out_fc, TAF2Use):
+    formsDir = 'C:\\MapSAR_Ex\\Forms\\TAF_ICS204'
+    icsPath=path.join(formsDir,"ICS204Forms_Available.txt")
+    ics204={}
+    if path.isfile(icsPath):
+        with open(icsPath)as f:
+            for line in f:
+                (key, val) = line.split(',',1)
+                ics204[key]= val.strip()
+        icsFile = ics204[TAF2Use]
+    else:
+        icsFile = "TAF_Page1_Task.pdf"
+
+    output = path.join(out_fc, "Assignments")
+    if not icsFile in listdir(output):
+        formFile = path.join(formsDir, icsFile)
+        destFile = path.join(output, icsFile)
+        if icsFile in listdir(formsDir):
+            arcpy.AddMessage("\nform {0} added to foler {1}.\n".format(icsFile, output))
+            copyfile(formFile, destFile)
+        else:
+            arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(icsFile, output, formsDir))
+            sys.exit(1)
+    return
 
 ########
 # Main Program starts here
@@ -54,7 +80,7 @@ if __name__ == '__main__':
     in_fc = "C:\MapSAR_Ex\Template"
     # Set date and time vars
     timestamp = ''
-    now = datetime.datetime.now()
+    now = datetime.now()
     todaydate = now.strftime("%m_%d")
     todaytime = now.strftime("%H_%M_%p")
     timestamp = '{0}_{1}'.format(todaydate,todaytime)
@@ -92,6 +118,10 @@ if __name__ == '__main__':
     if LeadAgency == '#' or not LeadAgency:
         arcpy.AddMessage("No Lead Agency information provided. It can be entered at a later time.\n")
 
+    TAF2Use = arcpy.GetParameterAsText(7)
+    if TAF2Use == '#' or not TAF2Use:
+        arcpy.AddError("Need to specify the desired ICS204 form to use.\n")
+
     if (output_coordinate_system != "") and (output_coordinate_system != "#"):
         sr = output_coordinate_system
 
@@ -103,8 +133,8 @@ if __name__ == '__main__':
     copyanything(in_fc, out_fc)
 
     # Set environment settings
-    templ= os.path.join(in_fc,'SAR_Default.gdb')
-    wrkspc = os.path.join(out_fc,'SAR_Default.gdb')
+    templ= path.join(in_fc,'SAR_Default.gdb')
+    wrkspc = path.join(out_fc,'SAR_Default.gdb')
     env.workspace = wrkspc
 
     # Set local variables
@@ -133,8 +163,8 @@ if __name__ == '__main__':
             # Execute GetCount and if some features have been selected, then
             #  execute DeleteFeatures to remove the selected features.
             arcpy.AddMessage(fclist)        # Determine the new output feature class path and name
-            outData = os.path.join(wrkspc, fclist)
-            inData = os.path.join(templ, fclist)
+            outData = path.join(wrkspc, fclist)
+            inData = path.join(templ, fclist)
             arcpy.Project_management(inData, outData, sr, transformation)
 
     except Exception as e:
@@ -148,7 +178,7 @@ if __name__ == '__main__':
     arcpy.Compact_management(templ)
     arcpy.Compact_management(wrkspc)
 
-    mxd_nA = os.path.join(out_fc,'IncidentNo.mxd')
+    mxd_nA = path.join(out_fc,'IncidentNo.mxd')
     mxd = arcpy.mapping.MapDocument(mxd_nA)
 
     df = arcpy.mapping.ListDataFrames(mxd)[0]
@@ -162,18 +192,18 @@ if __name__ == '__main__':
     mxd.save()
 
     if IncidNum:
-        mxd_nB = os.path.join(out_fc, (IncidNum.replace(" ","") + '.mxd'))
+        mxd_nB = path.join(out_fc, (IncidNum.replace(" ","") + '.mxd'))
         arcpy.AddMessage('Save map as {0}'.format(mxd_nB))
         mxd.saveACopy(mxd_nB)
         del mxd
         del df
-        os.remove(mxd_nA)
+        remove(mxd_nA)
         mxd = arcpy.mapping.MapDocument(mxd_nB)
         df = arcpy.mapping.ListDataFrames(mxd)[0]
 
 
     if SubName:
-        SubjectInfo = os.path.join(wrkspc,"Subject_Information")
+        SubjectInfo = path.join(wrkspc,"Subject_Information")
         cursor = arcpy.UpdateCursor(SubjectInfo)
         for row in cursor:
             row.setValue('Name', SubName)
@@ -188,7 +218,7 @@ if __name__ == '__main__':
         arcpy.AddMessage("You have not provided a valid Subject Name")
 
     if LeadAgency:
-        LeadInfo =os.path.join(wrkspc,"Lead_Agency")
+        LeadInfo =path.join(wrkspc,"Lead_Agency")
         cursor = arcpy.UpdateCursor(LeadInfo)
         for row in cursor:
             row.setValue('Lead_Agency', LeadAgency)
@@ -212,25 +242,39 @@ if __name__ == '__main__':
     arcpy.AddMessage("\n")
 
     ## Update Incident Information if it is provided by user
-    if IncidName and IncidNum:
-        IncidInfo =os.path.join(wrkspc,"Incident_Info")
-        cursor = arcpy.UpdateCursor(IncidInfo)
-        for row in cursor:
-            row.setValue('Incident_Name', IncidName)
-            row.setValue('Incident_Number', IncidNum)
-            row.setValue('Lead_Agency', LeadAgency)
-            row.setValue("MapDatum", dfSpatial_Ref)
-            cursor.updateRow(row)
+    IncidInfo = path.join(wrkspc,"Incident_Info")
+    fieldnames = [f.name for f in arcpy.ListFields(IncidInfo)]
+    if "ICS204" in fieldnames:
+        pass
+    else:
+         arcpy.AddField_management(IncidInfo,"ICS204", "TEXT","","",100)
 
-        arcpy.AddMessage("update Incident Information domain")
-        arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
-        try:
-            arcpy.SortCodedValueDomain_management(wrkspc, "Incident_Name", "DESCRIPTION", "ASCENDING")
-        except:
-            pass
+    cursor = arcpy.UpdateCursor(IncidInfo)
+    for row in cursor:
+        if IncidName:
+            row.setValue('Incident_Name', IncidName)
+        if IncidNum:
+            row.setValue('Incident_Number', IncidNum)
+        if LeadAgency:
+            row.setValue('Lead_Agency', LeadAgency)
+        row.setValue("MapDatum", dfSpatial_Ref)
+        if not TAF2Use:
+            TAF2Use = "Default_ASRC"
+        row.setValue("ICS204", TAF2Use)
+        cursor.updateRow(row)
+
+    arcpy.AddMessage("update Incident Information domain")
+
+    checkForm(out_fc, TAF2Use)
+
+    arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
+    try:
+        arcpy.SortCodedValueDomain_management(wrkspc, "Incident_Name", "DESCRIPTION", "ASCENDING")
+    except:
+        pass
 
         ## Update Opertion Period Information
-        OpInfo = os.path.join(wrkspc,"Operation_Period")
+        OpInfo = path.join(wrkspc,"Operation_Period")
         cursor = arcpy.UpdateCursor(OpInfo)
         for row in cursor:
             row.setValue('Period', 1)

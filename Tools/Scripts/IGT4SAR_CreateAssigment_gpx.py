@@ -34,7 +34,7 @@ except NameError:
     import sys
 import time, unicodedata
 from types import *
-from os import path
+from os import path, listdir
 import IGT4SAR_CreateICS204
 import IGT4SAR_UpdateLayout
 
@@ -81,6 +81,33 @@ def joinCheck(FName, fc, mxd, df, TaskMap):
                 else:
                     return('"' + f.name + '" = ' + "'" + TaskMap + "'")
     arcpy.AddError("No field named '{0}' in {1}".format(FName,lyr))
+
+
+def checkForm(out_fc, TAF2Use):
+    formsDir = 'C:\\MapSAR_Ex\\Forms\\TAF_ICS204'
+    icsPath=path.join(formsDir,"ICS204Forms_Available.txt")
+    ics204={}
+    if path.isfile(icsPath):
+        with open(icsPath)as f:
+            for line in f:
+                (key, val) = line.split(',',1)
+                ics204[key]= val.strip()
+        icsFile = ics204[TAF2Use]
+    else:
+        icsFile = "TAF_Page1_Task.pdf"
+
+    outAssign = out_fc
+    if not icsFile in listdir(outAssign):
+        formFile = path.join(formsDir, icsFile)
+        destFile = path.join(outAssign, icsFile)
+        if icsFile in listdir(formsDir):
+            arcpy.AddMessage("\nform {0} added to foler {1}.\n".format(icsFile, outAssign))
+            copyfile(formFile, destFile)
+        else:
+            arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(icsFile, outAssign, formsDir))
+            sys.exit(1)
+    return(icsFile)
+
 
 def updateAssignmentDomain():
         # Process: Table To Domain (10)
@@ -501,7 +528,21 @@ if __name__ == '__main__':
     # break up the "Assignments" string to generate a list
     AssignNum = AssignNumber.split(";")
 
+    #Specify a defualt ICS204 Region until one is obtained from the Incident Information Table
+    ICS204Reg = TAF2Use  #see line 47-52 above
+
     fc1="Incident_Info"
+    # Get a list of field names
+    fldnames = [f.name for f in arcpy.ListFields(fc1)]
+    if "ICS204" in fldnames:
+        pass
+    else:
+         arcpy.AddField_management(fc1,"ICS204", "TEXT","","",100)
+         cursor = arcpy.UpdateCursor(fc1)
+         for row in cursor:
+            row.setValue("ICS204", TAF2Use)
+            cursor.updateRow(row)
+
     # Create a dictionary for Incident Information
     incidInfo={}
     cAssign=arcpy.GetCount_management(fc1)
@@ -529,11 +570,19 @@ if __name__ == '__main__':
             Base_Freq = checkNoneType(row.getValue("Comms_Freq"))
             UtmZone = checkNoneType(row.getValue("UTM_Zone"))
             UsngGrid = checkNoneType(row.getValue("USNG_GRID"))
+            ICS204Reg = checkNoneType(row.getValue("ICS204"))
+            if len(ICS204Reg)<1:
+                ICS204Reg='Default_ASRC'
+                arcpy.AddMessage('Error in the specification of the ICS204 Form.  Defualt form is being used.')
+
             incidInfo[IncidIdx]=[Incident_Name, Incident_Numb, MapDatum, MagDec, MapCoord, Base_Phone, Base_Freq, UtmZone, UsngGrid]
 
             zk+=1
             row = rows.next()
         del rows, row
+
+    ICS204Use = checkForm(output,ICS204Reg)
+    arcpy.AddMessage('You have elected to use the ICS204 Form from: {0}\n'.format(ICS204Reg))
 
     if zk == 0:
         arcpy.AddError("Please update incident information")
@@ -738,8 +787,8 @@ if __name__ == '__main__':
                 TeamMember[Rsp]=TeamMembers[Rsp]
         if len(Respd)==0:
             arcpy.AddMessage("Time estimates based on single searcher - divide by total number of searchers assigned")
-        mod_name = TAF2Use
-        CreateICS204 = "IGT4SAR_CreateICS204.{0}(Assign, Team, TeamMember, AssNum, incInfo, output, OpPd)".format(mod_name)
+
+        CreateICS204 = "IGT4SAR_CreateICS204.{0}(Assign, Team, TeamMember, AssNum, incInfo, output, OpPd, ICS204Use)".format(ICS204Reg)
         exec CreateICS204
 ##########################################
     ##Create Map for Task Assignment
