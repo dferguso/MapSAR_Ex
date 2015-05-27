@@ -32,9 +32,11 @@ try:
     sys
 except NameError:
     import sys
-import time, unicodedata
+from unicodedata import normalize
 from types import *
 from os import path, listdir
+from shutil import copyfile, copytree, copy
+from datetime import datetime
 import IGT4SAR_CreateICS204
 import IGT4SAR_UpdateLayout
 
@@ -470,6 +472,9 @@ if __name__ == '__main__':
     output = arcpy.GetParameterAsText(0)
     AssignNumber = arcpy.GetParameterAsText(1)
     updateMap = arcpy.GetParameterAsText(2)
+
+    nowDateTime = datetime.now()
+
     if updateMap.upper() == "TRUE":
         arcpy.AddMessage('\nUpdating Map Layout')
         IGT4SAR_UpdateLayout.updateMapLayout()
@@ -643,7 +648,7 @@ if __name__ == '__main__':
         k=1
         while row4:
             Respond = row4.getValue("Name")
-            Respond = unicodedata.normalize('NFD', Respond).encode('ascii', 'ignore')
+            Respond = normalize('NFD', Respond).encode('ascii', 'ignore')
             Respond = k if not Respond else Respond
 
             SARTeam =checkNoneType(row4.getValue("Originating_Team"))
@@ -714,6 +719,8 @@ if __name__ == '__main__':
             Assign_Safety = checkNoneType(row0.getValue("Safety_note"))
             PrepBy = checkNoneType(row0.getValue("Prepared_By"))
             TaskDate =checkNoneType(row0.getValue("TimeOut"))
+            if not TaskDate:
+                TaskDate = nowDateTime
 
             Assignment[AssignIdx]=[AssignNumber, PlanNumber, Period, TaskInstruct, Milage, Team,
                        ResourceType, Division, Priority, PreSearch, TaskMap, mapScale, CreateMap,
