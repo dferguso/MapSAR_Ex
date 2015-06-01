@@ -130,10 +130,12 @@ if __name__ == '__main__':
     ##srp.loadFromString(output_coordinate_system)
     ##arcpy.AddMessage(srp.datumName)
 
-    copyanything(in_fc, out_fc)
-
     # Set environment settings
     templ= path.join(in_fc,'SAR_Default.gdb')
+    arcpy.Compact_management(templ)
+
+    copyanything(in_fc, out_fc)
+
     wrkspc = path.join(out_fc,'SAR_Default.gdb')
     env.workspace = wrkspc
 
@@ -295,6 +297,8 @@ if __name__ == '__main__':
         except:
             pass
 
+    arcpy.Compact_management(templ)
+    arcpy.Compact_management(wrkspc)
 
     del dfSpatial_Ref, dfSpatial_Type
 
