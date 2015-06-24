@@ -200,6 +200,7 @@ arcpy.AddMessage("Path Distance")
 # slope dtravel is obtained from the VF.  Path Distance Tool applies directionality.
 
 InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler.txt")'
+##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\Tobler_Bike.txt")'
 ##InVertFact = 'VfTable("C:\MapSAR_Ex\Tools\Tables\ToblerOrg.txt")'
 
 ############Test Section##################

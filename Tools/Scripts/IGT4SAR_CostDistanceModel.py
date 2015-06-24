@@ -203,6 +203,7 @@ arcpy.AddMessage("Buffer IPP around the " + ippType )
 #############################################
 
 maxSlope = "60"
+##maxSlope = "45" #For biking
 
 # Set the cell size environment using a raster dataset.
 #arcpy.env.cellSize = DEM2
@@ -603,10 +604,10 @@ try:
     else:
         # Fence line processing
         # Process: Clip Fences
-        arcpy.AddMessage("Clip Fences and buffer to 5 meters")
+        arcpy.AddMessage("Clip Fences and buffer to 15 meters")
         arcpy.Clip_analysis(Fence, IPP_dist, Fence_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "5 Meters")
+        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "15 Meters")
 
         # Check to see if the Fence polyline already has a "Impd" field.  If not create on
         FenceImpedance = 99
