@@ -129,35 +129,38 @@ def updateMapLayout():
         bearingTuple=('SUBTRACT','ADD')
     MagDecTxt = str(abs(MagDeclinlination)) + " " + Cardinal
 
-    try:  #Update Incident Name and Number with the file name and dataframe name
-        IncName = df.name
-        IncNumA = mxd.filePath.split("\\")
-        IncNum=IncNumA[-1].strip(".mxd")
-        arcpy.AddMessage("\nThe Incident Name is " + IncName)
-        arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
+##    try:  #Update Incident Name and Number with the file name and dataframe name
+    IncName = df.name
+    IncNumA = mxd.filePath.split("\\")
+    IncNum=IncNumA[-1].strip(".mxd")
+    arcpy.AddMessage("\nThe Incident Name is " + IncName)
+    arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
+    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]:
         MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
         MapName.text = " "
 
+    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]:
         PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
         PlanNum.text = " "
 
+    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]:
         AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
         AssignNum.text = " "
 
-        fld2 = "Incident_Name"
-        fld3 = "Incident_Number"
-        cursor = arcpy.UpdateCursor(fc2)
-        for row in cursor:
-            incidName=row.getValue(fld2)
-            if incidName != IncName:
-                row.setValue(fld2, IncName)
-                row.setValue(fld3, IncNum)
-                cursor.updateRow(row)
-            del incidName
-        del cursor, row
-        del IncName, IncNum, fld2, fld3
-    except:
-        arcpy.AddMessage("Error: Update Incident Name and Number manually\n")
+    fld2 = "Incident_Name"
+    fld3 = "Incident_Number"
+    cursor = arcpy.UpdateCursor(fc2)
+    for row in cursor:
+        incidName=row.getValue(fld2)
+        if incidName != IncName:
+            row.setValue(fld2, IncName)
+            row.setValue(fld3, IncNum)
+            cursor.updateRow(row)
+        del incidName
+    del cursor, row
+    del IncName, IncNum, fld2, fld3
+##    except:
+##        arcpy.AddMessage("Error: Update Incident Name and Number manually\n")
 
     arcpy.AddMessage("The Coordinate System for the dataframe is: " + dfSpatial_Type)
     arcpy.AddMessage("The Datum for the dataframe is: " + dfSpatial_Ref)
@@ -168,13 +171,15 @@ def updateMapLayout():
     try:
         mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
         arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT","1 Incident_Group\Planning Point")
-        UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-        USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
         arcpy.AddMessage("Maplayers: " + mapLyr.name)
         rows=arcpy.SearchCursor(mapLyr)
         row = rows.next()
-        UTMZn.text = row.getValue("GRID1MIL")
-        USNGZn.text = row.getValue("GRID100K")
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]:
+            UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
+            UTMZn.text = row.getValue("GRID1MIL")
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]:
+            USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
+            USNGZn.text = row.getValue("GRID100K")
         arcpy.AddMessage("UTM Zone is {0} and USNG Grid is {1}".format(UTMZn.text,USNGZn.text))
         del rows
         del row
@@ -194,17 +199,16 @@ def updateMapLayout():
         if int(cIncident.getOutput(0)) > 0:
             if "MagDec" in field:
                 fld1 = "MagDec"
-                MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-
                 try:
-                    bearingConv=arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]
-                    bcText=bearingConv.text
-                    # Even though the templates have %s in them, we may have
-                    # clobbered them in a previous run.  So put 'em back.
-                    bcText=bcText.replace('ADD','%s')
-                    bcText=bcText.replace('SUBTRACT','%s')
-                    bearingConv.text= bcText % bearingTuple
-                    del bearingConv
+                    if arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]:
+                        bearingConv=arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]
+                        bcText=bearingConv.text
+                        # Even though the templates have %s in them, we may have
+                        # clobbered them in a previous run.  So put 'em back.
+                        bcText=bcText.replace('ADD','%s')
+                        bcText=bcText.replace('SUBTRACT','%s')
+                        bearingConv.text= bcText % bearingTuple
+                        del bearingConv
                 except:
                     arcpy.AddMessage("Failed to update bearing conversion text.")
 
@@ -212,10 +216,12 @@ def updateMapLayout():
                 for row in cursor:
                     row.setValue(fld1, MagDecTxt)
                     cursor.updateRow(row)
-                MagDeclin.text = MagDecTxt
-                arcpy.AddMessage("Magnetic Declination is {0}".format(MagDeclin.text))
+                if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]:
+                    MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+                    MagDeclin.text = MagDecTxt
+                    arcpy.AddMessage("Magnetic Declination is {0}".format(MagDeclin.text))
+                    del MagDeclin
                 del cursor, row
-                del MagDeclin
             else:
                 arcpy.AddMessage("Magnetic Declination is not in the field list for Incident Information")
         else:

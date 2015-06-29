@@ -258,21 +258,24 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
         try:
             mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
             arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
-            UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-            USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
             rows7=arcpy.SearchCursor(mapLyr)
             row7 = rows7.next()
-            UTMZn.text = row7.getValue("GRID1MIL")
-            UtmZone=UTMZn.text
-            USNGZn.text = row7.getValue("GRID100K")
-            UsngGrid = USNGZn.text
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]:
+                UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
+                UTMZn.text = row7.getValue("GRID1MIL")
+                UtmZone=UTMZn.text
+                del UTMZn
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]:
+                USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
+                USNGZn.text = row7.getValue("GRID100K")
+                UsngGrid = USNGZn.text
+                del USNGZn
+
             ##arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text)
 
             arcpy.SelectLayerByAttribute_management (mapLyr, "CLEAR_SELECTION")
 
             del mapLyr
-            del UTMZn
-            del USNGZn
             del row7
             del rows7
         except:
@@ -304,26 +307,30 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
             cIncident=arcpy.GetCount_management("Incident_Information")
             if int(cIncident.getOutput(0)) > 0:
                 mapLyr = arcpy.mapping.ListLayers(mxd, "Incident_Information")[0]
-                MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
                 if not MagDec:
                     arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
                 else:
-                    MagDeclin.text = str(MagDec)
-                del MagDeclin
+                    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]:
+                        MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+                        MagDeclin.text = str(MagDec)
+                        del MagDeclin
             else:
                 arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
         except:
             arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
 
         if TaskMap:
-            MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
-            MapName.text = "  " + TaskMap
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]:
+                MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+                MapName.text = "  " + TaskMap
         if PlanNo:
-            PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
-            PlanNum.text = "  " + PlanNo
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]:
+                PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+                PlanNum.text = "  " + PlanNo
         if TaskNo:
-            TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
-            TaskNum.text = "  " + TaskNo
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]:
+                TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+                TaskNum.text = "  " + TaskNo
 
         outFile = output + "/" + str(AssNum) + "_MAP.pdf"
 ##          outFile = output + "/" + str(AssNum) + "_aerial.pdf"

@@ -65,7 +65,7 @@ def checkForm(out_fc, TAF2Use):
         formFile = path.join(formsDir, icsFile)
         destFile = path.join(output, icsFile)
         if icsFile in listdir(formsDir):
-            arcpy.AddMessage("\nform {0} added to foler {1}.\n".format(icsFile, output))
+            arcpy.AddMessage("\nForm {0} added to folder {1}.\n".format(icsFile, output))
             copyfile(formFile, destFile)
         else:
             arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(icsFile, output, formsDir))
