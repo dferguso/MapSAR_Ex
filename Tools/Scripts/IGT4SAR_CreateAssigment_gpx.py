@@ -260,12 +260,12 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
             arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
             rows7=arcpy.SearchCursor(mapLyr)
             row7 = rows7.next()
-            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]:
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone"):
                 UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
                 UTMZn.text = row7.getValue("GRID1MIL")
                 UtmZone=UTMZn.text
                 del UTMZn
-            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]:
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone"):
                 USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
                 USNGZn.text = row7.getValue("GRID100K")
                 UsngGrid = USNGZn.text
@@ -310,7 +310,7 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
                 if not MagDec:
                     arcpy.AddWarning("No Magnetic Declination provided in Incident Information")
                 else:
-                    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]:
+                    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl"):
                         MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
                         MagDeclin.text = str(MagDec)
                         del MagDeclin
@@ -320,15 +320,15 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
             arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
 
         if TaskMap:
-            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]:
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName"):
                 MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
                 MapName.text = "  " + TaskMap
         if PlanNo:
-            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]:
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum"):
                 PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
                 PlanNum.text = "  " + PlanNo
         if TaskNo:
-            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]:
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum"):
                 TaskNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
                 TaskNum.text = "  " + TaskNo
 
@@ -348,6 +348,7 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
             arcpy.mapping.RemoveLayer(df,reMoveLyr)
             del reMoveLyr
         except:
+            arcpy.AddWarning("\nYou will need to manually remove FgTrzG Layer\n")
             pass
 
         ###############################
@@ -360,6 +361,7 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
             if arcpy.Exists(fcIsh):
                 arcpy.Delete_management(fcIsh)
         except:
+            arcpy.AddWarning("\nYou will need to manually remove FgTrzPt Layer\n")
             pass
         ##############################
 

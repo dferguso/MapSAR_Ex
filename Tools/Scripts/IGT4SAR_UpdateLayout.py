@@ -110,7 +110,7 @@ def updateMapLayout():
     # Rotate data frame to adjust map layout for True North vs Grid North.
     try:
         df.rotation = gridN
-        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]:
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth"):
             gridNorth=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]
             gridNorth.text = gNorthTxt
         # Remove field
@@ -135,15 +135,15 @@ def updateMapLayout():
     IncNum=IncNumA[-1].strip(".mxd")
     arcpy.AddMessage("\nThe Incident Name is " + IncName)
     arcpy.AddMessage("The Incident Number is: " + IncNum + "\n")
-    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]:
+    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName"):
         MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
         MapName.text = " "
 
-    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]:
+    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum"):
         PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
         PlanNum.text = " "
 
-    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]:
+    if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum"):
         AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
         AssignNum.text = " "
 
@@ -174,10 +174,10 @@ def updateMapLayout():
         arcpy.AddMessage("Maplayers: " + mapLyr.name)
         rows=arcpy.SearchCursor(mapLyr)
         row = rows.next()
-        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]:
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone"):
             UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
             UTMZn.text = row.getValue("GRID1MIL")
-        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]:
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone"):
             USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
             USNGZn.text = row.getValue("GRID100K")
         arcpy.AddMessage("UTM Zone is {0} and USNG Grid is {1}".format(UTMZn.text,USNGZn.text))
@@ -200,7 +200,7 @@ def updateMapLayout():
             if "MagDec" in field:
                 fld1 = "MagDec"
                 try:
-                    if arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]:
+                    if arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv"):
                         bearingConv=arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]
                         bcText=bearingConv.text
                         # Even though the templates have %s in them, we may have
@@ -216,7 +216,7 @@ def updateMapLayout():
                 for row in cursor:
                     row.setValue(fld1, MagDecTxt)
                     cursor.updateRow(row)
-                if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]:
+                if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl"):
                     MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
                     MagDeclin.text = MagDecTxt
                     arcpy.AddMessage("Magnetic Declination is {0}".format(MagDeclin.text))
