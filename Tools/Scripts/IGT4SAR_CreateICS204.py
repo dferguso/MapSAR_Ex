@@ -263,7 +263,7 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use)
             ## Resrouce Type
             txt.write("<</T({0})/V({1})>>\n".format("Team Number  Call SignRow1",str(Assign[5]))) #TeamID
             try:
-                txt.write("<</T({0})/V({1})>>\n".format(Resource[Assign[6]],"1"))
+                txt.write("<</T({0})/V({1})>>\n".format(Resource[Assign[6]],"On"))
             except:
                 pass
 
