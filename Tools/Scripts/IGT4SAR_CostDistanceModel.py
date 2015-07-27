@@ -604,10 +604,10 @@ try:
     else:
         # Fence line processing
         # Process: Clip Fences
-        arcpy.AddMessage("Clip Fences and buffer to 15 meters")
+        arcpy.AddMessage("Clip Fences and buffer to 10 meters")
         arcpy.Clip_analysis(Fence, IPP_dist, Fence_Clipped, "")
         # Process: Buffer for theoretical search area
-        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "15 Meters")
+        arcpy.Buffer_analysis(Fence_Clipped, Fence_Buf, "10 Meters")
 
         # Check to see if the Fence polyline already has a "Impd" field.  If not create on
         FenceImpedance = 99
