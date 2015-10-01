@@ -507,12 +507,16 @@ if __name__ == '__main__':
             aBearing=row.getValue('ANTSEC_DIR')
             aSecAng =row.getValue('ANTSEC_DISP')
             aRange =row.getValue('RANGE_MAX')
-            AziChkL = aBearing - (1.05*aSecAng)/2
-            if AziChkL<0:
-                AziChkL=360+AziChkL
-            AziChkH = aBearing + (1.05*aSecAng)/2
-            if AziChkH>360:
-                AziChkH=AziChkH-360
+            if aSecAng == 360:
+                AziChkL = 0
+                AziChkH = 360
+            else:
+                AziChkL = aBearing - (1.05*aSecAng)/2
+                if AziChkL<0:
+                    AziChkL=360+AziChkL
+                AziChkH = aBearing + (1.05*aSecAng)/2
+                if AziChkH>360:
+                    AziChkH=AziChkH-360
 
             row.setValue('OFFSETA',int(aHeight))
             row.setValue('OFFSETB',2)

@@ -142,6 +142,7 @@ def Geodesic(pnt, in_bearing, in_angle, in_dist):
     return coordList
 
 def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc, UncertBuff, out_fcUNC):
+    mxd, df = getDataframe()
     inDataset = os.path.join(wrkspc,"Sector")
     inDatasetUNC = os.path.join(wrkspc,"Uncert")
     out_Line=out_fc+'UNC_Temp'
@@ -153,66 +154,79 @@ def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc, UncertBu
     unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
     # Execute CreateFeatureclass
 
-    coordList = []
-    k=0
-    rows = arcpy.SearchCursor(in_fc, '', unProjCoordSys)
-
-    for row in rows:
-        feat = row.getValue(shapefieldname)
-        pnt = feat.getPart()
-        k+=1
-    ###################################################
-        # A list of features and coordinate pairs
-        pnt.X=pnt.X
-        pnt.Y=pnt.Y
-        coordList1 = Geodesic(pnt, float(in_bearing), float(in_angle), float(in_dist))
-        coordList.append(coordList1)
-
-    del row
-    del rows
-    # Create empty Point and Array objects
-    #
-    array = arcpy.Array()
-
     # A list that will hold each of the Polygon objects
     #
     featureList = []
     featureListUNC=[]
 
-    for feature in coordList:
-        for coordPair in feature:
-            # For each coordinate pair, set the x,y properties and add to the
-            #  Array object.
-            #
-            point = arcpy.Point(float(coordPair[0]),float(coordPair[1]))
-
-            array.add(point)
-        ######################################################
-        # Create a Polygon object based on the array of points
-        #
-        polygon = arcpy.Polygon(array, unProjCoordSys)
-        # Clear the array for future use
-        #
-        array.removeAll()
-
-        # Append to the list of Polygon objects
-        #
-        featureList.append(polygon)
-
+    if in_angle == 360:
+        outDist = ('{0} Meters'.format(in_dist))
+        arcpy.Buffer_analysis(in_fc, out_fc, outDist)
         if len(UncertBuff)>0:
-            for coordPair in feature[1:-1]:
-                point = arcpy.Point(float(coordPair[0]),float(coordPair[1]))
-                array.add(point)
-            polyline=arcpy.Polyline(array,unProjCoordSys)
-            array.removeAll()
-            featureListUNC.append(polyline)
+            featureListUNC.append[out_fc]
+    else:
+        coordList = []
+        k=0
+        rows = arcpy.SearchCursor(in_fc, '', unProjCoordSys)
 
-    # Create a copy of the Polygon objects, by using featureList as input to
-    #  the CopyFeatures tool.
-    #
-    arcpy.CopyFeatures_management(featureList, inDataset)
-    arcpy.Project_management(inDataset, out_fc, outCS)
-    arcpy.Delete_management(inDataset)
+        for row in rows:
+            feat = row.getValue(shapefieldname)
+            pnt = feat.getPart()
+            k+=1
+        ###################################################
+            # A list of features and coordinate pairs
+            pnt.X=pnt.X
+            pnt.Y=pnt.Y
+            coordList1 = Geodesic(pnt, float(in_bearing), float(in_angle), float(in_dist))
+            coordList.append(coordList1)
+
+        del row
+        del rows
+        # Create empty Point and Array objects
+        #
+        array = arcpy.Array()
+
+        for feature in coordList:
+            for coordPair in feature:
+                # For each coordinate pair, set the x,y properties and add to the
+                #  Array object.
+                #
+                point = arcpy.Point(float(coordPair[0]),float(coordPair[1]))
+
+                array.add(point)
+            ######################################################
+            # Create a Polygon object based on the array of points
+            #
+            polygon = arcpy.Polygon(array, unProjCoordSys)
+            # Clear the array for future use
+            #
+            array.removeAll()
+
+            # Append to the list of Polygon objects
+            #
+            featureList.append(polygon)
+            del polygon
+
+            if len(UncertBuff)>0:
+                for coordPair in feature[1:-1]:
+                    point = arcpy.Point(float(coordPair[0]),float(coordPair[1]))
+                    array.add(point)
+                polyline=arcpy.Polyline(array,unProjCoordSys)
+                array.removeAll()
+                featureListUNC.append(polyline)
+
+        del coordList
+        del feature
+
+
+        # Create a copy of the Polygon objects, by using featureList as input to
+        #  the CopyFeatures tool.
+        #
+        arcpy.CopyFeatures_management(featureList, inDataset)
+        arcpy.Project_management(inDataset, out_fc, outCS)
+        arcpy.Delete_management(inDataset)
+        del featureList
+    ## End IF-ELSE Loop
 
     if len(featureListUNC)>0:
         arcpy.CopyFeatures_management(featureListUNC, inDatasetUNC)
@@ -228,12 +242,7 @@ def Geodesic_Main(in_fc, out_fc, in_bearing, in_angle, in_dist, wrkspc, UncertBu
         arcpy.Delete_management(inDatasetUNC)
         arcpy.Delete_management(wrkspc + '\\' + out_Line)
         del featureListUNC
-
-    del coordList
-    del polygon
-    del featureList
-    del feature
-
+    return()
 
 ########
 # Main Program starts here

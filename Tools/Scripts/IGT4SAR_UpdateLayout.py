@@ -28,6 +28,10 @@ try:
     arcpy
 except NameError:
     import arcpy
+try:
+    sys
+except NameError:
+    import sys
 import geomag
 
 def getDataframe():
@@ -68,11 +72,15 @@ def updateMapLayout():
     cBasePt = arcpy.GetCount_management(fc3)
     if int(cPlanPt.getOutput(0)) > 0:
         cPlanPt = cPlanPt
+        intLyr = "1 Incident_Group\Planning Point"
     elif int(cBasePt.getOutput(0)) > 0:
         cPlanPt = cBasePt
         fc1 = fc3
+        intLyr = "2 Incident Assets\Assets"
     else:
-        arcpy.AddError("Warning: Need to add Planning Point or ICP prior to updating map layout\n")
+        arcpy.AddError("Warning: Need to add Planning Point or ICP prior to updating map layout.\n")
+        arcpy.AddError("Warning: Map Layout COULD NOT be updated.\n")
+        sys.exit(0)
 
     desc = arcpy.Describe(fc1)
 
@@ -170,7 +178,7 @@ def updateMapLayout():
     arcpy.AddMessage("Updating UTM and USNG grid info on map layout")
     try:
         mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
-        arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT","1 Incident_Group\Planning Point")
+        arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT", intLyr) #"1 Incident_Group\Planning Point")
         arcpy.AddMessage("Maplayers: " + mapLyr.name)
         rows=arcpy.SearchCursor(mapLyr)
         row = rows.next()

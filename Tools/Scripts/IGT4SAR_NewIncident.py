@@ -48,6 +48,7 @@ def copyanything(src, dst):
         else: raise
 
 def checkForm(out_fc, TAF2Use):
+    icsFile=[]
     formsDir = 'C:\\MapSAR_Ex\\Forms\\TAF_ICS204'
     icsPath=path.join(formsDir,"ICS204Forms_Available.txt")
     ics204={}
@@ -56,20 +57,27 @@ def checkForm(out_fc, TAF2Use):
             for line in f:
                 (key, val) = line.split(',',1)
                 ics204[key]= val.strip()
-        icsFile = ics204[TAF2Use]
+        icsFile.append(ics204[TAF2Use])
     else:
-        icsFile = "TAF_Page1_Task.pdf"
+        icsFile.append("Default_204Form_pg1.pdf")
+
+    (FName,FType)= icsFile[0].split('.')
+
+    if 'pg1' in FName:
+        icsFile=[]
+        [icsFile.append(f) for f in listdir(formsDir) if FName[:-3] in f]
 
     output = path.join(out_fc, "Assignments")
-    if not icsFile in listdir(output):
-        formFile = path.join(formsDir, icsFile)
-        destFile = path.join(output, icsFile)
-        if icsFile in listdir(formsDir):
-            arcpy.AddMessage("\nForm {0} added to folder {1}.\n".format(icsFile, output))
-            copyfile(formFile, destFile)
-        else:
-            arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(icsFile, output, formsDir))
-            sys.exit(1)
+    for icsFileX in icsFile:
+        if not icsFileX in listdir(output):
+            formFile = path.join(formsDir, icsFileX)
+            destFile = path.join(output, icsFileX)
+            if icsFileX in listdir(formsDir):
+                arcpy.AddMessage("\nForm {0} added to folder {1}.\n".format(icsFileX, output))
+                copyfile(formFile, destFile)
+            else:
+                arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(icsFileX, output, formsDir))
+                sys.exit(1)
     return
 
 ########

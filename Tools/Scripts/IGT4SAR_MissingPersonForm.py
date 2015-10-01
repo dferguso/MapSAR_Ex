@@ -62,7 +62,6 @@ while row:
     else:
         LeadAgency = row.getValue("Lead_Agency")
         where2 = '"Lead_Agency" = ' + "'" + LeadAgency + "'"
-        arcpy.AddMessage(where2)
         rows2 = arcpy.SearchCursor(fc2, where2)
         row2 = rows2.next()
 

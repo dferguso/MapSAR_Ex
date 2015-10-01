@@ -50,7 +50,8 @@ arcpy.env.extent = "MAXOF"
 ## Specify which TAF to use
 #TAF2Use ='NMSAR'
 #TAF2Use ='MD_SP'
-TAF2Use ='Default_ASRC'
+#TAF2Use = 'PSARC'
+TAF2Use ='Default'
 ###############################
 
 def getDataframe():
@@ -96,7 +97,7 @@ def checkForm(out_fc, TAF2Use):
                 ics204[key]= val.strip()
         icsFile = ics204[TAF2Use]
     else:
-        icsFile = "TAF_Page1_Task.pdf"
+        icsFile = "Default_204Form_pg1.pdf"
 
     outAssign = out_fc
     if not icsFile in listdir(outAssign):
@@ -482,7 +483,7 @@ if __name__ == '__main__':
     AssignNumber = arcpy.GetParameterAsText(1)
     updateMap = arcpy.GetParameterAsText(2)
 
-    nowDateTime = datetime.now()
+    nowDateTime = datetime.now().strftime("%m/%d/%y %H:%M")
 
     if updateMap.upper() == "TRUE":
         arcpy.AddMessage('\nUpdating Map Layout')
@@ -586,7 +587,7 @@ if __name__ == '__main__':
             UsngGrid = checkNoneType(row.getValue("USNG_GRID"))
             ICS204Reg = checkNoneType(row.getValue("ICS204"))
             if len(ICS204Reg)<1:
-                ICS204Reg='Default_ASRC'
+                ICS204Reg='Default'
                 arcpy.AddMessage('Error in the specification of the ICS204 Form.  Defualt form is being used.')
 
             incidInfo[IncidIdx]=[Incident_Name, Incident_Numb, MapDatum, MagDec, MapCoord, Base_Phone, Base_Freq, UtmZone, UsngGrid]

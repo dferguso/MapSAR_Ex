@@ -33,11 +33,11 @@ try:
     sys
 except NameError:
     import sys
-try:
-    math
-except NameError:
-    import math
+
+from math import log, ceil
+
 import os, datetime
+
 
 # Environment variables
 wrkspc=arcpy.env.workspace
@@ -241,7 +241,14 @@ if __name__ == '__main__':
     sNameUnq = list(set(sName))
 
     # Calculate Coverage and Spacing
-    Coverage=-(math.log(1.0-dPOD/100.0))
+    if dPOD >= 100.0:
+        dPOD = 99.999
+        if dPOD > 100.0:
+            arcpy.AddMessage("POD can not be greater than 100.0")
+    elif dPOD < 0.0:
+        dPOD = 0.0
+        arcpy.AddMessage("POD can not be less than 0.0")
+    Coverage=-(log(1.0-dPOD/100.0))
 
     # Output file
     dirNm = os.path.dirname(wrkspc)
@@ -276,7 +283,7 @@ if __name__ == '__main__':
         TrkLngth = lSpd * float(SrchTime)
         EffSpcng = float(SwpWdthb) / Coverage / 1000.0 # km
         eFfort = lArea/EffSpcng
-        nSrchr = math.ceil(eFfort/TrkLngth)
+        nSrchr = ceil(eFfort/TrkLngth)
         nSrchSum+=nSrchr
         nSegSum+=1
         nAreaSum+=lArea
@@ -315,11 +322,11 @@ if __name__ == '__main__':
             lArea = StatArea[stt][0]
             TrkLngth = lSpd * float(SrchTime)
             eFfort = lArea/EffSpcng
-            nSrchr = math.ceil(eFfort/TrkLngth)
+            nSrchr = ceil(eFfort/TrkLngth)
             nSrchSum+=nSrchr
             nSegSum+=1
             nAreaSum+=lArea
-            lIne06 = "To Search the {0} Statistical Search Area (Area = {1} sq KM), would require {2} Searchers".format(stt, round(lArea,2), math.ceil(nSrchr))
+            lIne06 = "To Search the {0} Statistical Search Area (Area = {1} sq KM), would require {2} Searchers".format(stt, round(lArea,2), ceil(nSrchr))
             arcpy.AddMessage(lIne06)
             target.write(lIne06)
             target.write("\n")

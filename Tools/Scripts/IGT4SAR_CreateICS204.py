@@ -6,7 +6,19 @@
 #
 # Created:     28/01/2015
 # Copyright:   (c) ferguson 2015
-# Licence:     <your licence>
+# Licence:
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  The GNU General Public License can be found at
+#  <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 try:
     arcpy
@@ -29,6 +41,97 @@ OpPeriod = [Op_Safety, wEather,PrimComms] #Refer to Assign[3] for Period
 Teams= [TeamType,TeamLead,Medic, TeamCell] # Refer to Assign[5] for Team Name
 TeamMember[Responder]=[TeamName, SARTeam, sKills, Role]
 '''
+
+def PSARC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
+    if TAF2Use in listdir(output):
+        filename = output + "/" + str(AssNum) + "_TAF.fdf"
+
+        txt= open (filename, "w")
+        txt.write("%FDF-1.2\n")
+        txt.write("%????\n")
+        txt.write("1 0 obj<</FDF<</F({0})/Fields 2 0 R>>>>\n".format(TAF2Use))
+        txt.write("endobj\n")
+        txt.write("2 0 obj[\n")
+        txt.write ("\n")
+
+        SearchTime = 0
+        assSafety = "None "
+        opSafety = "None "
+
+        ## Incident Information
+        if len(incidInfo) > 0:
+            txt.write("<</T({0})/V({1})>>\n".format("IncidentName",str(incidInfo[0])))
+            txt.write("<</T({0})/V({1})>>\n".format("MissNo",str(incidInfo[1])))
+            txt.write("<</T({0})/V({1})>>\n".format("Phone_Base",str(incidInfo[5])))
+
+        ## Assignment Information
+        if len(Assign)>0:
+            SearchTime=Assign[19]
+            txt.write("<</T({0})/V({1})>>\n".format("OPPeriod",str(Assign[2])))
+            if len(Assign[0])>1:
+                txt.write("<</T({0})/V({1})>>\n".format("TaskNo",str(Assign[0])))
+            elif len(Assign[1])>1:
+                txt.write("<</T({0})/V({1})>>\n".format("TaskNo",str(Assign[1])))
+            txt.write("<</T({0})/V({1})>>\n".format("ResourceType",str(Assign[6])))
+            txt.write("<</T({0})/V({1})>>\n".format("Priority",str(Assign[8])))
+            txt.write("<</T({0})/V({1})>>\n".format("TaskMap",str(Assign[10])))
+            txt.write("<</T({0})/V({1})>>\n".format("TASKINSTRUCTIONS",str(Assign[3])))
+            txt.write("<</T({0})/V({1})>>\n".format("PrepBy",str(Assign[16])))
+            txt.write("<</T({0})/V({1})>>\n".format("DATE",str(Assign[17])))
+            ################
+            ## Team Infomration
+            txt.write("<</T({0})/V({1})>>\n".format("TeamId",str(Assign[5])))
+            txt.write("<</T({0})/V({1})>>\n".format("TeamId01",str(Assign[5])))
+            assSafety= Assign[15]
+
+        k=1
+        kk=0
+        if len(TeamMember)>0:
+            for key in TeamMember:
+                if key==Team[1]:
+                    txt.write("<</T({0})/V({1})>>\n".format('TeamLead',str(key)))
+                    kk+=1
+                elif key == Team[2]:
+                    txt.write("<</T({0})/V({1})>>\n".format('Medic',str(key)))
+                    kk+=1
+                else:
+                    txt.write("<</T(Respond{0})/V({1})>>\n".format(k,str(key)))
+                    k+=1
+                if k>12:
+                    break
+        SearchTime = round(SearchTime/(k+kk),2)
+        txt.write("<</T({0})/V({1} hrs)>>\n".format("ExpectedDuration",str(SearchTime))) # SearchTime
+
+        ## Operation Period Infomration
+        if len(OpPeriod)>0:
+            opSafety = OpPeriod[0]
+            if len(OpPeriod[2])>1:
+                txt.write("<</T({0})/V({1})>>\n".format("Prim_Freq",str(OpPeriod[2])))
+            elif len(incidInfo[6])>0:
+                txt.write("<</T({0})/V({1})>>\n".format("Prim_Freq",str(incidInfo[6])))
+            txt.write("<</T({0})/V({1})>>\n".format("BaseId","BASE"))
+
+        if len(Team)>0:
+            txt.write("<</T({0})/V({1})>>\n".format("Phone_Team",str(Team[3])))
+
+        Notes = "Specific Safety: " + str(assSafety) + "     General Safety: " + \
+            str(opSafety)
+        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
+        txt.write("<</T({0})/V({1})>>\n".format("Notes",str(Notes)))
+
+        del Notes
+        txt.write("]\n")
+        txt.write("endobj\n")
+        txt.write("trailer\n")
+        txt.write("<</Root 1 0 R>>\n")
+        txt.write("%%EO\n")
+        txt.close ()
+
+    else:
+        arcpy.AddError('The Task Assignment Form: {0} is not in the output folder'.format(TAF2Use))
+        sys.exit()
+
+    return
 
 def MD_SP(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
     if TAF2Use in listdir(output):
@@ -300,7 +403,7 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use)
 
     return
 
-def Default_ASRC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
+def Default(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
     if TAF2Use in listdir(output):
         filename = output + "/" + str(AssNum) + "_TAF.fdf"
 

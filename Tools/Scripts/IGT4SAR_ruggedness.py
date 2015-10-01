@@ -3,7 +3,7 @@
 #                   described in Sappington, J.M., K.M. Longshore, and D.B. Thomson. 2007. Quantifiying
 #                   Landscape Ruggedness for Animal Habitat Anaysis: A case Study Using Bighorn Sheep in
 #                   the Mojave Desert. Journal of Wildlife Management. 71(5): 1419 -1426.
-# Requirements: Spatial Analyst 
+# Requirements: Spatial Analyst
 # Author: Mark Sappington
 # Revision History: 2/1/2008 		original Python version
 #			  12/17/2010	updated for Windows 7 and ArcGIS 9.3.x/10
@@ -58,7 +58,7 @@ try:
 
     # Calculate sums of x, y, and z rasters for selected neighborhood size
     gp.AddMessage("Calculating sums of x, y, and z rasters in selected neighborhood...")
-    gp.FocalStatistics_sa(xRaster, xSumRaster, "Rectangle " + str(Neighborhood_Size) + " " + str(Neighborhood_Size) + " CELL", "SUM", "NODATA") 
+    gp.FocalStatistics_sa(xRaster, xSumRaster, "Rectangle " + str(Neighborhood_Size) + " " + str(Neighborhood_Size) + " CELL", "SUM", "NODATA")
     gp.FocalStatistics_sa(yRaster, ySumRaster, "Rectangle " + str(Neighborhood_Size) + " " + str(Neighborhood_Size) + " CELL", "SUM", "NODATA")
     gp.FocalStatistics_sa(zRaster, zSumRaster, "Rectangle " + str(Neighborhood_Size) + " " + str(Neighborhood_Size) + " CELL", "SUM", "NODATA")
 
@@ -70,6 +70,14 @@ try:
     gp.AddMessage("Calculating the final ruggedness raster...")
     maxValue = int(Neighborhood_Size) * int(Neighborhood_Size)
     gp.SingleOutputMapAlgebra_sa("1 - (" + ResultRaster + " / " + str(maxValue) + ")", OutRaster)
+
+    insertLayer=arcpy.mapping.Layer(OutRaster)
+    try:
+        refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis',df)[0]
+        arcpy.mapping.AddLayerToGroup(df, refGroupLayer, insertLayer,'BOTTOM')
+    except:
+        arcpy.mapping.AddLayer(df, insertLayer,'TOP')
+
 
     # Delete all intermediate raster data sets
     gp.AddMessage("Deleting intermediate data...")
@@ -87,8 +95,8 @@ try:
     gp.Delete(ResultRaster)
 
 # Check in any necessary licenses
-    gp.CheckInExtension("spatial")    
-    
+    gp.CheckInExtension("spatial")
+
 except:
 # Print error message if an error occurs
     gp.GetMessages()

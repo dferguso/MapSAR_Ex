@@ -101,6 +101,78 @@ def ProbabilityUpdate(fc1):
 
 #workspc = arcpy.GetParameterAsText(0)
 
+## Check to see if the original POA for the Regions has changed from the last
+## time this tool was run.
+def ProbRegionsReset(fc1,fc2):
+    ####  Now do the Probability Regions
+    rows1 = arcpy.UpdateCursor(fc1,"","","",sort_fields="Region_Name")
+    row1 = rows1.next()
+
+    while row1:
+        RegionName = row1.Region_Name
+        pocOld = row1.POAcum
+        poaReg_Initial = row1.POA
+        regArea = row1.Area
+        POCcum = 0.0
+        POScum = 0.0
+        POScumUn = 0.0
+        PdenReg = 0.0
+        where2 = '"Region_Name" = ' + "'" + RegionName + "'"
+        rows2 = arcpy.UpdateCursor(fc2, where2)
+        row2 = rows2.next()
+        messTrip = False
+
+        while row2:
+            ## Check to see if the Original POA Region has been changed
+            poaSeg_Initial = row2.POA
+            sPOC_Orig = row2.sPOC_Orig
+            pocNow = row2.POC_Now
+            segPden = row2.Pden
+            if round(poaSeg_Initial,2) <> round(poaReg_Initial,2):
+                if not messTrip:
+                    arcpy.AddMessage("\nReseting POA for Region {0}\n".format(RegionName))
+                    messTrip=True
+                poaSeg_Initial = poaReg_Initial
+                row2.POA = poaSeg_Initial
+                if row2.Area_seg != 0.0:
+                    sPOC_Orig = poaSeg_Initial * row2.Area_seg / regArea
+                    segPden = round(sPOC_Orig/row2.Area_seg,3)
+                else:
+                    sPOC_Orig = poaSeg_Initial
+                    segPden = 0.0
+                pocNow = sPOC_Orig
+                row2.sPOC_Orig = round(sPOC_Orig,2)
+                row2.POC_Now = round(sPOC_Orig,2)
+                row2.Pden = segPden
+
+                rows2.updateRow(row2)
+
+            POCcum = POCcum + pocNow
+            PdenReg = PdenReg + segPden
+            POScum = POScum + row2.PODcum/100.0*sPOC_Orig
+            POScumUn = POScumUn + sPOC_Orig * row2.PODcumunrsp/100.0
+            row2 = rows2.next()
+
+        del where2
+        del row2
+        del rows2
+        row1.POAcum = round(POCcum,2)
+        row1.POScum = round(POScum,2)
+        row1.POScumUn = round(POScumUn,2)
+        row1.Pden = round(PdenReg,3)
+
+
+        rows1.updateRow(row1)
+        row1 = rows1.next()
+
+    del POCcum
+    del POScum
+    del POScumUn
+
+    del RegionName
+    del rows1
+    del row1
+    return()
 
 def DebriefUpdate(fc1, fc3, fc4):
     POCN=[]
@@ -118,7 +190,9 @@ def DebriefUpdate(fc1, fc3, fc4):
     where1 = '"Recorded" = 0'
     rows1 = arcpy.UpdateCursor(fc1, where1)
     row1 = rows1.next()
-    arcpy.AddMessage(pocSum)
+    arcpy.AddMessage("\nConfirm POA sums to 100: POA_Cummulative = {0}".format(round(pocSum,1)))
+    if pocSum < 99:
+        arcpy.AddMessage("***Totlas do not seem to add up, please manully check POA values***\n")
 
     if not row1:
         msgs = "All tasks have been processed"
@@ -260,7 +334,7 @@ def ProbabilityRegions(fc1, fc2):
         del where2
         del row2
         del rows2
-        arcpy.AddMessage("{0}  Previous POA: {1},  New POA: {2}".format(RegionName, str(round(pocOld,2)),str(round(POCcum,2)) ))
+        arcpy.AddMessage("{0}  Previous POA: {1},  New POA: {2}".format(RegionName, str(round(pocOld,1)),str(round(POCcum,1)) ))
         row1.POAcum = round(POCcum,2)
         row1.POScum = round(POScum,2)
         row1.POScumUn = round(POScumUn,2)
@@ -303,11 +377,8 @@ if __name__ == '__main__':
     ProbRegions = arcpy.GetParameterAsText(0)
     if ProbRegions == '#' or not ProbRegions:
         ProbRegions = "8 Segments_Group\Probability Regions" # provide a default value if unspecified
-    fc1 = ProbRegions
-    fc2 = "Debriefing"
-    fc3 = "Search_Segments"
-    fc4 = "Assignments"
 
-    ProbabilityUpdate(fc1)
-    DebriefUpdate(fc2, fc3, fc4)
-    ProbabilityRegions(fc1, fc3)
+    ProbabilityUpdate(ProbRegions)
+    ProbRegionsReset(ProbRegions, "Search_Segments")
+    DebriefUpdate("Debriefing", "Search_Segments", "Assignments")
+    ProbabilityRegions(ProbRegions, "Search_Segments")
