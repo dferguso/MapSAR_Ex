@@ -61,6 +61,14 @@ def checkForm(out_fc, TAF2Use):
     else:
         icsFile.append("Default_204Form_pg1.pdf")
 
+    formList=list(ics204.keys())
+    try:
+        del(formList[formList.index('Default')])
+        newList=sorted(formList)
+        formList = ['Default'] + newList
+    except:
+        pass
+
     (FName,FType)= icsFile[0].split('.')
 
     if 'pg1' in FName:
@@ -73,12 +81,111 @@ def checkForm(out_fc, TAF2Use):
             formFile = path.join(formsDir, icsFileX)
             destFile = path.join(output, icsFileX)
             if icsFileX in listdir(formsDir):
-                arcpy.AddMessage("\nForm {0} added to folder {1}.\n".format(icsFileX, output))
+                arcpy.AddMessage("\nForm {0} added to folder {1}.".format(icsFileX, output))
                 copyfile(formFile, destFile)
             else:
                 arcpy.AddError("{0} is not available, please check {1} or {2} for correct form".format(icsFileX, output, formsDir))
                 sys.exit(1)
+    return(formList)
+
+def geoCoords(geoUnits):
+    newPt=geoUnits.split(',')
+    xCoord=newPt[0].strip()
+    yCoord=newPt[1].strip()
+    return('{0},{1}'.format(yCoord,xCoord))
+
+def IPPplot(iPPtype, cUnits, spatial_ref, xyIPP, iNcdName, SubName, wrkspc):
+    env.workspace = wrkspc
+    if iPPtype == 'ICP':
+        ipPoint = 'Assets'
+    else:
+        ipPoint='Plan_Point'
+    CoordUnits = cUnits.upper()
+    geoUnits=['DECIMAL DEGREES','DEGREES MINUTES SECONDS','DEGREES DECIMAL MINUTES']
+    projUnits = ['MGRS', 'US NATIONAL GRID', 'UTM']
+    spa_ref = arcpy.SpatialReference('WGS 1984')
+
+
+    if CoordUnits in geoUnits:
+        xy = geoCoords(xyIPP)
+        spatial_ref = arcpy.SpatialReference('WGS 1984')
+        if CoordUnits == 'DECIMAL DEGREES':
+            inFormat = 'DD_1'
+        elif CoordUnits == 'DEGREES MINUTES SECONDS':
+            inFormat = 'DMS_1'
+        elif CoordUnits == 'DEGREES DECIMAL MINUTES':
+            inFormat = 'DDM_1'
+    elif CoordUnits in projUnits:
+        xy=xyIPP
+        IncidPP = path.join(wrkspc, "Plan_Point")
+        desc=arcpy.Describe("Plan_Point")  #Replace with parameter input if projected
+        spatial_ref=desc.spatialReference
+        if CoordUnits == 'MGRS':
+            inFormat = 'MGRS'
+        elif CoordUnits == 'US NATIONAL GRID':
+            inFormat = 'USNG'
+        elif CoordUnits == 'UTM':
+            inFormat = 'UTM_ZONES'
+    else:
+        arcpy.AddErrorMessage('Improper Coordinate System')
+        sys.exit('Improper Coordinate System')
+
+    fc='xyTemplate'
+    arcpy.DeleteRows_management(fc)
+    try:
+        arcpy.Delete_management(outTbl)
+    except:
+        pass
+
+    cur = arcpy.InsertCursor(fc)
+    row = cur.newRow()
+    row.setValue("x_Field", xy)
+    cur.insertRow(row)
+    del cur, row
+
+    # set parameter values
+    outTbl = 'TempPoint'
+    x_field = 'x_Field'
+    outFormat = 'DD_2'
+    id_field = ''
+    arcpy.ConvertCoordinateNotation_management(fc, outTbl, x_field, '', inFormat, \
+        outFormat, id_field, spatial_ref,spa_ref)
+
+    arcpy.DeleteRows_management(fc)
+
+    cursor = arcpy.SearchCursor(outTbl)
+    for row in cursor:
+        LatDD = row.getValue('DDLat')
+        LonDD = row.getValue('DDLon')
+        if LatDD[-1]=='S':
+            LatDD = -float(LatDD[:-1])
+        else:
+            LatDD = float(LatDD[:-1])
+        if LonDD[-1]=='W':
+            LonDD = -float(LonDD[:-1])
+        else:
+            LonDD = float(LonDD[:-1])
+
+        print('Lat: {0}, Long: {1}'.format(LatDD, LonDD))
+    del cursor, row
+
+    cur = arcpy.InsertCursor(ipPoint, spa_ref)
+    feat=cur.newRow()
+    pnt = arcpy.Point(LonDD,LatDD)
+    feat.shape=pnt
+    feat.setValue('Latitude',LatDD)
+    feat.setValue('Longitude',LonDD)
+    feat.setValue('IPPType',iPPtype)
+    if len(SubName) > 1:
+        feat.setValue('Subject_Number',1)
+    if len(iNcdName) > 1:
+        feat.setValue('Incident_Name',iNcdName)
+    cur.insertRow(feat)
+    del feat, cur, pnt
+    arcpy.Delete_management(outTbl)
+
     return
+
 
 ########
 # Main Program starts here
@@ -103,7 +210,7 @@ if __name__ == '__main__':
     #Set the spatial reference
     output_coordinate_system = arcpy.GetParameterAsText(1)
     if output_coordinate_system == '#' or not output_coordinate_system:
-        arcpy.AddMessage("You need to provide a valid Coordinate System")
+        arcpy.AddError("You need to provide a valid Coordinate System")
 
     #Set the transformation
     transformation = arcpy.GetParameterAsText(2)
@@ -129,6 +236,18 @@ if __name__ == '__main__':
     TAF2Use = arcpy.GetParameterAsText(7)
     if TAF2Use == '#' or not TAF2Use:
         arcpy.AddError("Need to specify the desired ICS204 form to use.\n")
+
+    iPPtype = arcpy.GetParameterAsText(8)
+    if iPPtype == '#' or not iPPtype:
+        arcpy.AddMessage("No IPP Type selected\n")
+
+    cUnits = arcpy.GetParameterAsText(9)
+    if cUnits == '#' or not cUnits:
+        arcpy.AddMessage("No IPP Coordinate Units selected\n")
+
+    ippCoord = arcpy.GetParameterAsText(10)
+    if ippCoord == '#' or not ippCoord:
+        arcpy.AddMessage('No IPP Coordinates provided\n')
 
     if (output_coordinate_system != "") and (output_coordinate_system != "#"):
         sr = output_coordinate_system
@@ -257,7 +376,7 @@ if __name__ == '__main__':
     if "ICS204" in fieldnames:
         pass
     else:
-         arcpy.AddField_management(IncidInfo,"ICS204", "TEXT","","",100)
+         arcpy.AddField_management(IncidInfo,"ICS204", "TEXT","","",100,"","","", "Form204")
 
     cursor = arcpy.UpdateCursor(IncidInfo)
     for row in cursor:
@@ -275,7 +394,15 @@ if __name__ == '__main__':
 
     arcpy.AddMessage("update Incident Information domain")
 
-    checkForm(out_fc, TAF2Use)
+#####################################################################
+    formList=checkForm(out_fc, TAF2Use)
+    # Set local parameters
+    domName = "Form204"
+    # Process: Add list of aavailable ICS204 forms to Domain
+    #use a for loop to cycle through all the domain codes in the List
+    for code in formList:
+        arcpy.AddCodedValueToDomain_management(wrkspc, domName, code, code)
+###############################################
 
     arcpy.TableToDomain_management(IncidInfo, "Incident_Name", "Incident_Name", wrkspc, "Incident_Name", "Incident_Name", "REPLACE")
     try:
@@ -283,27 +410,38 @@ if __name__ == '__main__':
     except:
         pass
 
-        ## Update Opertion Period Information
-        OpInfo = path.join(wrkspc,"Operation_Period")
-        cursor = arcpy.UpdateCursor(OpInfo)
-        for row in cursor:
-            row.setValue('Period', 1)
-            cursor.updateRow(row)
-        # Update Operational Period Information
-        arcpy.AddMessage("update Operation Period domain")
+    ## Update Opertion Period Information
+    OpInfo = path.join(wrkspc,"Operation_Period")
+    cursor = arcpy.UpdateCursor(OpInfo)
+    for row in cursor:
+        row.setValue('Period', 1)
+        cursor.updateRow(row)
+    # Update Operational Period Information
+    arcpy.AddMessage("update Operation Period domain")
 
-        fieldnames = [f.name for f in arcpy.ListFields(OpInfo)]
-        if "Period_Text" in fieldnames:
-            pass
+    fieldnames = [f.name for f in arcpy.ListFields(OpInfo)]
+    if "Period_Text" in fieldnames:
+        pass
+    else:
+         arcpy.AddField_management(OpInfo,"Period_Text", "TEXT")
+
+    arcpy.CalculateField_management(OpInfo, "Period_Text", "!Period!", "PYTHON_9.3", "")
+    arcpy.TableToDomain_management(OpInfo, "Period", "Period_Text", wrkspc, "Period", "Period_Text", "REPLACE")
+    try:
+        arcpy.SortCodedValueDomain_management(wrkspc, "Period", "DESCRIPTION", "ASCENDING")
+    except:
+        pass
+
+    if iPPtype:
+        if cUnits:
+            if ippCoord:
+                IPPplot(iPPtype, cUnits, sr, ippCoord, IncidName, SubName, wrkspc)
+            else:
+                pass
         else:
-             arcpy.AddField_management(OpInfo,"Period_Text", "TEXT")
-
-        arcpy.CalculateField_management(OpInfo, "Period_Text", "!Period!", "PYTHON_9.3", "")
-        arcpy.TableToDomain_management(OpInfo, "Period", "Period_Text", wrkspc, "Period", "Period_Text", "REPLACE")
-        try:
-            arcpy.SortCodedValueDomain_management(wrkspc, "Period", "DESCRIPTION", "ASCENDING")
-        except:
             pass
+    else:
+        pass
 
     arcpy.Compact_management(templ)
     arcpy.Compact_management(wrkspc)

@@ -56,6 +56,42 @@ def checkNoneType(variable):
         result = variable
     return result
 
+def checkFields(fc, fldName, fldType):
+    desc=arcpy.Describe(fc)
+    # Get a list of field names from the feature
+    fieldsList = desc.fields
+    field_names=[f.name for f in fieldsList]
+    if fldName not in field_names:
+        arcpy.AddField_management (fc, fldName, fldType)
+    return
+
+def gNorth_Check(fc, fldName, fldType,unProjCoordSys):
+
+    checkFields(fc, fldName, fldType)
+    arcpy.CalculateGridConvergenceAngle_cartography(fc,fldName, "GEOGRAPHIC")
+
+    rows0 = arcpy.SearchCursor(fc, '', unProjCoordSys)
+    k = 0.0
+    gridNorth = 0.0
+    for row0 in rows0:
+        gridN = row0.getValue(fld_gNorth)
+        arcpy.AddMessage('Grid North: {0}'.format(gridN))
+        gridNorth += float(gridN)
+        k+=1.0
+
+    gridN = round((gridNorth / k),2)
+    del row0
+    del rows0
+    del k
+    # Remove field
+    dropField=[fld_gNorth]
+    arcpy.DeleteField_management(fc, dropField)
+
+    if gridN > 0:
+        gCard ="W"
+    else:
+        gCard ="E"
+    return(str(abs(gridN)) + " " + gCard)
 
 def MagDeclin(gLat, gLong):
     declin = geomag.declination(gLat,gLong)
@@ -220,6 +256,21 @@ if __name__ == '__main__':
 
     arcpy.GridIndexFeatures_cartography (fcOut, "", "", "USEPAGEUNIT", sCale, "", "", originCoord, nRow, nCol)
 
+    unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
+
+    #First determine the grid north value
+    fld_gNorth = "gNORTH"
+    field_type = "FLOAT"
+    gNorthTxt=gNorth_Check(inputFC, fld_gNorth, field_type, unProjCoordSys)
+    try:
+        df.rotation = 0.0
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth"):
+            gridNorth=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]
+            gridNorth.text = gNorthTxt
+    except:
+        pass
+
+
     ## Add layer to TOC
     arcpy.MakeFeatureLayer_management (fcOut, fcOut)
     mkLyr = arcpy.mapping.Layer(fcOut)
@@ -227,7 +278,6 @@ if __name__ == '__main__':
 
 
     #Get the Lat / Long, magDeclination for each GRID
-    unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
     desc = arcpy.Describe(fcOut)
     shapefieldname = desc.ShapeFieldName
     gRids={}

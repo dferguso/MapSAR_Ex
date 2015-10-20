@@ -31,6 +31,7 @@ except NameError:
 ##import time
 from os import listdir
 from datetime import datetime
+from math import exp
 
 '''
 Assign =[AssignNumber, PlanNumber, Period, TaskInstruct, Milage, Team,
@@ -39,7 +40,7 @@ Assign =[AssignNumber, PlanNumber, Period, TaskInstruct, Milage, Team,
 incidInfo=[Incident_Name, Incident_Numb, MapDatum, MagDec, MapCoord, Base_Phone, Base_Freq, UtmZone, UsngGrid]
 OpPeriod = [Op_Safety, wEather,PrimComms] #Refer to Assign[3] for Period
 Teams= [TeamType,TeamLead,Medic, TeamCell] # Refer to Assign[5] for Team Name
-TeamMember[Responder]=[TeamName, SARTeam, sKills, Role]
+TeamMember[Responder]=[TeamName, SARTeam, sKills, Role, Wght]
 '''
 
 def PSARC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
@@ -403,6 +404,466 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use)
 
     return
 
+def MapSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use):
+    if TAF2Use in listdir(output):
+        # Get current date and time from system
+        now = datetime.now()
+        todaydate = now.strftime("%m/%d/%Y")
+        todaytime = now.strftime("%H:%M %p")
+
+        filename = output + "/" + str(AssNum) + "_TAF.fdf"
+
+        txt= open (filename, "w")
+        txt.write("%FDF-1.2\n")
+        txt.write("%????\n")
+        txt.write("1 0 obj<</FDF<</F({0})/Fields 2 0 R>>>>\n".format(TAF2Use))
+        txt.write("endobj\n")
+        txt.write("2 0 obj[\n")
+        txt.write ("\n")
+
+        SearchTime = 0
+        assSafety = "None "
+        opSafety = "None "
+        phBase = " "
+        phTeam = " "
+
+        txt.write("<</T(PrepDate)/V({0})>>\n".format(todaydate))
+        txt.write("<</T(PrepTime)/V({0})>>\n".format(todaytime))
+        ## Incident Information
+        if len(incidInfo) > 0:
+            inCid = "{0} / {1}".format(str(incidInfo[0]),str(incidInfo[1]))
+            mapDatum = str(incidInfo[2])
+            magDec = str(incidInfo[3])
+            mapCoord = str(incidInfo[4])
+            phBase = str(incidInfo[5])
+            baseFreq = "Base / {0}".format(str(incidInfo[6]))
+
+            txt.write("<</T({0})/V({1})>>\n".format("IncidentName", inCid))
+            txt.write("<</T({0})/V({1})>>\n".format("PrimaryComs", baseFreq))
+
+         ## Operation Period Infomration
+        #################
+        if len(OpPeriod)>0:
+            opSafety = OpPeriod[0]
+            weaTher = OpPeriod[1]
+            txt.write("<</T({0})/V({1})>>\n".format("AssignTeamEquipment", weaTher))
+            if len(OpPeriod[2])>0:
+                primFreq = str(OpPeriod[2])
+            elif len(incidInfo[6])>0:
+                primFreq = str(incidInfo[6])
+
+        ## Assignment Information
+        if len(Assign)>0:
+            SearchTime=Assign[19]
+            SegArea_KM=Assign[18]
+            SegArea_Acres = round((SegArea_KM * 247.104393),2) # Convert km**2 to Acres
+            SegArea_KM = round(SegArea_KM,3)
+            mapName = "Map: {0}".format(str(Assign[10]))
+            assignSize = "Acres: {0}; Sq KM: {1}".format(str(SegArea_Acres), str(SegArea_KM))
+            preSearch = "Previously Search: {0}".format(str(Assign[9]))
+            teamCall = "{0} / {1}".format(str(Assign[5]), primFreq)
+            aSSignment = "{0}, {1}, {2}\n{3}".format(mapName, assignSize, preSearch, str(Assign[3]))
+
+            allTime = datetime.strptime(str(Assign[17]), "%m/%d/%y %H:%M" )
+            dateStamp = datetime.strftime(allTime, "%m/%d/%Y")
+            timeStamp = datetime.strftime(allTime, "%H:%M %p")
+
+            if len(Assign[0])>1:
+                txt.write("<</T({0})/V({1})>>\n".format("AssignmentNum",str(Assign[0])))
+            else:
+                txt.write("<</T({0})/V({1})>>\n".format("AssignmentNum",str(Assign[1])))
+            txt.write("<</T({0})/V({1})>>\n".format("AssignTeam",Assign[5]))
+            txt.write("<</T({0})/V({1})>>\n".format("AssignPeriod",str(Assign[2])))
+            txt.write("<</T({0})/V({1})>>\n".format("StartDate",str(dateStamp))) # TaskDate
+            txt.write("<</T({0})/V({1})>>\n".format("TimeBeganAssign",str(timeStamp))) # TaskDate
+            txt.write("<</T({0})/V({1})>>\n".format("AssignDescription",aSSignment))
+            txt.write("<</T({0})/V({1})>>\n".format("TeamCallSign",teamCall))
+            txt.write("<</T({0})/V({1})>>\n".format("Assignlocation",Assign[10]))
+
+            assSafety=Assign[15]
+
+            txt.write("<</T({0})/V({1})>>\n".format("PreparedBy",str(Assign[16])))
+        ################
+
+        if len(Team)>0:
+            phTeam = str(Team[3])
+        pertPh = "Base #: {0}; Team #: {1}".format(phBase, phTeam)
+        txt.write("<</T({0})/V({1})>>\n".format("PertinentPhoneNumbers", pertPh))
+
+        Notes = "Specific Safety: {0} / General Safety: {1}".format(str(assSafety),str(opSafety) )
+        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
+        txt.write("<</T({0})/V({1})>>\n".format("AssignComInstructions",str(Notes)))
+        del Notes
+
+        k=1
+        kk=0
+        if len(TeamMember)>0:
+            for key in TeamMember:
+                if len(TeamMember[key][2])>1 and len(TeamMember[key][4])>1:
+                    skillWght = "{0}, Wght={1}".format(TeamMember[key][2], TeamMember[key][4])
+                elif len(TeamMember[key][2])>1:
+                    skillWght = "{0}".format(TeamMember[key][2])
+                elif len(TeamMember[key][4])>1:
+                    skillWght = "Wght = {0}".format(TeamMember[key][4])
+                else:
+                    skillWght = " "
+
+                if key==Team[1]:
+                    txt.write("<</T({0}.roll)/V({1})>>\n".format('Team Leader',TeamMember[key][3]))
+                    txt.write("<</T({0}.name)/V({1})>>\n".format('Team Leader',str(key)))
+                    txt.write("<</T({0}.skillsandweight)/V({1})>>\n".format('Team Leader',skillWght))
+                    txt.write("<</T({0}.origteam)/V({1})>>\n".format('Team Leader',str(TeamMember[key][1]))) # Agency
+                    kk+=1
+                else:
+                    txt.write("<</T(Team Member.{0}.roll)/V({1})>>\n".format(k,TeamMember[key][3]))
+                    txt.write("<</T(Team Member.{0}.name)/V({1})>>\n".format(k,str(key)))
+                    txt.write("<</T(Team Member.{0}.skillsandweight)/V({1})>>\n".format(k,skillWght))
+                    txt.write("<</T(Team Member.{0}.origteam)/V({1})>>\n".format(k,str(TeamMember[key][1]))) # Agency
+                    k+=1
+                if k>6:
+                    break
+
+        # Close and write FDF file
+        txt.write("]\n")
+        txt.write("endobj\n")
+        txt.write("trailer\n")
+        txt.write("<</Root 1 0 R>>\n")
+        txt.write("%%EO\n")
+        txt.close ()
+    else:
+        arcpy.AddError('The Task Assignment Form: {0} is not in the output folder'.format(TAF2Use))
+        sys.exit()
+
+    return
+
+
+def Arizona(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use):
+    if TAF2Use in listdir(output):
+        # Get current date and time from system
+        now = datetime.now()
+        todaydate = now.strftime("%m/%d/%Y")
+        todaytime = now.strftime("%H:%M %p")
+        PrepDate = "{0}\n{1}".format(todaydate, todaytime)
+
+        filename = output + "/" + str(AssNum) + "_TAF.fdf"
+
+        txt= open (filename, "w")
+        txt.write("%FDF-1.2\n")
+        txt.write("%????\n")
+        txt.write("1 0 obj<</FDF<</F({0})/Fields 2 0 R>>>>\n".format(TAF2Use))
+        txt.write("endobj\n")
+        txt.write("2 0 obj[\n")
+        txt.write ("\n")
+
+        SearchTime = 0
+        assSafety = "None "
+        opSafety = "None "
+        phBase = " "
+        phTeam = " "
+                ## Incident Information
+         ## Operation Period Infomration
+        #################
+        if len(OpPeriod)>0:
+            opSafety = OpPeriod[0]
+            weaTher = OpPeriod[1]
+            if len(OpPeriod[2])>0:
+                primFreq = str(OpPeriod[2])
+            elif len(incidInfo[6])>0:
+                primFreq = str(incidInfo[6])
+            txt.write("<</T({0})/V({1})>>\n".format("TactFreq1", primFreq))
+
+        ## Assignment Information
+        if len(Assign)>0:
+            SearchSpd = Assign[20]
+            SearchTime=Assign[19]
+            txt.write("<</T({0})/V({1})>>\n".format("ReturnTime", SearchTime))
+            SegArea_KM=Assign[18]
+            SegArea_Acres = round((SegArea_KM * 247.104393),2) # Convert km**2 to Acres
+            SegArea_KM = round(SegArea_KM,3)
+
+            # Assume a sweep width of 20 m (0.02km)
+            arcpy.AddMessage("POD and # person required based on Coverage = 1 and Sweep Width = 20m\n")
+            SearchNum = SegArea_KM/(float(SearchTime) * float(SearchSpd)*0.02)
+            areaSrch = SegArea_KM
+            podREQ = int((1-exp(-SegArea_KM/areaSrch))*100.0)
+
+            mapName = "Map: {0}".format(str(Assign[10]))
+            assignSize = "Acres: {0}; Sq KM: {1}".format(str(SegArea_Acres), str(SegArea_KM))
+            preSearch = "Previously Search: {0}".format(str(Assign[9]))
+            aSSignment = "{0}, {1}, {2}\n{3}".format(mapName, assignSize, preSearch, str(Assign[3]))
+
+            allTime = datetime.strptime(str(Assign[17]), "%m/%d/%y %H:%M" )
+            dateStamp = datetime.strftime(allTime, "%m/%d/%Y")
+            timeStamp = datetime.strftime(allTime, "%H:%M %p")
+
+            txt.write("<</T({0})/V({1})>>\n".format("TASK",str(Assign[0])))
+            txt.write("<</T({0})/V({1})>>\n".format("TASK NAME",Assign[10]))
+            txt.write("<</T({0})/V({1})>>\n".format("AssignName",str(Assign[1])))
+            txt.write("<</T({0})/V({1})>>\n".format("TeamId",Assign[5]))
+            txt.write("<</T({0})/V({1})>>\n".format("OpPeriod",str(Assign[2])))
+            txt.write("<</T({0})/V({0})>>\n".format("PrepDate",PrepDate))
+            txt.write("<</T({0})/V({1})>>\n".format("TaskInstruct",aSSignment))
+            txt.write("<</T({0})/V({1})>>\n".format("PODreq",str(podREQ)))
+
+
+            assSafety=Assign[15]
+
+            txt.write("<</T({0})/V({1})>>\n".format("PrepBy",str(Assign[16])))
+        ################
+        Notes = "Specific Safety: {0};  General Safety: {1};  {2}".format(str(assSafety),str(opSafety), str(weaTher) )
+        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
+        txt.write("<</T({0})/V({1})>>\n".format("COMMENTS",str(Notes)))
+        del Notes
+
+        if len(Team)>0:
+            phTeam = str(Team[3])
+            txt.write("<</T({0})/V({1})>>\n".format("CELL PHONE1", phTeam))
+
+        k=1
+        kk=0
+        if len(TeamMember)>0:
+            for key in TeamMember:
+                if len(TeamMember[key][2])>1:
+                    skillWght = "{0}".format(TeamMember[key][2])
+                else:
+                    skillWght = " "
+
+                if key==Team[1]:
+                    txt.write("<</T({0})/V({1})>>\n".format('MEMBER1',str(key)))
+                    txt.write("<</T({0})/V({1})>>\n".format('CALL SIGN1',"Leader"))
+                    txt.write("<</T({0})/V({1})>>\n".format('SPECIAL SKILL',skillWght))
+                    kk+=1
+                else:
+                    txt.write("<</T(MEMBER{0})/V({1})>>\n".format(k,str(key)))
+                    txt.write("<</T(SPECIAL SKILL_{0})/V({1})>>\n".format(k,skillWght))
+                    k+=1
+                if k>6:
+                    break
+
+        # Close and write FDF file
+        txt.write("]\n")
+        txt.write("endobj\n")
+        txt.write("trailer\n")
+        txt.write("<</Root 1 0 R>>\n")
+        txt.write("%%EO\n")
+        txt.close ()
+    else:
+        arcpy.AddError('The Task Assignment Form: {0} is not in the output folder'.format(TAF2Use))
+        sys.exit()
+    return
+
+def BASARC(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
+    if TAF2Use in listdir(output):
+        filename = output + "/" + str(AssNum) + "_TAF.fdf"
+
+        txt= open (filename, "w")
+        txt.write("%FDF-1.2\n")
+        txt.write("%????\n")
+        txt.write("1 0 obj<</FDF<</F({0})/Fields 2 0 R>>>>\n".format(TAF2Use))
+        txt.write("endobj\n")
+        txt.write("2 0 obj[\n")
+        txt.write ("\n")
+
+        SearchTime = 0
+        assSafety = "None "
+        opSafety = "None "
+
+        now = datetime.now()
+        todaydate = now.strftime("%m/%d/%Y")
+        todaytime = now.strftime("%H:%M %p")
+
+        ## Incident Information
+        if len(incidInfo) > 0:
+            if len(incidInfo[0])> 1:
+                incidName = incidInfo[0]
+            elif len(incidInfo[1])> 1:
+                incidName = incidInfo[1]
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("incidentName",str(incidName)))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("other_radio_chan","Base Phone"))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("freqOther",str(incidInfo[5])))
+            ###################################
+        ## Assignment Information
+        if len(Assign)>0:
+            if len(Assign[0])>1:
+                TaskID = Assign[0]
+            elif len(Assign[1])>1:
+                TaskID = Assign[1]
+            else:
+                TaskID = " "
+
+            mapName = "Map: {0}".format(str(Assign[10]))
+            aSSignment = "{0}\n{1}".format(mapName, str(Assign[3]))
+            preSearch = "Previously Search: {0}".format(str(Assign[9]))
+
+            allTime = datetime.strptime(str(Assign[17]), "%m/%d/%y %H:%M" )
+            dateStamp = datetime.strftime(allTime, "%m/%d/%Y")
+            timeStamp = datetime.strftime(allTime, "%H:%M %p")
+
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("opPeriod",str(Assign[2])))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("assignNumber",TaskID))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("resource_type",Assign[6]))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("asgn_description",aSSignment))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("previous_search_effort",preSearch))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("radio_call",Assign[5]))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("date_prepared", todaydate))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("time_prepared", todaytime))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("prepared_by",str(Assign[16])))
+
+            SearchSpd = Assign[20]
+            SearchTime=Assign[19]
+            SegArea_KM=Assign[18]
+            SegArea_Acres = round((SegArea_KM * 247.104393),2) # Convert km**2 to Acres
+            SegArea_KM = round(SegArea_KM,3)
+            assignSize = "{0}Acres; {1}sqKM".format(str(SegArea_Acres), str(SegArea_KM))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("size_of_assignment", assignSize))
+
+            assSafety= Assign[15]
+
+        k=1
+        if len(TeamMember)>0:
+            for key in TeamMember:
+                txt.write("<</T(topmostSubform[0].Page1[0].PersonnelName_{0}[0])/V({1})>>\n".format(k,str(key)))
+                txt.write("<</T(topmostSubform[0].Page1[0].PersonnelAgency_{0}[0])/V({1})>>\n".format(k,str(TeamMember[key][1])))
+                if key==Team[1]:
+                    txt.write("<</T(topmostSubform[0].Page1[0].PersonnelFunction_{0}[0])/V({1})>>\n".format(k,"L"))
+                elif key == Team[2]:
+                    txt.write("<</T(topmostSubform[0].Page1[0].PersonnelFunction_{0}[0])/V({1})>>\n".format(k,"M"))
+                k+=1
+                if k>9:
+                    break
+        SearchTime = round(SearchTime/(k),2)
+        txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1} hrs)>>\n".format("TimeAllocated",str(SearchTime))) # SearchTime
+
+        ## Operation Period Infomration
+        if len(OpPeriod)>0:
+            opSafety = OpPeriod[0]
+            weaTher = OpPeriod[1]
+            if len(OpPeriod[2])>1:
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("freqCommand",str(OpPeriod[2])))
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("freqTactical",str(OpPeriod[2])))
+            elif len(incidInfo[6])>0:
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("freqCommand",str(incidInfo[6])))
+                txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("freqTactical",str(incidInfo[6])))
+
+
+        Notes = "Specific Safety: {0};  General Safety: {1};  {2}".format(str(assSafety),str(opSafety), str(weaTher) )
+        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
+        txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("notes",str(Notes)))
+
+        del Notes
+        txt.write("]\n")
+        txt.write("endobj\n")
+        txt.write("trailer\n")
+        txt.write("<</Root 1 0 R>>\n")
+        txt.write("%%EO\n")
+        txt.close ()
+
+    else:
+        arcpy.AddError('The Task Assignment Form: {0} is not in the output folder'.format(TAF2Use))
+        sys.exit()
+
+    return
+
+
+def Tyler_County(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use):
+    if TAF2Use in listdir(output):
+        filename = output + "/" + str(AssNum) + "_TAF.fdf"
+        txt= open (filename, "w")
+        txt.write("%FDF-1.2\n")
+        txt.write("%????\n")
+        txt.write("1 0 obj<</FDF<</F({0})/Fields 2 0 R>>>>\n".format(TAF2Use))
+        txt.write("endobj\n")
+        txt.write("2 0 obj[\n")
+        txt.write ("\n")
+
+        SearchTime = 0
+        assSafety = "None "
+        opSafety = "None "
+        phBase = " "
+        phTeam = " "
+        ## Incident Information
+        Incid = "{0}\n{1}".format(incidInfo[0],incidInfo[1])
+        txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("IncidentName",Incid))
+        txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("BasePhone",str(incidInfo[5])))
+
+        ## Operation Period Infomration
+        #################
+        if len(OpPeriod)>0:
+            opSafety = OpPeriod[0]
+            weaTher = OpPeriod[1]
+            if len(OpPeriod[2])>0:
+                primFreq = str(OpPeriod[2])
+            elif len(incidInfo[6])>0:
+                primFreq = str(incidInfo[6])
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("FrequencyChannel", primFreq))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("PredictedWeather",str(weaTher)))
+
+        ## Assignment Information
+        if len(Assign)>0:
+            if len(Assign[0])>1:
+                TaskID = str(Assign[0])
+            elif len(Assign[1])>1:
+                TaskID = str(Assign[1])
+            else:
+                TaskID = " "
+
+            SegArea_KM=Assign[18]
+            SegArea_Acres = round((SegArea_KM * 247.104393),2) # Convert km**2 to Acres
+            SegArea_KM = round(SegArea_KM,3)
+
+            mapName = "Map: {0}".format(str(Assign[10]))
+            assignSize = "Acres: {0}; Sq KM: {1}".format(str(SegArea_Acres), str(SegArea_KM))
+            preSearch = "Previously Search: {0}".format(str(Assign[9]))
+            aSSignment = "{0}, {1}, {2}\n{3}".format(mapName, assignSize, preSearch, str(Assign[3]))
+
+            allTime = datetime.strptime(str(Assign[17]), "%m/%d/%y %H:%M" )
+            dateStamp = datetime.strftime(allTime, "%m/%d/%Y")
+            timeStamp = datetime.strftime(allTime, "%H:%M %p")
+
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("AssignLocation",Assign[10]))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("OpPeriod",str(Assign[2])))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TaskNumber",TaskID))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamId",Assign[5]))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("BaseCallSign","Base"))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamCallSign",Assign[5]))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("ResourceType",str(Assign[6])))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("PrepBy",str(Assign[16])))
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TaskInstruct",aSSignment))
+
+            assSafety=Assign[15]
+
+         ################
+        Notes = "Specific Safety: {0};  General Safety: {1}".format(str(assSafety),str(opSafety))
+        Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
+        txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("SafetyPrecautions",str(Notes)))
+        del Notes
+
+        if len(Team)>0:
+            phTeam = str(Team[3])
+            txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamPhone", phTeam))
+
+        k=1
+        kk=0
+        if len(TeamMember)>0:
+            for key in TeamMember:
+                txt.write("<</T(topmostSubform[0].Page1[0].TeamMembersName_{0}[0])/V({1})>>\n".format(k,str(key)))
+                txt.write("<</T(topmostSubform[0].Page1[0].Agency_{0}[0])/V({1})>>\n".format(k,str(TeamMember[key][1])))
+                k+=1
+                if k>10:
+                    break
+
+        # Close and write FDF file
+        txt.write("]\n")
+        txt.write("endobj\n")
+        txt.write("trailer\n")
+        txt.write("<</Root 1 0 R>>\n")
+        txt.write("%%EO\n")
+        txt.close ()
+    else:
+        arcpy.AddError('The Task Assignment Form: {0} is not in the output folder'.format(TAF2Use))
+        sys.exit()
+    return
+
 def Default(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2Use):
     if TAF2Use in listdir(output):
         filename = output + "/" + str(AssNum) + "_TAF.fdf"
@@ -481,6 +942,7 @@ def Default(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2U
         ## Operation Period Infomration
         if len(OpPeriod)>0:
             opSafety = OpPeriod[0]
+            weaTher = OpPeriod[1]
             if len(OpPeriod[2])>1:
                 txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("TeamFreq",str(OpPeriod[2])))
             elif len(incidInfo[6])>0:
@@ -489,20 +951,12 @@ def Default(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2U
         if len(Team)>0:
             txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("Phone_Team",str(Team[3])))
 
-        Notes = "Specific Safety: " + str(assSafety) + "     General Safety: " + \
-            str(opSafety)
+
+        Notes = "Specific Safety: {0}; General Safety: {1};  {2}".format(str(assSafety),str(opSafety),str(weaTher) )
         Notes = "\n".join(Notes.splitlines()) # os-specific newline conversion
         txt.write("<</T(topmostSubform[0].Page1[0].{0}[0])/V({1})>>\n".format("Notes",str(Notes)))
 
         del Notes
-        ## txt.write("<</T(topmostSubform[0].Page1[0].Table2[0].Row1[1].TactFreq1[0])/V(" + str(TactFreq1) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].EquipIssued[0])/V(" + str(EquipIssued) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].Phone_Team[0])/V(" + str(Phone_Team) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].GPSIdOut[0])/V(" + str(GPSIdOut) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].BriefBy[0])/V(" + str(BriefBy) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].DateOut[0])/V(" + str(DateOut) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].TimeOut[0])/V(" + str(TimeOut) + ")>>\n")
-        ## txt.write("<</T(topmostSubform[0].Page1[0].GPSDatumOut[0])/V(" + str(GPSDatumOut) + ")>>\n")
         txt.write("]\n")
         txt.write("endobj\n")
         txt.write("trailer\n")
@@ -517,4 +971,4 @@ def Default(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod, TAF2U
     return
 
 if __name__ == '__main__':
-    CreateICS204(Assign, Teams, TeamMember, AssNum, incidInfo, IncidIdx, output, OpPeriod)
+    CreateICS204(Assign, Team, TeamMember, AssNum, incidInfo, IncidIdx, output, OpPeriod)

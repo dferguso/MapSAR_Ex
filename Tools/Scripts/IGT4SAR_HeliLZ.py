@@ -41,7 +41,7 @@ try:
     arcpy.mapping
 except NameError:
     import arcpy.mapping
-import datetime
+#import datetime
 import arcgisscripting, os
 from arcpy import env
 from arcpy.sa import *
@@ -141,11 +141,11 @@ if __name__ == '__main__':
     ## Script arguments
     mxd,df = getDataframe()
     # Set date and time vars
-    timestamp = ''
-    now = datetime.datetime.now()
-    todaydate = now.strftime("%m_%d")
-    todaytime = now.strftime("%H_%M_%p")
-    timestamp = '{0}_{1}'.format(todaydate,todaytime)
+##    timestamp = ''
+##    now = datetime.datetime.now()
+##    todaydate = now.strftime("%m_%d")
+##    todaytime = now.strftime("%H_%M_%p")
+##    timestamp = '{0}_{1}'.format(todaydate,todaytime)
 
     wrkspc = arcpy.GetParameterAsText(0)  # Get the subject number
     global wrkspc

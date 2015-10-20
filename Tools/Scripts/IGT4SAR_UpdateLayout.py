@@ -44,15 +44,18 @@ def getDataframe():
     except SystemExit as err:
             pass
 
-def gNorth_Check(fc, fname):
-    field_type = "FLOAT"
+def checkFields(fc, fldName, fldType):
     desc=arcpy.Describe(fc)
     # Get a list of field names from the feature
     fieldsList = desc.fields
     field_names=[f.name for f in fieldsList]
-    if fname not in field_names:
-        arcpy.AddField_management (fc, fname, field_type)
-    arcpy.CalculateGridConvergenceAngle_cartography(fc,fname, "GEOGRAPHIC")
+    if fldName not in field_names:
+        arcpy.AddField_management (fc, fldName, fldType)
+    return
+
+def gNorth_Check(fc, fldName, fldType):
+    checkFields(fc, fldName, fldType)
+    arcpy.CalculateGridConvergenceAngle_cartography(fc,fldName, "GEOGRAPHIC")
     return
 
 def updateMapLayout():
@@ -84,26 +87,36 @@ def updateMapLayout():
 
     desc = arcpy.Describe(fc1)
 
-    #First determine the grid north value
-    fname = "gNORTH"
-    gNorth_Check(fc1, fname)
-    gridNorth = 0.0
-
     unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984',SPHEROID['WGS_1984',6378137.0,298.257223563]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
     shapefieldname = desc.ShapeFieldName
+
+    #First determine the grid north value
+    fld_gNorth = "gNORTH"
+    field_type = "FLOAT"
+    gNorth_Check(fc1, fld_gNorth, field_type)
+
+    rows0 = arcpy.SearchCursor(fc1, '', unProjCoordSys)
+    k = 0.0
+    gridNorth = 0.0
+    for row0 in rows0:
+        gridN = row0.getValue(fld_gNorth)
+        arcpy.AddMessage('Grid North: {0}'.format(gridN))
+        gridNorth += float(gridN)
+        k+=1.0
+    del row0
+    del rows0
+    del k
+
 
     rows1 = arcpy.SearchCursor(fc1, '', unProjCoordSys)
     k = 0
     declin = 0.0
-
     for row1 in rows1:
-        gridN = row1.getValue(fname)
         feat = row1.getValue(shapefieldname)
         pnt = feat.getPart()
         latitude = pnt.Y
         longitude = pnt.X
         declin = geomag.declination(latitude,longitude) + declin
-        gridNorth += gridN
         k+=1
     del rows1
     del row1
@@ -116,13 +129,15 @@ def updateMapLayout():
     gNorthTxt = str(abs(gridN)) + " " + gCard
 
     # Rotate data frame to adjust map layout for True North vs Grid North.
+    # Grid North is parallel with the edge of the page.  The "True North" arrow
+    # should be rotated to TRUE NORTH.
     try:
-        df.rotation = gridN
+        df.rotation = 0.0
         if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth"):
             gridNorth=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "gNorth")[0]
             gridNorth.text = gNorthTxt
         # Remove field
-        dropField=[field_name]
+        dropField=[fld_gNorth]
         arcpy.DeleteField_management(fc1, dropField)
     except:
         pass
@@ -177,18 +192,28 @@ def updateMapLayout():
 
     arcpy.AddMessage("Updating UTM and USNG grid info on map layout")
     try:
-        mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+        for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
+            if str(llyr.name) == "MRGS_UTM_USNG":
+                mapLyr=arcpy.mapping.ListLayers(mxd, "MRGS_UTM_USNG",df)[0]
+            elif str(llyr.name) == "MRGSZones_World":
+                mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
         arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT", intLyr) #"1 Incident_Group\Planning Point")
-        arcpy.AddMessage("Maplayers: " + mapLyr.name)
         rows=arcpy.SearchCursor(mapLyr)
         row = rows.next()
         if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone"):
             UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
             UTMZn.text = row.getValue("GRID1MIL")
+            UTMzone = str(UTMZn.text)
+        else:
+            UTMzone = ""
+
         if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone"):
             USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
             USNGZn.text = row.getValue("GRID100K")
-        arcpy.AddMessage("UTM Zone is {0} and USNG Grid is {1}".format(UTMZn.text,USNGZn.text))
+            USNGzone = str(USNGZn.text)
+        else:
+            USNGzone =""
+        arcpy.AddMessage("UTM Zone is {0} and USNG Grid is {1}".format(UTMzone,USNGzone))
         del rows
         del row
         del mapLyr
@@ -204,36 +229,43 @@ def updateMapLayout():
         for fld in fieldList:
             field.append(fld.name.encode('ascii','ignore'))
 
-        if int(cIncident.getOutput(0)) > 0:
-            if "MagDec" in field:
-                fld1 = "MagDec"
-                try:
-                    if arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv"):
-                        bearingConv=arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]
-                        bcText=bearingConv.text
-                        # Even though the templates have %s in them, we may have
-                        # clobbered them in a previous run.  So put 'em back.
-                        bcText=bcText.replace('ADD','%s')
-                        bcText=bcText.replace('SUBTRACT','%s')
-                        bearingConv.text= bcText % bearingTuple
-                        del bearingConv
-                except:
-                    arcpy.AddMessage("Failed to update bearing conversion text.")
+        fld_gNorth = "gNORTH"
+        fldType = "STRING"
+        checkFields(fc2, fld_gNorth, fldType)
 
-                cursor = arcpy.UpdateCursor(fc2)
-                for row in cursor:
-                    row.setValue(fld1, MagDecTxt)
-                    cursor.updateRow(row)
-                if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl"):
-                    MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-                    MagDeclin.text = MagDecTxt
-                    arcpy.AddMessage("Magnetic Declination is {0}".format(MagDeclin.text))
-                    del MagDeclin
-                del cursor, row
-            else:
-                arcpy.AddMessage("Magnetic Declination is not in the field list for Incident Information")
+        fld_MagDec = "MagDec"
+        fldType = "STRING"
+        checkFields(fc2, fld_MagDec, fldType)
+
+
+        if int(cIncident.getOutput(0)) > 0:
+            cursor = arcpy.UpdateCursor(fc2)
+            for row in cursor:
+                row.setValue(fld_MagDec, MagDecTxt)
+                row.setValue(fld_gNorth, gNorthTxt)
+                cursor.updateRow(row)
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl"):
+                MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+                MagDeclin.text = MagDecTxt
+                arcpy.AddMessage("Magnetic Declination is {0}\n".format(MagDeclin.text))
+                del MagDeclin
+            del cursor, row
+
         else:
             arcpy.AddWarning("No Incident Information provided\n")
+
+        try:
+            if arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv"):
+                bearingConv=arcpy.mapping.ListLayoutElements(mxd,"TEXT_ELEMENT","bearingConv")[0]
+                bcText=bearingConv.text
+                # Even though the templates have %s in them, we may have
+                # clobbered them in a previous run.  So put 'em back.
+                bcText=bcText.replace('ADD','%s')
+                bcText=bcText.replace('SUBTRACT','%s')
+                bearingConv.text= bcText % bearingTuple
+                del bearingConv
+        except:
+            arcpy.AddMessage("Failed to update bearing conversion text.")
     except:
         arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
 

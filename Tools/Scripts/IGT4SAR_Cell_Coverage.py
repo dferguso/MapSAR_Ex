@@ -171,8 +171,39 @@ def WritePointGeometry(fc,xy):  #Only works for single point
     del cur
     return()
 
-def CellViewshed(CellPts_Lyr, DEM, refGroupLayer, out_fc):
+def chkCellSize(DEM):
+    XCel = arcpy.GetRasterProperties_management(DEM,"CELLSIZEX")
+    XCell = float(XCel.getOutput(0))
+    return(XCell)
+
+def CellViewshed(CellPts_Lyr, DEM, trPower, Ftx, Gtx, recThres, aRange, refGroupLayer, out_fc):
     mxd,df = getDataframe()
+    cellSize = chkCellSize(DEM)
+    arcpy.env.extent = DEM
+    # Calculate Received Signal Strength and Path Loss
+    # Prx (dBm) = Ptx + Gtx + Grx - Ltx - Lfs - Lfm - Lrx
+    # Prx (dBm) = Received input power (dBm)
+    # Ptx (dBm) = Transmitter output power (dBm)
+    # Gtx (dBm) = Transmitter antenna gain (dBm)
+    # Grx (dBm) = Receiver antenna gain (dBm)
+    # Ltx (dBm) = Transmit feeder and associated losses (feeder, connectors, etc.)
+    # Lfs (dBm) = Free space path loss
+    # Lfm (dBm) = many-sided signal propagation losses (these include fading margin, polarization mismatch,
+    #             losses associated with medium through which signal is travelling, other losses...)
+    # Lrx (dBm) = Receiver feeder losses
+    # Decibel milliwatts (dBm) = 10*log10(milliWatts)
+    # e.g. 0 dBm = 10*log10(1 mW)
+
+    # Convert the tranmission power from W to dBm (decibel milliWatts)
+    Ptx = 10.0 * math.log10(trPower / 1000.0) # Covert W to milliwatts
+
+    Grx = 0 # Receiver gain (dBm) - typical cell phone has zero gain as it is equity with a uni-direction antenna.
+    Ltx = 0 # Currently neglecting trnsmitter feeder losses as it would be difficult to determine for cellular - Oct 2015 - DHF
+    Lfm = 0 # Currently neglecting addtional path losses - Oct 2015 - DHF
+    Lrx = 0 # Currently neglecting receiver fedder losses - Oct 2015 - DHF
+
+    cSpd = 2997924458.0 # Speed of light (m/sec)
+
     # Set layer that output symbology will be based on
     # Set local variables
     zFactor = 1; useEarthCurvature = "CURVED_EARTH"; refractivityCoefficient = 0.15
@@ -180,10 +211,19 @@ def CellViewshed(CellPts_Lyr, DEM, refGroupLayer, out_fc):
     DEM=checkSR(DEM)
     # Execute Viewshed
     outViewshed = Viewshed(DEM, CellPts_Lyr, zFactor, useEarthCurvature, refractivityCoefficient)
+    outEucDistance = EucDistance(CellPts_Lyr, aRange, cellSize)
+
+    Lfs = SetNull(outViewshed==0,20*Log10((4*math.pi*(10**6))/cSpd*Ftx*outEucDistance))
+
+    Prx = Ptx + Gtx + Grx - Ltx - Lfs - Lfm - Lrx
+    # Received signal strength cut off at Receiver Threshold
+    outVisible = SetNull(Prx, Prx, 'Value < {0}'.format(recThres))
 
     # Save the output
     outRstr = "{0}_rstr".format(out_fc)
-    outViewshed.save(outRstr)
+    outVisible.save(outRstr)
+    del outViewshed, outEucDistance, outVisible, Prx
+
     arcpy.RefreshCatalog(outRstr)
 
     outRstrb = "{0}_rstrb".format(out_fc)
@@ -283,17 +323,22 @@ if __name__ == '__main__':
     if DEM == '#' or not DEM:
         DEM = "empty"
 
+    recThres = arcpy.GetParameterAsText(11)
+    if recThres == '#' or not recThres:
+        recThres = "empty"
+
     arcpy.AddMessage('\n')
     ## Variables
-    tParam=['aDescrip', 'aHeight','aBearing', 'aSecAng', 'aRange']
-    towerParam=['Description','Height','Bearing', 'Sector Angle', 'Range']
+    tParam=['aDescrip', 'aHeight','aBearing', 'aSecAng', 'aRange', 'aPtx', 'aGtx', 'aFreq_tx']
+    towerParam=['Description','Height','Bearing', 'Sector Angle', 'Range', 'Transmit Power (W)', 'Transmit Antenna Gain (dB)', 'Transmit Frequency (MHz)']
     unProjCoordSys = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984', \
                       SPHEROID['WGS_1984',6378137.0,298.257223563]],\
                       PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]]"
     fldNamesA=[('OFFSETA', 'SHORT'),('OFFSETB', 'SHORT'), \
               ('AZIMUTH1', 'SHORT'),('AZIMUTH2', 'SHORT'),('VERT1', 'SHORT'), \
               ('VERT2', 'SHORT'),('RADIUS1', 'SHORT'),('RADIUS2', 'SHORT')]
-    fldNamesB=[('DESCRIPTION','TEXT'),('HEIGHT','SHORT'),('ANTSEC_DIR','SHORT'),('ANTSEC_DISP', 'SHORT'),('RANGE_MAX', 'SHORT')]
+    fldNamesB=[('DESCRIPTION','TEXT'),('HEIGHT','SHORT'),('ANTSEC_DIR','SHORT'),('ANTSEC_DISP', 'SHORT'),('RANGE_MAX', 'SHORT'), \
+               ('Ptx', 'FLOAT'), ('Gtx','FLOAT'),('Freq_tx', 'FLOAT')]
     CellTowers = "CellTowers"
 
     OFFSETA = 15
@@ -338,10 +383,6 @@ if __name__ == '__main__':
     if NewGenSector =="false" and NewViewshed == "false":
         sys.exit(arcpy.AddError("You must select either to generate a Cell Sector or Estimate Coverage"))
 
-    if NewViewshed == "true":
-        if DEM=="empty":
-            sys.exit(arcpy.AddError("Need to select DEM to estimate Cellular Coverage"))
-
 ############################################################
     if inFeature == "Use Cell Towers Layer":
         if cellTowers=="empty":
@@ -382,6 +423,7 @@ if __name__ == '__main__':
                             aHeight=row.getValue('HEIGHT')
                             if aHeight is None:
                                 sys.exit(arcpy.AddError("Check HEIGHT in CellTower Layer for the selected Tower"))
+
                             aBearing=row.getValue('ANTSEC_DIR')
                             if aBearing is None:
                                 sys.exit(arcpy.AddError("Check ANTSEC_DIR in CellTower Layer for the selected Tower"))
@@ -394,7 +436,19 @@ if __name__ == '__main__':
                             if aRange is None:
                                 sys.exit(arcpy.AddError("Check RANGE_MAX in CellTower Layer for the selected Tower"))
 
-                        nInfo=[aDescrip,aHeight,aBearing, aSecAng, aRange]
+                            aPtx =row.getValue('Ptx')
+                            if aPtx is None:
+                                sys.exit(arcpy.AddError("Check Transmit Power (W) in CellTower Layer for the selected Tower"))
+
+                            aGtx =row.getValue('Gtx')
+                            if aGtx is None:
+                                sys.exit(arcpy.AddError("Check Transmit Antenna Gain (dB) in CellTower Layer for the selected Tower"))
+
+                            aFreq_tx =row.getValue('Freq_tx')
+                            if aFreq_tx is None:
+                                sys.exit(arcpy.AddError("Check Transmit Frequency (MHz) in CellTower Layer for the selected Tower"))
+
+                        nInfo=[aDescrip,aHeight,aBearing, aSecAng, aRange, aPtx, aGtx, aFreq_tx]
                         AntInfo = ValidateNewInfo(nInfo,tParam,towerParam)
             else:
                 sys.exit(arcpy.AddError("There is no CellTower Layer.  Run this tool using 'New Location'\n "))
@@ -507,6 +561,9 @@ if __name__ == '__main__':
             aBearing=row.getValue('ANTSEC_DIR')
             aSecAng =row.getValue('ANTSEC_DISP')
             aRange =row.getValue('RANGE_MAX')
+            aPtx = row.getValue('Ptx')
+            aGtx = row.getValue('Gtx')
+            aFreq_tx = row.getValue('Freq_tx')
             if aSecAng == 360:
                 AziChkL = 0
                 AziChkH = 360
@@ -533,7 +590,7 @@ if __name__ == '__main__':
             sys.exit(arcpy.AddError('Problem most likely do to improperly selected features'))
         expression = 'DESCRIPTION = \'{0}\''.format(descript01)
         arcpy.SelectLayerByAttribute_management(cellTower_Layer, "NEW_SELECTION", expression)
-        out_fc="{0}_B{1}_Ang{2}_Rng{3}".format(descript[0:10],str(aBearing),str(aSecAng),str(int(aRange)))
+        out_fc="{0}_B{1}_Ang{2}_Ptx{3}".format(descript[0:10],str(aBearing),str(aSecAng),str(int(aPtx)))
         inDataset="{0}\{1}".format(wrkspc, descript[0:5])
 
         if NewGenSector=="true":
@@ -583,12 +640,39 @@ if __name__ == '__main__':
 
         if NewViewshed == "true":
             if DEM=="empty":
-                sys.exit(arcpy.AddError("No DEM Selected"))
-            else:
-                arcpy.AddMessage("Estimate coverage for {0}\n".format(descript01))
-                # Execute Viewshed
-                CellViewshed(cellTower_Layer, DEM, refGroupLayerA, out_fc)
+                sys.exit(arcpy.AddError("Need to select DEM to estimate Cellular Coverage"))
+            try:
+                trPower = float(aPtx)
+            except:
+                if trPower =="empty":
+                    sys.exit(arcpy.AddError("Need to provide a Transmitter Power, or use default value of 60 Watts"))
+                else:
+                    sys.exit(arcpy.AddError("Format error with Transmitter Power.  Correct or use default value of 60 Watts"))
+            try:
+                trFreq=float(aFreq_tx)
+            except:
+                if trFreq =="empty":
+                    sys.exit(arcpy.AddError("Need to provide a Transmitter Frequency, or use default value of 900 MHz"))
+                else:
+                    sys.exit(arcpy.AddError("Format error with Transmitter Frequency.  Correct or use default value of 900 MHz"))
+            try:
+                trGain = float(aGtx)
+            except:
+                if trGain =="empty":
+                    sys.exit(arcpy.AddError("Need to provide a Transmitter Antenna Gain, or use default value of 10 dB"))
+                else:
+                    sys.exit(arcpy.AddError("Format error with Transmitter Antenna Gain.  Correct or use default value of 10 dB"))
+            try:
+                recThres ==float(recThres)
+            except:
+                if recThres =="empty":
+                    sys.exit(arcpy.AddError("Need to provide a Receiver Threshold, or use default value of -90 dBm"))
+                else:
+                    sys.exit(arcpy.AddError("Format error with Receiver Threshold. Correct or use default value of -90 dBm"))
 
+            arcpy.AddMessage("Estimate coverage for {0}\n".format(descript01))
+            # Execute Viewshed
+            CellViewshed(cellTower_Layer, DEM, trPower, trFreq, trGain, recThres, aRange, refGroupLayerA, out_fc)
         else:
             arcpy.AddWarning("User did not select Viewshed")
         arcpy.SelectLayerByAttribute_management(cellTower_Layer, "CLEAR_SELECTION")

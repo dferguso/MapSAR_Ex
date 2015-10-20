@@ -31,6 +31,10 @@ try:
     arcpy
 except NameError:
     import arcpy
+from arcpy import env
+import os
+
+arcpy.env.overwriteOutput = "True"
 
 def getDataframe():
     """ get current mxd and dataframe returns mxd, frame"""
@@ -46,14 +50,38 @@ def getDataframe():
 ########
 # Main Program starts here
 #######
+if __name__ == '__main__':
+    #in_fc  - this is a point feature used to get the latitude and longitude of point.
+    mxd, df = getDataframe()
 
-#in_fc  - this is a point feature used to get the latitude and longitude of point.
-outFolder = arcpy.GetParameterAsText(0)
-if outFolder == '#' or not outFolder:
-    arcpy.AddMessage("You need to provide a valid output folder")
+    outFolder = arcpy.GetParameterAsText(0)
+    if outFolder == '#' or not outFolder:
+        arcpy.AddMessage("You need to provide a valid output folder")
 
-layerNames = arcpy.GetParameterAsText(1)
-layerNames = layerNames.split(";")
+    layerNames = arcpy.GetParameterAsText(1)
+    createKMZ = arcpy.GetParameterAsText(2)
 
-# Execute FeatureClassToGeodatabase
-arcpy.FeatureClassToShapefile_conversion(layerNames, outFolder)
+    expLayers=[]
+    layerNames = layerNames.split(";")
+    arcpy.AddMessage("\n")
+    for lyrs in layerNames:
+        try:
+            lyrs = lyrs.replace("'","")
+        except:
+            pass
+
+        outName = str(arcpy.Describe(lyrs).name)
+        outFC = os.path.join(outFolder,outName)
+        arcpy.AddMessage("Process {0}".format(outName))
+        arcpy.CopyFeatures_management(lyrs, outFC)
+        if createKMZ.upper() == 'TRUE':
+            outKML = "{0}.kmz".format(outFC)
+            for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
+                if str(llyr)==str(lyrs):
+                    if llyr.visible == 0:
+                        llyr.visible = 1
+                        arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
+                        llyr.visible = 0
+                    else:
+                        arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
+    arcpy.AddMessage("\n")

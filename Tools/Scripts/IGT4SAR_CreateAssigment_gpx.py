@@ -65,10 +65,8 @@ def getDataframe():
             pass
 
 def checkNoneType(variable):
-    if type(variable) is NoneType:
+    if type(variable) is NoneType or variable is None:
         result = ""
-    elif variable is None:
-        result=""
     else:
         result = variable
     return result
@@ -482,6 +480,10 @@ if __name__ == '__main__':
     output = arcpy.GetParameterAsText(0)
     AssignNumber = arcpy.GetParameterAsText(1)
     updateMap = arcpy.GetParameterAsText(2)
+    sUppress205 = arcpy.GetParameterAsText(3)
+    sUppressMap = arcpy.GetParameterAsText(4)
+    sUppressGPX = arcpy.GetParameterAsText(5)
+    sUppressKML = arcpy.GetParameterAsText(6)
 
     nowDateTime = datetime.now().strftime("%m/%d/%y %H:%M")
 
@@ -617,7 +619,43 @@ if __name__ == '__main__':
             if not Period:
                 Period = k
             Op_Safety = checkNoneType(row3.getValue("Safety_Message"))
-            wEather = checkNoneType(row3.getValue("Weather"))
+
+            weaThrA = checkNoneType(row3.getValue("Weather"))
+            if len(weaThrA)>1:
+                weaThr = "Weather: {0}; ".format(weaThrA)
+            else:
+                weaThr =""
+            Temp_MaxA =checkNoneType(row3.getValue("Temp_Max"))
+            if len(Temp_MaxA)>1:
+                Temp_Max = "Temp(Max): {0}; ".format(Temp_MaxA)
+            else:
+                Temp_Max =""
+            Temp_MinA =checkNoneType(row3.getValue("Temp_Min"))
+            if len(Temp_MaxA)>1:
+                Temp_Min = "Temp(Min): {0}; ".format(Temp_MinA)
+            else:
+                Temp_Min =""
+            WindA =checkNoneType(row3.getValue("Wind"))
+            if len(WindA)>1:
+                Wind = "Wind(mph): {0}; ".format(WindA)
+            else:
+                Wind =""
+            WindDirA =checkNoneType(row3.getValue("WindDir"))
+            if len(WindDirA)>1:
+                WindDir = "Wind Dir(deg): {0}; ".format(WindDirA)
+            else:
+                WindDir =""
+            RainA =checkNoneType(row3.getValue("Rain"))
+            if len(RainA)<1 or RainA=='None':
+                Rain =""
+            else:
+                Rain = "Rain: {0}; ".format(RainA)
+            SnowA =checkNoneType(row3.getValue("Snow"))
+            if len(SnowA)<1 or SnowA == 'None':
+                Snow =""
+            else:
+                Snow = "Snow: {0}; ".format(SnowA)
+            wEather = "{0}{1}{2}{3}{4}{5}{6}".format(str(weaThr), str(Temp_Max), str(Temp_Min), str(Wind), str(WindDir), str(Rain), str(Snow))
             PrimComms = checkNoneType(row3.getValue("Primary_Comm"))
             OpPeriod[Period] = [Op_Safety, wEather,PrimComms]
             del Period, Op_Safety, wEather
@@ -655,7 +693,7 @@ if __name__ == '__main__':
         arcpy.AddMessage("Get Team Member Information")
         rows4 = arcpy.SearchCursor(fc9)
         row4 = rows4.next()
-        k=1
+        k=0
         while row4:
             Respond = row4.getValue("Name")
             Respond = normalize('NFD', Respond).encode('ascii', 'ignore')
@@ -665,7 +703,8 @@ if __name__ == '__main__':
             sKills = checkNoneType(row4.getValue('Skills'))
             TeamName = checkNoneType(row4.getValue("Team_Name"))
             Role =checkNoneType(row4.getValue("Role"))
-            TeamMembers[Respond]=[TeamName, SARTeam, sKills, Role]
+            Wght = checkNoneType(row4.getValue("Total_Weight"))
+            TeamMembers[Respond]=[TeamName, SARTeam, sKills, Role, Wght]
 
             k+=1
             del Respond, SARTeam, sKills, TeamName
@@ -714,12 +753,18 @@ if __name__ == '__main__':
             TaskMap = checkNoneType(row0.getValue("Area_Name"))
             CreateMap = row0.getValue("Create_Map")
             CreateMap = 'Yes' if not CreateMap else CreateMap
+            if sUppressMap.upper()=='TRUE':
+                CreateMap = 'No'
 
             CreateGpx = checkNoneType(row0.getValue("Create_gpx"))
             CreateGpx = 'Yes' if not CreateGpx else CreateGpx
+            if sUppressGPX.upper()=='TRUE':
+                CreateGpx = 'No'
 
             CreateKml = checkNoneType(row0.getValue("Create_KML"))
             CreateKml = 'Yes' if not CreateKml else CreateKml
+            if sUppressKML.upper()=='TRUE':
+                CreateKml = 'No'
 
             mapScale = row0.getValue("Map_Scale")
             if not mapScale or mapScale <=0:
@@ -728,10 +773,9 @@ if __name__ == '__main__':
 
             Assign_Safety = checkNoneType(row0.getValue("Safety_note"))
             PrepBy = checkNoneType(row0.getValue("Prepared_By"))
-            TaskDate =checkNoneType(row0.getValue("TimeOut"))
+            TaskDate =row0.getValue("TimeOut")
             if not TaskDate:
                 TaskDate = nowDateTime
-
             Assignment[AssignIdx]=[AssignNumber, PlanNumber, Period, TaskInstruct, Milage, Team,
                        ResourceType, Division, Priority, PreSearch, TaskMap, mapScale, CreateMap,
                        CreateGpx, CreateKml, Assign_Safety, PrepBy, TaskDate]
@@ -785,10 +829,9 @@ if __name__ == '__main__':
 ##        except:
 ##            arcpy.AddError("failed to get feature layer")
 ##            sys.exit(1)
-        Assign.append(SegArea_KM); Assign.append(SearchTime);
+        Assign.append(SegArea_KM); Assign.append(SearchTime);Assign.append(SearchSpd)
 
         ###Create ICS204 - Moved June 23, 2014 by Don Ferguson to accomodate USNG_GRID and UTM_ZONE
-        arcpy.AddMessage("Creating Task Assignment Form for Assignment Number: " +str(AssNum))
         incInfo = incidInfo[IncidIdx]
         OpPd=[]
         if OpPeriod[Assign[2]]:
@@ -805,8 +848,13 @@ if __name__ == '__main__':
         if len(Respd)==0:
             arcpy.AddMessage("Time estimates based on single searcher - divide by total number of searchers assigned")
 
-        CreateICS204 = "IGT4SAR_CreateICS204.{0}(Assign, Team, TeamMember, AssNum, incInfo, output, OpPd, ICS204Use)".format(ICS204Reg)
-        exec CreateICS204
+        if sUppress205.upper() == 'FALSE':
+            arcpy.AddMessage('Creating Task Assignment Form for Assignment Number: {0}'.format(str(AssNum)))
+            CreateICS204 = "IGT4SAR_CreateICS204.{0}(Assign, Team, TeamMember, AssNum, incInfo, output, OpPd, ICS204Use)".format(ICS204Reg)
+            exec CreateICS204
+        else:
+            arcpy.AddMessage('No Task Assignment Form created for Assignment Number: {0}'.format(str(AssNum)))
+
 ##########################################
     ##Create Map for Task Assignment
     ##
