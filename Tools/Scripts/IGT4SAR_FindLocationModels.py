@@ -181,10 +181,16 @@ Woods = int(Woods*100)
 Fields = int(Fields*100)
 Rock = int(Rock*100)
 
+
+# Generate a list of layers in the df
+layer_names=[str(f.name) for f in arcpy.mapping.ListLayers(mxd,"",df)]
+if "Water_Polygon" in layer_names:
+    Water = "Water_Polygon"
+elif "WaterBodies" in layer_names:
+    Water = "WaterBodies"
 Roads = "Roads"
 Trails = "Trails"
 pStreams = "Streams"
-Water = "Water_Polygon"
 Fence = "FenceLine"
 Electric = "PowerLines"
 

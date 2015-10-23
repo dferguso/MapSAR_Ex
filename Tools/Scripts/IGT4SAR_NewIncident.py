@@ -98,8 +98,15 @@ def IPPplot(iPPtype, cUnits, spatial_ref, xyIPP, iNcdName, SubName, wrkspc):
     env.workspace = wrkspc
     if iPPtype == 'ICP':
         ipPoint = 'Assets'
+        iType = 'Asset_Type'
+        iPPtype = 1
+        iLat = 'LATITUDE'
+        iLong = 'LONGITUDE'
     else:
         ipPoint='Plan_Point'
+        iType = 'IPPType'
+        iLat = 'Latitude'
+        iLong = 'Longitude'
     CoordUnits = cUnits.upper()
     geoUnits=['DECIMAL DEGREES','DEGREES MINUTES SECONDS','DEGREES DECIMAL MINUTES']
     projUnits = ['MGRS', 'US NATIONAL GRID', 'UTM']
@@ -173,13 +180,14 @@ def IPPplot(iPPtype, cUnits, spatial_ref, xyIPP, iNcdName, SubName, wrkspc):
     feat=cur.newRow()
     pnt = arcpy.Point(LonDD,LatDD)
     feat.shape=pnt
-    feat.setValue('Latitude',LatDD)
-    feat.setValue('Longitude',LonDD)
-    feat.setValue('IPPType',iPPtype)
-    if len(SubName) > 1:
-        feat.setValue('Subject_Number',1)
-    if len(iNcdName) > 1:
-        feat.setValue('Incident_Name',iNcdName)
+    feat.setValue(iLat,LatDD)
+    feat.setValue(iLong,LonDD)
+    feat.setValue(iType,iPPtype)
+    if ipPoint =='Plan_Point':
+        if len(SubName) > 1:
+            feat.setValue('Subject_Number',1)
+        if len(iNcdName) > 1:
+            feat.setValue('Incident_Name',iNcdName)
     cur.insertRow(feat)
     del feat, cur, pnt
     arcpy.Delete_management(outTbl)

@@ -283,10 +283,14 @@ if __name__ == '__main__':
 
 #############################################
     # Generate a list of layers in the df
-    layer_names=[f.name for f in arcpy.mapping.ListLayers(mxd,"",df)]
+    layer_names=[str(f.name) for f in arcpy.mapping.ListLayers(mxd,"",df)]
+    if "Water_Polygon" in layer_names:
+        Water = "Water_Polygon"
+    elif "WaterBodies" in layer_names:
+        Water = "WaterBodies"
 
     # Check to make sure the follow layers exist
-    fc_Lyrs = ["Assets", "Roads", "Streams", "Water_Polygon", "FenceLine",
+    fc_Lyrs = ["Assets", "Roads", "Streams", Water, "FenceLine",
                 "PowerLines", "Buildings", "CellTowers"]
 #############################################
     # Process the Land Cover

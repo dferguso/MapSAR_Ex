@@ -89,6 +89,17 @@ def checkSR(inRaster):   #From Jon Peddar - MapSAR
     except SystemExit as err:
             pass
 
+def chckSpecialCharacters(fName):
+    # Special Characters
+    spChar=('@','#','$','%','&','*','-',' ')
+    ######################################
+    # Check for special characters in name
+    for sp in spChar:
+        if sp in fName:
+            fName = fName.replace(sp,"")
+    ######################################
+    return(fName)
+
 def ValidateNewLocation(Newpoint,NewCoord):
     if NewPoint!="empty":
         NewPt = NewPoint.split(" ")
@@ -125,7 +136,7 @@ def ValidateNewInfo(nInfo,tParam, towerParam):
         except:
             sys.exit(arcpy.AddError('Tower properties need to be numeric\n'))
 
-    if len(nInfo)!= 5:
+    if len(nInfo)!= 8:
         sys.exit(arcpy.AddError("Please Check Antenna/Tower Properties - each seperated by a comma\n"))
     else:
         AntInfo=dict((tParam[i],nInfo[i]) for i in range(len(tParam)))
@@ -262,7 +273,6 @@ def deleteLayer(df,fcLayer):
             except:
                 pass
     return()
-
 
 ########
 # Main Program starts here
@@ -590,6 +600,9 @@ if __name__ == '__main__':
             sys.exit(arcpy.AddError('Problem most likely do to improperly selected features'))
         expression = 'DESCRIPTION = \'{0}\''.format(descript01)
         arcpy.SelectLayerByAttribute_management(cellTower_Layer, "NEW_SELECTION", expression)
+        ## Check for Special Characters
+        descript=chckSpecialCharacters(descript)
+        ##
         out_fc="{0}_B{1}_Ang{2}_Ptx{3}".format(descript[0:10],str(aBearing),str(aSecAng),str(int(aPtx)))
         inDataset="{0}\{1}".format(wrkspc, descript[0:5])
 

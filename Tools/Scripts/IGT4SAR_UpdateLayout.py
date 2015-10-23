@@ -94,8 +94,11 @@ def updateMapLayout():
     fld_gNorth = "gNORTH"
     field_type = "FLOAT"
     gNorth_Check(fc1, fld_gNorth, field_type)
-
-    rows0 = arcpy.SearchCursor(fc1, '', unProjCoordSys)
+    if fc1 == "Assets":
+        where0 = '"Asset_Type" = 1'
+    else:
+        where0 = ""
+    rows0 = arcpy.SearchCursor(fc1, where0, unProjCoordSys)
     k = 0.0
     gridNorth = 0.0
     for row0 in rows0:
@@ -108,7 +111,7 @@ def updateMapLayout():
     del k
 
 
-    rows1 = arcpy.SearchCursor(fc1, '', unProjCoordSys)
+    rows1 = arcpy.SearchCursor(fc1, where0, unProjCoordSys)
     k = 0
     declin = 0.0
     for row1 in rows1:
@@ -191,15 +194,15 @@ def updateMapLayout():
         arcpy.AddMessage("Be sure to turn on USNG Grid in Data Frame Properties.\n")
 
     arcpy.AddMessage("Updating UTM and USNG grid info on map layout")
-    try:
-        for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
-            if str(llyr.name) == "MRGS_UTM_USNG":
-                mapLyr=arcpy.mapping.ListLayers(mxd, "MRGS_UTM_USNG",df)[0]
-            elif str(llyr.name) == "MRGSZones_World":
-                mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
-        arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT", intLyr) #"1 Incident_Group\Planning Point")
-        rows=arcpy.SearchCursor(mapLyr)
-        row = rows.next()
+##    try:
+    for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
+        if str(llyr.name) == "MRGS_UTM_USNG":
+            mapLyr=arcpy.mapping.ListLayers(mxd, "MRGS_UTM_USNG",df)[0]
+        elif str(llyr.name) == "MRGSZones_World":
+            mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+    arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT", intLyr) #"1 Incident_Group\Planning Point")
+    cursor=arcpy.SearchCursor(mapLyr)
+    for row in cursor:
         if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone"):
             UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
             UTMZn.text = row.getValue("GRID1MIL")
@@ -214,11 +217,14 @@ def updateMapLayout():
         else:
             USNGzone =""
         arcpy.AddMessage("UTM Zone is {0} and USNG Grid is {1}".format(UTMzone,USNGzone))
-        del rows
+    del cursor
+    try:
         del row
-        del mapLyr
     except:
-        arcpy.AddMessage("Error: Update USNG Grid and UTM Zone text fields on map layout manually\n")
+        pass
+    del mapLyr
+##    except:
+##        arcpy.AddMessage("Error: Update USNG Grid and UTM Zone text fields on map layout manually\n")
 
     arcpy.AddMessage("Grid North correction to True North based on location of IPP or ICP is: {0}".format(gNorthTxt))
     try:
