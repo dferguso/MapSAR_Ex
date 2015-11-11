@@ -122,11 +122,15 @@ def AllPoints(Areas, SegmentName, pNumb):
         Ttype='Ground'
         SegName.encode('ascii','ignore')
         where1 = ('"Area_Name" = \'{0}\''.format(SegName.replace("'","")))
-        rows1 = arcpy.SearchCursor(fc1,where1)
-        row1 = rows1.next()
-
-        while row1:
+        cursor1 = arcpy.UpdateCursor(fc1,where1)
+        for row1 in cursor1:
             try:
+                if "Status" in fieldNames:
+                    sTatus = row1.getValue("Status")
+                    if sTatus == 'In Progress':
+                        pass
+                    else:
+                        row1.Status = 'Planned'
                 Area_Name = row1.getValue("Area_Name")
                 Area_Name.encode('ascii','ignore')
                 arcpy.AddMessage("QRT Points: " + Area_Name)
@@ -160,10 +164,9 @@ def AllPoints(Areas, SegmentName, pNumb):
                 #
                 print msgs
 
-            row1 = rows1.next()
+            cursor1.updateRow(row1)
 
-        del row1
-        del rows1
+        del row1, cursor1
     return(pNumb)
 
 
@@ -196,11 +199,15 @@ def AllLines(Areas, SegmentName, pNumb):
         Ttype='Ground'
         SegName.encode('ascii','ignore')
         where1 = ('"Area_Name" = \'{0}\''.format(SegName.replace("'","")))
-        rows1 = arcpy.SearchCursor(fc1,where1)
-        row1 = rows1.next()
-
-        while row1:
+        cursor1 = arcpy.UpdateCursor(fc1,where1)
+        for row1 in cursor1:
             try:
+                if "Status" in fieldNames:
+                    sTatus = row1.getValue("Status")
+                    if sTatus == 'In Progress':
+                        pass
+                    else:
+                        row1.Status = 'Planned'
                 Area_Name = row1.getValue("Area_Name")
                 Area_Name.encode('ascii','ignore')
                 arcpy.AddMessage("QRT Lines: " + Area_Name)
@@ -246,10 +253,9 @@ def AllLines(Areas, SegmentName, pNumb):
                 # Print tool error messages for use in Python/PythonWin
                 #
                 print msgs
-            row1 = rows1.next()
+            cursor1.updateRow(row1)
 
-        del row1
-        del rows1
+        del row1, cursor1
     return(pNumb)
 
 
@@ -276,6 +282,10 @@ def AllSegments(Areas, SegmentName, pNumb):
         AreaN.encode('ascii','ignore')
         SSeg.append(AreaN)
         row1 = rows1.next()
+    fields = arcpy.ListFields(fc1)
+    fldSSeg=[]
+    for field in fields:
+        fldSSeg.append(field.name)
 
     HSeg = []
     rows1 = arcpy.SearchCursor(fc4)
@@ -285,6 +295,10 @@ def AllSegments(Areas, SegmentName, pNumb):
         AreaN.encode('ascii','ignore')
         HSeg.append(str(AreaN))
         row1 = rows1.next()
+    fields = arcpy.ListFields(fc4)
+    fldHSeg=[]
+    for field in fields:
+        fldHSeg.append(field.name)
 
     ASeg = []
     rows1 = arcpy.SearchCursor(fc5)
@@ -294,6 +308,10 @@ def AllSegments(Areas, SegmentName, pNumb):
         AreaN.encode('ascii','ignore')
         ASeg.append(str(AreaN))
         row1 = rows1.next()
+    fields = arcpy.ListFields(fc5)
+    fldASeg=[]
+    for field in fields:
+        fldASeg.append(field.name)
 
     SName = SegmentName.split(";")
     for SegName in SName:
@@ -303,41 +321,54 @@ def AllSegments(Areas, SegmentName, pNumb):
         try:
             if SgName in SSeg:
                 Ttype='Ground'
-                rows1 = arcpy.UpdateCursor(fc1,where1)
-                row1 = rows1.next()
-                while row1:
+                cursor1 = arcpy.UpdateCursor(fc1,where1)
+                for row1 in cursor1:
                     Area_Name = row1.getValue("Area_Name")
                     Area_Name.encode('ascii','ignore')
                     arcpy.AddMessage("Search Segment: " + Area_Name)
                     Area_Description = row1.getValue(fieldName1)
-                    row1.Status = "Planned"
-                    rows1.updateRow(row1)
-                    row1 = rows1.next()
-                del row1, rows1
+                    if "Status" in fldSSeg:
+                        sTatus = row1.getValue("Status")
+                        if sTatus == 'In Progress':
+                            pass
+                        else:
+                            row1.Status = 'Planned'
+                    cursor1.updateRow(row1)
+                del row1, cursor1
 
             elif SgName in HSeg:
                 Ttype='Ground'
-                rows1 = arcpy.SearchCursor(fc4,where1)
-                row1 = rows1.next()
-                while row1:
+                cursor1 = arcpy.UpdateCursor(fc4,where1)
+                for row1 in cursor1:
                     Area_Name = row1.getValue("Area_Name")
                     Area_Name.encode('ascii','ignore')
                     arcpy.AddMessage("QRT Segment: " + Area_Name)
                     Area_Description = row1.getValue(fieldName1)
-                    row1 = rows1.next()
-                del row1, rows1
+                    if "Status" in fldHSeg:
+                        sTatus = row1.getValue("Status")
+                        if sTatus == 'In Progress':
+                            pass
+                        else:
+                            row1.Status = 'Planned'
+                    cursor1.updateRow(row1)
+                del row1, cursor1
 
             elif SgName in ASeg:
                 Ttype='Air'
-                rows1 = arcpy.SearchCursor(fc5,where1)
-                row1 = rows1.next()
-                while row1:
+                cursor1 = arcpy.UpdateCursor(fc5,where1)
+                for row1 in cursor1:
                     Area_Name = row1.getValue("Area_Name")
                     Area_Name.encode('ascii','ignore')
                     arcpy.AddMessage("Air Segment: " + Area_Name)
                     Area_Description = row1.getValue(fieldName1)
-                    row1 = rows1.next()
-                del row1, rows1
+                    if "Status" in fldASeg:
+                        sTatus = row1.getValue("Status")
+                        if sTatus == 'In Progress':
+                            pass
+                        else:
+                            row1.Status = 'Planned'
+                    cursor1.updateRow(row1)
+                del row1, cursor1
 
             ####
             if pNumb is not None:

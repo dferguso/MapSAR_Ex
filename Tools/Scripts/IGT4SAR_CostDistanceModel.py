@@ -139,8 +139,8 @@ if __name__ == '__main__':
     cfcc = "C:\MapSAR_Ex\Template\SAR_Default.gdb\cfcc"
     TrailClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\Trail_Class"
     ############################################
-    LCCWlkImpd = "NALandCover_Class"
-##    LCCWlkImpd = "LandCover_Class"
+##    LCCWlkImpd = "NALandCover_Class"
+    LCCWlkImpd = "LandCover_Class"
     LandCoverClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\{0}".format(LCCWlkImpd)
     ############################################
     inRemapTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\StreamOrder"
@@ -653,53 +653,53 @@ if __name__ == '__main__':
     arcpy.mapping.AddLayer(df,FenceImpd_Layer,"BOTTOM")
 
     arcpy.RefreshActiveView()
-    try:
-        if not NLCD:
-            arcpy.AddMessage("No Land Cover Data")
-            arcpy.CopyRaster_management(ImpdConst,Veggie_Impd)
+#    try:
+    if not NLCD:
+        arcpy.AddMessage("No Land Cover Data")
+        arcpy.CopyRaster_management(ImpdConst,Veggie_Impd)
+    else:
+        # Process: Clip Raster NLCD
+        arcpy.AddMessage("Clip NLCD")
+
+    ############################################
+        arcpy.Clip_management(NLCD, "#", NLCD_Clip, IPP_dist, "", "ClippingGeometry")
+    ############################################
+
+
+        NLCDClip_Layer=arcpy.mapping.Layer(NLCD_Clip)
+        arcpy.mapping.AddLayer(df,NLCDClip_Layer,"BOTTOM")
+
+        # Process: Resample
+        arcpy.AddMessage("Resample NLCD if needed")
+
+        NLCDCel = arcpy.GetRasterProperties_management(NLCD_Clip,"CELLSIZEX")
+        NLCDCell = float(NLCDCel.getOutput(0))
+        NLCDCellSize = NLCDCell
+        if NLCDCellSize != CellSize:
+            arcpy.Resample_management(NLCD_Clip, NLCD_Resample2, CellSize, "NEAREST")
         else:
-            # Process: Clip Raster NLCD
-            arcpy.AddMessage("Clip NLCD")
+            NLCD_Resample2 = NLCD_Clip
 
-        ############################################
-            arcpy.Clip_management(NLCD, "#", NLCD_Clip, IPP_dist, "", "ClippingGeometry")
-        ############################################
+        NLCDResamp=arcpy.mapping.Layer(NLCD_Resample2)
+        arcpy.Delete_management(NLCD_Clip)
+        arcpy.mapping.AddLayer(df,NLCDResamp,"BOTTOM")
+        # Process: Add Join (3)
+        arcpy.AddMessage("Land Cover Impedance - Join Table w/ NLCD")
+        arcpy.AddJoin_management(NLCD_Resample2, "VALUE", LandCoverClass, "LCCC", "KEEP_ALL")
+        arcpy.AddMessage("Done")
+        #####################
 
+        # Process: Lookup
+        arcpy.AddMessage("Create Veggie Impedance Layer")
+##        arcpy.gp.Lookup_sa(NLCD_Resample2, "LandCover_Class.Snow_Impd", Veggie_Impd)
+        LCCImpd = "{0}.Walk_Impd".format(LCCWlkImpd)
+        arcpy.gp.Lookup_sa(NLCD_Resample2, LCCImpd, Veggie_Impd)
+        arcpy.RemoveJoin_management(NLCD_Resample2)
+        arcpy.mapping.RemoveLayer(df,NLCDResamp)
 
-            NLCDClip_Layer=arcpy.mapping.Layer(NLCD_Clip)
-            arcpy.mapping.AddLayer(df,NLCDClip_Layer,"BOTTOM")
-
-            # Process: Resample
-            arcpy.AddMessage("Resample NLCD if needed")
-
-            NLCDCel = arcpy.GetRasterProperties_management(NLCD_Clip,"CELLSIZEX")
-            NLCDCell = float(NLCDCel.getOutput(0))
-            NLCDCellSize = NLCDCell
-            if NLCDCellSize != CellSize:
-                arcpy.Resample_management(NLCD_Clip, NLCD_Resample2, CellSize, "NEAREST")
-            else:
-                NLCD_Resample2 = NLCD_Clip
-
-            NLCDResamp=arcpy.mapping.Layer(NLCD_Resample2)
-            arcpy.Delete_management(NLCD_Clip)
-            arcpy.mapping.AddLayer(df,NLCDResamp,"BOTTOM")
-            # Process: Add Join (3)
-            arcpy.AddMessage("Land Cover Impedance - Join Table w/ NLCD")
-            arcpy.AddJoin_management(NLCD_Resample2, "VALUE", LandCoverClass, "LCCC", "KEEP_ALL")
-            arcpy.AddMessage("Done")
-            #####################
-
-            # Process: Lookup
-            arcpy.AddMessage("Create Veggie Impedance Layer")
-    ##        arcpy.gp.Lookup_sa(NLCD_Resample2, "LandCover_Class.Snow_Impd", Veggie_Impd)
-            LCCImpd = "{0}.Walk_Impd".format(LCCWlkImpd)
-            arcpy.gp.Lookup_sa(NLCD_Resample2, LCCImpd, Veggie_Impd)
-            arcpy.RemoveJoin_management(NLCD_Resample2)
-            arcpy.mapping.RemoveLayer(df,NLCDResamp)
-
-    except:
-        arcpy.AddMessage("No NLCD Layer")
-        arcpy.CopyRaster_management(ImpdConstA,Veggie_Impd)
+##    except:
+##        arcpy.AddMessage("No NLCD Layer")
+##        arcpy.CopyRaster_management(ImpdConstA,Veggie_Impd)
 
     #arcpy.mapping.RemoveLayer(df,NLCDResamp)
     VeggieImpd_Layer=arcpy.mapping.Layer(Veggie_Impd)

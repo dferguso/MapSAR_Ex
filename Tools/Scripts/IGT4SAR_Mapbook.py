@@ -135,18 +135,33 @@ def GetXY(inputFC, poly_Height, poly_Width, lenConv, sCale, nCol, nRow):
 
 def CreatingMap(fcOut, gRids, mxd, df, mapScale, output):
     ## Get a list of PageNames
-    PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
-    PlanNum.text = " "
-    AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
-    AssignNum.text = " "
-    MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+    try:
+        PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+        PlanNum.text = " "
+    except:
+        pass
+    try:
+        AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+        AssignNum.text = " "
+    except:
+        pass
+    try:
+        MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+    except:
+        pass
 
     UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
     USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
     MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
 
     mkLyr=arcpy.mapping.ListLayers(mxd, fcOut,df)[0]
-    mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+    for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
+            if str(llyr.name) == "MRGS_UTM_USNG":
+                mapLyr=arcpy.mapping.ListLayers(mxd, "MRGS_UTM_USNG",df)[0]
+            elif str(llyr.name) == "MRGSZones_World":
+                mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+
+
     for key in gRids:
         where4 = ('"PageName" = ' + "'" + key + "'")
         arcpy.AddMessage("{0}, MagDec = {1}".format(where4, gRids[key][2]))
@@ -270,11 +285,44 @@ if __name__ == '__main__':
     except:
         pass
 
+    layerOn=False
 
-    ## Add layer to TOC
-    arcpy.MakeFeatureLayer_management (fcOut, fcOut)
-    mkLyr = arcpy.mapping.Layer(fcOut)
-    arcpy.mapping.AddLayer(df,mkLyr,"BOTTOM")
+    if arcpy.Exists(fcOut):
+        arcpy.MakeFeatureLayer_management(fcOut,fcOut)
+        mkLyr = arcpy.mapping.Layer(fcOut)
+        mkLyr.name=fcOut
+        arcpy.mapping.RemoveLayer(df,mkLyr)
+        arcpy.mapping.AddLayer(df,mkLyr,"TOP")
+
+        try:
+            lyr = arcpy.mapping.ListLayers(mxd, mkLyr.name, df)[0]
+            symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\MapBookGrid.lyr"
+            refGroupLayerA = "Grids"
+            if refGroupLayerA in arcpy.mapping.ListLayers(mxd,"",df)[0].name:
+                arcpy.mapping.AddLayerToGroup(df,refGroupLayerA,lyr,'TOP')
+            arcpy.ApplySymbologyFromLayer_management(lyr, symbologyLayer)
+            ext=lyr.getExtent()
+            df.extent = ext
+            outFile = output + "/" + "MapBookGrid.pdf"
+            if lyr.supports("LABELCLASSES"):
+                for lblclass in lyr.labelClasses:
+                    lblclass.showClassLabels = True
+            lblclass.expression = '"%s" & [PageName] & "%s"' % ("<CLR red='255'><FNT size = '16'>", "</FNT></CLR>")
+            layerOn=True
+            lyr.visible = True
+            lyr.showLabels = True
+            if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName"):
+                MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+                MapName.text = "Mapbook Index"
+            arcpy.RefreshActiveView()
+            try:
+                arcpy.mapping.ExportToPDF(mxd, outFile)
+            except:
+                pass
+            lyr.visible = False
+            lyr.showLabels = False
+        except:
+            pass
 
 
     #Get the Lat / Long, magDeclination for each GRID
@@ -306,6 +354,31 @@ if __name__ == '__main__':
 ## Send this info to module for printing map
 
     CreatingMap(fcOut, gRids, mxd, df, int(sCale), output)
+
+    try:
+        PlanNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PlanNum")[0]
+        PlanNum.text = " "
+    except:
+        pass
+    try:
+        AssignNum=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "AssignNum")[0]
+        AssignNum.text = " "
+    except:
+        pass
+    try:
+        MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
+        MapName.text=" "
+    except:
+        pass
+
+
+    if layerOn==True:
+        lyr.visible = True
+        lyr.showLabels = True
+
+
+## Zom to the extent of the Fishnet and create  index map
+
 
 
 

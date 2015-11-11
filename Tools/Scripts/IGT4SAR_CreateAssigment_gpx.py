@@ -621,41 +621,36 @@ if __name__ == '__main__':
             Op_Safety = checkNoneType(row3.getValue("Safety_Message"))
 
             weaThrA = checkNoneType(row3.getValue("Weather"))
-            if len(weaThrA)>1:
+            if weaThrA:
                 weaThr = "Weather: {0}; ".format(weaThrA)
             else:
                 weaThr =""
             Temp_MaxA =checkNoneType(row3.getValue("Temp_Max"))
-            if len(Temp_MaxA)>1:
+            if Temp_MaxA:
                 Temp_Max = "Temp(Max): {0}; ".format(Temp_MaxA)
             else:
                 Temp_Max =""
             Temp_MinA =checkNoneType(row3.getValue("Temp_Min"))
-            if len(Temp_MaxA)>1:
+            if Temp_MaxA:
                 Temp_Min = "Temp(Min): {0}; ".format(Temp_MinA)
             else:
                 Temp_Min =""
             WindA =checkNoneType(row3.getValue("Wind"))
-            if len(WindA)>1:
+            if WindA:
                 Wind = "Wind(mph): {0}; ".format(WindA)
             else:
                 Wind =""
-            WindDirA =checkNoneType(row3.getValue("WindDir"))
-            if len(WindDirA)>1:
-                WindDir = "Wind Dir(deg): {0}; ".format(WindDirA)
-            else:
-                WindDir =""
             RainA =checkNoneType(row3.getValue("Rain"))
-            if len(RainA)<1 or RainA=='None':
+            if not RainA or RainA=='None':
                 Rain =""
             else:
                 Rain = "Rain: {0}; ".format(RainA)
             SnowA =checkNoneType(row3.getValue("Snow"))
-            if len(SnowA)<1 or SnowA == 'None':
+            if not SnowA or SnowA == 'None':
                 Snow =""
             else:
                 Snow = "Snow: {0}; ".format(SnowA)
-            wEather = "{0}{1}{2}{3}{4}{5}{6}".format(str(weaThr), str(Temp_Max), str(Temp_Min), str(Wind), str(WindDir), str(Rain), str(Snow))
+            wEather = "{0}{1}{2}{3}{4}{5}".format(str(weaThr), str(Temp_Max), str(Temp_Min), str(Wind), str(Rain), str(Snow))
             PrimComms = checkNoneType(row3.getValue("Primary_Comm"))
             OpPeriod[Period] = [Op_Safety, wEather,PrimComms]
             del Period, Op_Safety, wEather

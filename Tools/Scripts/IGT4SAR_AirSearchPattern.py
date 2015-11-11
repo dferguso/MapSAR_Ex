@@ -243,7 +243,7 @@ def AppendPolyLineFeatures(df, outFc, spRef, Descrip1):
         arcpy.CreateFeatureclass_management(fClass, AirPatterns, "POLYLINE", spatial_reference=spRef)
 
         fldNames=[('Area_Name', 'TEXT'),('Area_Description','TEXT','','',500),('PATTERN','TEXT'), \
-                  ('SWEEPWIDTH', 'SHORT'),('SEARCHED', 'SHORT'),('SEARCHSPEED', 'SHORT'), ('PATHLENGTH','FLOAT')]
+                  ('SWEEPWIDTH', 'SHORT'),('Status','TEXT','','',20,'','','','Assignment_Status'),('SEARCHED', 'SHORT'),('SEARCHSPEED', 'SHORT'), ('PATHLENGTH','FLOAT')]
         for field in fldNames:
             arcpy.AddField_management(*(AirPatterns,) + field)
         deleteLayer(df,[AirPatterns])
@@ -255,6 +255,10 @@ def AppendPolyLineFeatures(df, outFc, spRef, Descrip1):
         arcpy.mapping.AddLayerToGroup(df,refGroupLayer,outFC_Lyr,'TOP')
 
     arcpy.Append_management(outFC,AirPatterns,"NO_TEST")
+    fields = arcpy.ListFields(AirPatterns)
+    fldASeg=[]
+    for field in fields:
+        fldASeg.append(field.name)
 
     where4 = '"Area_Name" = ' + "'" + outFC + "'"
     fc_lyr = arcpy.mapping.Layer(AirPatterns)
@@ -266,6 +270,8 @@ def AppendPolyLineFeatures(df, outFc, spRef, Descrip1):
         pLength = row.getValue("PATHLENGTH")
         pDescrip = "The flight path is {0} km. ".format(round(pLength,2))
         row.setValue("SEARCHED",0)
+        if "Status" in fldASeg:
+            row.Status = 'Not Assigned'
         row.setValue("SEARCHSPEED",0)
         row.setValue("Area_Description",pDescrip + Descrip1)
         cursor.updateRow(row)
@@ -459,7 +465,7 @@ if __name__ == '__main__':
     cursor=arcpy.SearchCursor(PtrnExt)
     for row in cursor:
         if "Area_Description" in fieldNames:
-            Descrip1 =row.getValue("Area_Description")
+            Descrip1 =str(row.getValue("Area_Description"))
         else:
             Descrip1=""
         Extnt=row.Shape.extent
