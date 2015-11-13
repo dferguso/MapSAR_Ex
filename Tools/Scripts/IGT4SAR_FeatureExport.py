@@ -46,6 +46,18 @@ def getDataframe():
     except SystemExit as err:
             pass
 
+def joinCheck(FName, fc, mxd, df, TaskMap):
+    lyrs=arcpy.mapping.ListLayers(mxd,fc,df)
+    for lyr in lyrs:
+        fList=arcpy.Describe(lyr).fields
+        for f in fList:
+            if FName in f.name:
+                if type(TaskMap)== int:
+                    return('"{0}" <> {1}'.format(f.name,TaskMap))
+                else:
+                    return('"' + f.name + '" <> ' + "'" + TaskMap + "'")
+    arcpy.AddError("No field named '{0}' in {1}".format(FName,lyrs))
+    return()
 
 ########
 # Main Program starts here
@@ -60,6 +72,7 @@ if __name__ == '__main__':
 
     layerNames = arcpy.GetParameterAsText(1)
     createKMZ = arcpy.GetParameterAsText(2)
+    excludeROW = arcpy.GetParameterAsText(3)
 
     expLayers=[]
     layerNames = layerNames.split(";")
@@ -70,18 +83,39 @@ if __name__ == '__main__':
         except:
             pass
 
-        outName = str(arcpy.Describe(lyrs).name)
-        outFC = os.path.join(outFolder,outName)
+        lyrFile = arcpy.mapping.Layer(lyrs)
+        outName = str(lyrFile.name)
         arcpy.AddMessage("Process {0}".format(outName))
-        arcpy.CopyFeatures_management(lyrs, outFC)
+        if lyrFile.isRasterLayer:
+            outFC = os.path.join(outFolder,outName + '.tif')
+            arcpy.CopyRaster_management(lyrs,outFC)#,"DEFAULTS","0","-3.402823e+038","","","16_BIT_UNSIGNED")
+        else:
+            outFC = os.path.join(outFolder,outName)
+            if excludeROW:
+                if lyrFile.name=='Probability Regions':
+                    where=joinCheck('Region_Name', lyrFile.name, mxd, df, 'ROW')
+                elif lyrFile.name=='Search Segments':
+                    where=joinCheck('Area_Name', lyrFile.name, mxd, df, 'ROW')
+                else:
+                    where=""
+            else:
+                where=""
+            arcpy.FeatureClassToFeatureClass_conversion(lyrs, outFolder,outName,where)
+
         if createKMZ.upper() == 'TRUE':
             outKML = "{0}.kmz".format(outFC)
-            for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
-                if str(llyr)==str(lyrs):
-                    if llyr.visible == 0:
-                        llyr.visible = 1
-                        arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
-                        llyr.visible = 0
-                    else:
-                        arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
+            if outName=='Probability_Regions':
+                where=joinCheck('Region_Name', lyrFile.name, mxd, df, 'ROW')
+                arcpy.SelectLayerByAttribute_management (lyrs, "NEW_SELECTION", where)
+            elif outName=='Search_Segments':
+                where=joinCheck('Area_Name', lyrFile.name, mxd, df, 'ROW')
+                arcpy.SelectLayerByAttribute_management (lyrs, "NEW_SELECTION", where)
+            if lyrFile.visible:
+                arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
+            else:
+                lyrs.visible = 1
+                arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
+                lyrs.visible = 0
+            if not lyrFile.isRasterLayer:
+                arcpy.SelectLayerByAttribute_management (lyrs, "CLEAR_SELECTION")
     arcpy.AddMessage("\n")

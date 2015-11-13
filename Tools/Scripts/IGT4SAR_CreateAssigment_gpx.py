@@ -81,7 +81,7 @@ def joinCheck(FName, fc, mxd, df, TaskMap):
                     return('"{0}" = {1}'.format(f.name,TaskMap))
                 else:
                     return('"' + f.name + '" = ' + "'" + TaskMap + "'")
-    arcpy.AddError("No field named '{0}' in {1}".format(FName,lyr))
+    arcpy.AddError("No field named '{0}' in {1}".format(FName,lyrs))
 
 
 def checkForm(out_fc, TAF2Use):
