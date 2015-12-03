@@ -264,6 +264,7 @@ arcpy.mapping.AddLayer(df,IPPDist_Layer,"BOTTOM")
 
 spatialRef = arcpy.Describe(IPPDist_Layer).SpatialReference
 spn =spatialRef.name
+spnCode = spatialRef.projectionCode
 #arcpy.AddMessage(spn)
 
 desc = arcpy.Describe(IPP_dist)
@@ -274,10 +275,11 @@ arcpy.AddMessage("Get Cellsize \n")
 
 spRefNLCD = arcpy.Describe(NLCD).SpatialReference
 spnNLCD =spRefNLCD.name
+spnNLCDcode = spRefNLCD.projectionCode
 arcpy.AddMessage("NLCD Spatial Reference is: " + spnNLCD + "\n")
 
 
-if spnNLCD != spn:
+if spnNLCDcode != spnCode:
     State1 = "Project NLCD using 'Project Raster tool' with the output coord system:"
     State2 = "Select the appropriate coord transformation for your data and"
     State3 = "use the default Cell Size. Use the projected NLCD for this tool."

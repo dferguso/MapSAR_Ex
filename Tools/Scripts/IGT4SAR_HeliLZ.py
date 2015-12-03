@@ -184,13 +184,15 @@ if __name__ == '__main__':
     # be the same for all selected layers.
     spRefDEM = arcpy.Describe(DEM2).SpatialReference
     spnDEM =spRefDEM.name
+    spnDEMcode = spRefDEM.projectionCode
     arcpy.AddMessage("DEM Spatial Reference is: " + spnDEM)
 
     fcDesc = arcpy.Describe(RegExt)
     spatialRef = fcDesc.SpatialReference
     spn = spatialRef.name
+    spnCode = spatialRef.projectionCode
 
-    if spnDEM.upper() != spn.upper():
+    if spnDEMcode != spnCode:
         State1 = "Project DEM using 'Project Raster tool' with the output coord system:"
         State2 = "Select the appropriate coord transformation for your data and"
         State3 = "use the default Cell Size. Use the projected DEM for this tool."

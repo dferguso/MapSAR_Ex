@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     #File Names:
     IPP = "Planning Point"
-    waterShed = "WaterShed_LPB"
+    waterShed = "Watershed_LPB"
     fcLayer=[waterShed]
     deleteLayer(fcLayer)
 

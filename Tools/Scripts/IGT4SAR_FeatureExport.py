@@ -113,9 +113,9 @@ if __name__ == '__main__':
             if lyrFile.visible:
                 arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
             else:
-                lyrs.visible = 1
+                lyrFile.visible = 1
                 arcpy.LayerToKML_conversion(lyrs, outKML,0,"","","","",'CLAMPED_TO_GROUND')
-                lyrs.visible = 0
+                lyrFile.visible = 0
             if not lyrFile.isRasterLayer:
                 arcpy.SelectLayerByAttribute_management (lyrs, "CLEAR_SELECTION")
     arcpy.AddMessage("\n")

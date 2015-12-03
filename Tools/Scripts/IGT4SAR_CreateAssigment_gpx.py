@@ -255,7 +255,11 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
         where4 = joinCheck("Area_Name",selectLayer, mxd, df,TaskMap)
         arcpy.SelectLayerByAttribute_management (selectLayer, "NEW_SELECTION", where4)
         try:
-            mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
+            for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
+                if str(llyr.name) == "MRGS_UTM_USNG":
+                    mapLyr=arcpy.mapping.ListLayers(mxd, "MRGS_UTM_USNG",df)[0]
+                elif str(llyr.name) == "MRGSZones_World":
+                    mapLyr=arcpy.mapping.ListLayers(mxd, "MGRSZones_World",df)[0]
             arcpy.SelectLayerByLocation_management(mapLyr,"INTERSECT",selectLayer)
             rows7=arcpy.SearchCursor(mapLyr)
             row7 = rows7.next()

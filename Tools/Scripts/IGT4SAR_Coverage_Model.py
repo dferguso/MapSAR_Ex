@@ -34,6 +34,7 @@ try:
     arcpy
 except NameError:
     import arcpy
+from arcpy import env
 try:
     sys
 except NameError:
@@ -44,10 +45,21 @@ except NameError:
     import math
 import string
 
-#workspc = arcpy.GetParameterAsText(0)
+# Environment variables
+wrkspc=arcpy.env.workspace
+env.overwriteOutput = "True"
+arcpy.env.extent = "MAXOF"
 
-#arcpy.env.workspace = workspc
-arcpy.env.overwriteOutput = "True"
+def getDataframe():
+    """ get current mxd and dataframe returns mxd, frame"""
+    try:
+        mxd = arcpy.mapping.MapDocument('CURRENT');df = arcpy.mapping.ListDataFrames(mxd,"*")[0]
+
+        return(mxd,df)
+
+    except SystemExit as err:
+            pass
+
 
 fc1 = "Routes_Line"
 fc2 = "Debriefing"
@@ -66,6 +78,8 @@ fieldName4 = "Area_seg"
 fieldName5 = "Region_Name"
 fieldName6 = "PODTheo"
 fieldName7 = "POStheo"
+
+mxd,df = getDataframe()
 
 try:
     arcpy.Delete_management(fc4)
