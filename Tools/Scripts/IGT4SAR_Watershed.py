@@ -156,7 +156,7 @@ if __name__ == '__main__':
     cursor = arcpy.UpdateCursor(waterShed)
     for row in cursor:
         HUname = row.getValue(wshd_fld1)
-        row.setValue(wshd_fld2,"SAME")
+        row.setValue(wshd_fld2,1)
         row.setValue(wshd_flds[0], 48)
         cursor.updateRow(row)
 
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     if matchCount > 0:
         cursor = arcpy.UpdateCursor(waterShed, where4)
         for row in cursor:
-            row.setValue(wshd_fld2,"ADJACENT")
+            row.setValue(wshd_fld2,2)
             row.setValue(wshd_flds[0],38/matchCount)
             HUname = row.getValue(wshd_fld1)
             HuNm.append(HUname)
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     if matchCount > 0:
         cursor = arcpy.UpdateCursor(waterShed, where4)
         for row in cursor:
-            row.setValue(wshd_fld2,"DISTANT")
+            row.setValue(wshd_fld2,3)
             row.setValue(wshd_flds[0],13/matchCount)
             cursor.updateRow(row)
 
