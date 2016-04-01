@@ -2,13 +2,13 @@
 # Name:        CostDistanceModel.py
 # Purpose:
 #  This tool creates a least cost path across a continuous surface
-#  for use in modeling cross country foot traffic.  The surface is created using
-#  Tobler's Hiking Function to account for the slope, access to travel aides
-#  (Trails, Roads and right-of-ways).  Barriers that impose an impedance are also
-#  considered and include: excessive slope, stream order, large bodies of water
-#  and fencelines (real and virtual).  Given the layers and important nominal,
-#  unimpeded walking speed the output is a surface representing the potential
-#  walking speed (mph and kph).</p>
+#  for use in modeling cross country foot traffic.  The surface is created by
+#  considering the impedance various geographical features have on foot traffic.
+#  This script considers the slope, access to travel aides (trails, roads, etc),
+#  and barriers such as waterbodies.  Strahler Stream Order can be used to help
+#  define the size of the stream adn its ultimate impact on impedance.  These
+#  layers are combined to form an imepdance layer which is used with a second
+#  script to determine woalking distance per time or search speed.</p>
 
 # Author:      Don Ferguson
 #
@@ -90,44 +90,61 @@ if __name__ == '__main__':
     #in_fc  - this is a point feature used to get the latitude and longitude of point.
     mxd, df = getDataframe()
 
-    wrkspc = arcpy.GetParameterAsText(0)  # Get the subject number
+    #Set variables defined by thje user
+    #Identify the workspace.  A number of temporary reasters and vectors are stored in this location.
+    wrkspc = arcpy.GetParameterAsText(0)
     arcpy.AddMessage("\nCurrent Workspace" + '\n' + wrkspc + '\n')
     env.workspace = wrkspc
 
-    SubNum = arcpy.GetParameterAsText(1)  # Get the subject number
+    # Get the subject number in case there are mulitple subjects.
+    SubNum = arcpy.GetParameterAsText(1)
     if SubNum == '#' or not SubNum:
         SubNum = "1" # provide a default value if unspecified
 
-    ippType = arcpy.GetParameterAsText(2)  # Determine to use PLS or LKP
+    # Identify whcih IPP you will use as the center point for the area of interest (PLS or LKP)
+    ippType = arcpy.GetParameterAsText(2)
 
+    # Define the maximum distance you want to include in the region.
     TheoDist = arcpy.GetParameterAsText(3)
     if TheoDist == '#' or not TheoDist:
         TheoDist = "0" # provide a default value if unspecified
 
-    bufferUnit = arcpy.GetParameterAsText(4) # Desired units
+    # Identify the desired units
+    bufferUnit = arcpy.GetParameterAsText(4)
     if bufferUnit == '#' or not bufferUnit:
         bufferUnit = "miles" # provide a default value if unspecified
 
-    uSeStr= arcpy.GetParameterAsText(5) # Desired units
+    # Strahler Stream Order (Yes/No).  If no all streams are given the same
+    # impedance.  If yes an table is imported that maps stream order to impedance.
+    uSeStr= arcpy.GetParameterAsText(5)
     if uSeStr == '#' or not uSeStr:
         uSeStr = "true" # provide a default value if unspecified
 
+    # Identify the DEM
     DEM2 = arcpy.GetParameterAsText(6)
     if DEM2 == '#' or not DEM2:
     #    DEM2 = "DEM" # provide a default value if unspecified
         arcpy.AddMessage("You need to provide a valid DEM")
 
+    # Identify the Land Cover Dataset to use.  If a land cover dataset other
+    # than NLCD is used the user must create a new table (LandCoverClass).
     NLCD = arcpy.GetParameterAsText(7)
     if NLCD == '#' or not NLCD:
     #    NLCD = "NLCD" # provide a default value if unspecified
         NLCD = "empty"
 
+    # create a list of layer names
     lyrs=[str(f.name) for f in arcpy.mapping.ListLayers(mxd,"",df)]
 
+    # Check to make sure certain layers are in the Table of Contents.  Water_Polygons
+    # is an old layer that has been replaced by WaterBodies but someone may still
+    # have an older version of IGT4SAR.
     if "Water_Polygon" in lyrs:
         Water = "Water_Polygon"
     elif "WaterBodies" in lyrs:
         Water = "WaterBodies"
+
+    # Assign variable names
     Roads = "Roads"
     Trails = "Trails"
     pStreams = "Streams"
@@ -135,7 +152,8 @@ if __name__ == '__main__':
     Electric = "PowerLines"
 
 
-    #Tables
+    # Identify Tables that are used to map impedance values for roads, Trails
+    # (Maintanence Level), Land Cover and Stream Order.
     cfcc = "C:\MapSAR_Ex\Template\SAR_Default.gdb\cfcc"
     TrailClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\Trail_Class"
     ############################################
@@ -145,7 +163,7 @@ if __name__ == '__main__':
     ############################################
     inRemapTable = "C:\MapSAR_Ex\Template\SAR_Default.gdb\StreamOrder"
 
-    #File Names:
+    #More variable names
     IPP = "Planning Point"
     IPP_dist = "IPPTheoDistance"
     Roads_Clipped = "Roads_Clipped"
@@ -196,19 +214,31 @@ if __name__ == '__main__':
     # Local variables:
     Input_true_raster_or_constant_value = "1"
     v3600 = "3600"
+    # Coversion factor for miles o KM
     Miles_per_Km_Conversion = 0.6213711922
 
+    #############################################
+    # Establish the maximum slope to be considered for walking subjet.  Assume
+    # no normal foot traffic could travel over steeper slope.  The slope is
+    # "over-ridden" in the event of a trail such as an established feature that defines a trail.
+    maxSlope = "60"
+    ##maxSlope = "45" #For biking
     ############################################
+
+    # Convert Subnum (string) to integer
     SubNum = int(SubNum)
 
+    # Create a string statement that will be used to create a buffer around a
+    # point that will be used to clip other layers.  This layer is temporary.
     theDist = float(TheoDist)
     if bufferUnit=="km":
         bufferUnit="Kilometers"
     TheoSearch = "{0} {1}".format(theDist, bufferUnit)
 
+    # Compact geodatabase to improve performance.
     arcpy.Compact_management(wrkspc)
 
-    #Clip features to max distance
+    # Clip features to max distance
     try:
         arcpy.Delete_management(wrkspc + '\\' + IPP_dist)
     except:
@@ -221,13 +251,6 @@ if __name__ == '__main__':
 
     arcpy.SelectLayerByAttribute_management(IPP, "NEW_SELECTION", where)
     arcpy.AddMessage("Buffer IPP around the " + ippType )
-    #############################################
-
-    maxSlope = "60"
-    ##maxSlope = "45" #For biking
-
-    # Set the cell size environment using a raster dataset.
-    #arcpy.env.cellSize = DEM2
 
     # Process: Buffer for theoretical search area
     arcpy.AddMessage("Buffer IPP")
@@ -237,12 +260,13 @@ if __name__ == '__main__':
     spatialRef = arcpy.Describe(IPPDist_Layer).SpatialReference
     spn =spatialRef.name
 
+    # Determine the extent of the buffer layer that will be used to clip other layers.
     desc = arcpy.Describe(IPP_dist)
     extent = desc.extent
     arcpy.env.extent = IPP_dist
 
-    arcpy.AddMessage("Get Cellsize")
-
+    # Determine the spatial reference for the DEM layer.  If the DEM layer is not
+    # projected then throw an error and stop stript.
     spRefDEM = arcpy.Describe(DEM2).SpatialReference
     spnDEM =spRefDEM.name
     arcpy.AddMessage("DEM Spatial Reference is: " + spnDEM)
@@ -257,6 +281,9 @@ if __name__ == '__main__':
         arcpy.AddError(State3)
         sys.exit()
 
+    # Set the cell size environment using a raster dataset.
+    #arcpy.env.cellSize = DEM2
+    arcpy.AddMessage("Get Cellsize")
     XCel = arcpy.GetRasterProperties_management(DEM2,"CELLSIZEX")
     XCell = float(XCel.getOutput(0))
     CellSize = XCell
@@ -273,10 +300,8 @@ if __name__ == '__main__':
     DEMClip_Layer=arcpy.mapping.Layer(DEM_Clip)
     arcpy.mapping.AddLayer(df,DEMClip_Layer,"BOTTOM")
 
-    # Process: Slope (2)
+    # Determine the Slope layer using the DEM
     arcpy.AddMessage("Get Slope from DEM")
-    # Execute Slope
-    #outSlope = Slope(DEM_Clip, "DEGREE", "0.304800609601219")
     outSlope = Slope(DEM_Clip, "DEGREE", "1")
     # Save the output
     outSlope.save(Sloper)
@@ -284,7 +309,9 @@ if __name__ == '__main__':
     Slope_Layer=arcpy.mapping.Layer(Sloper)
     arcpy.mapping.AddLayer(df,Slope_Layer,"BOTTOM")
 
-    # Process: Con
+    # Define any slope that is greater than maxSlope to be impassable and
+    # assign an impedance of 99 (max impedance) - this is over-ridden by the
+    # presence of a trail.
     arcpy.AddMessage("High Slope")
     HighSlopeImpedance = 99.0
     inTrueRaster = (HighSlopeImpedance)
@@ -297,10 +324,9 @@ if __name__ == '__main__':
     HighSlope_Layer=arcpy.mapping.Layer(High_Slope)
     arcpy.mapping.AddLayer(df,HighSlope_Layer,"BOTTOM")
 
-    # Execute CreateConstantRaster
+    # Create a Constant Raster with value of "0" and extent
     arcpy.AddMessage("Create NULL value raster")
     outConstRaster = CreateConstantRaster(0, "INTEGER", CellSize, extent)
-
     # Save the output
     outConstRaster.save(ImpdConstA)
     arcpy.DefineProjection_management(ImpdConstA, spatialRef)
@@ -308,13 +334,8 @@ if __name__ == '__main__':
     outSetNull=SetNull(ImpdConstA, ImpdConstA, whereClause)
     outSetNull.save(ImpdConst)
 
-    ##arcpy.MakeRasterLayer_management(ImpdConst,ConstImpd)
-    ##arcpy.mapping.AddLayer(df,ConstImpd,"BOTTOM")
-##    try:
-##        arcpy.Delete_management(wrkspc + '\\' + ImpdConstA)
-##    except:
-##        pass
-
+    # Work on the Roads layer if it exists.  if it doesn't exist use the
+    # constant "0" raster defined above
     try:
         if gp.GetCount_management(Roads) == 0:
             arcpy.AddMessage("No Roads")
@@ -325,14 +346,14 @@ if __name__ == '__main__':
         ##        arcpy.AddMessage("Clip Roads and buffer to " + BuffSize + " meters")
             arcpy.AddMessage("Clip Roads and buffer to 15 meters")
             arcpy.Clip_analysis(Roads, IPP_dist, Roads_Clipped, "")
-            # Process: Buffer for theoretical search area
+            # Buffer the roads to account for the CellSize otherwise when raster
+            # is created from feature layer the Roads layer may not be present.
             arcpy.Buffer_analysis(Roads_Clipped, Roads_Buf, "15 Meters")
 
         ################################
         # Need to add in code to verify Roads Layer has CFCC
         ################################
-
-            # Process: Add Join for Roads
+            # Add buffered and clippped roads to TOC.
             RoadBuf_Layer=arcpy.mapping.Layer(Roads_Buf)
             arcpy.mapping.AddLayer(df,RoadBuf_Layer,"BOTTOM")
             arcpy.AddMessage("create Road Impedance Layer")
@@ -340,6 +361,8 @@ if __name__ == '__main__':
             # Updated June 14, 2014 - Don Ferguson
             # Update to include the use of MTFCC in addition to CFCC
             #################
+            # If MTFCC or CFCC is identified then use these values to help map
+            # impedance.  Otherwise give all roads an impeance of "0".
             cfcc_count=0
             mtcfc_count=0
             rTable="MTFCC"
@@ -386,9 +409,10 @@ if __name__ == '__main__':
 
 
 
-            # Process: Polyline to Raster (3)
+            # Join the MTFCC/CFCC table to the buffered/clipped roads layer
             arcpy.AddJoin_management(Roads_Buf, rTable, cfcc, rTable, "KEEP_ALL")
             #################
+            # Feature to raster using the Road_Impd value to define the raster value.
             arcpy.FeatureToRaster_conversion(Roads_Buf, "cfcc.Walk_Impd", Road_Impd, CellSize)
             arcpy.RemoveJoin_management(Roads_Buf)
             arcpy.Delete_management(wrkspc + '\\' + Roads_Buf)
@@ -401,7 +425,7 @@ if __name__ == '__main__':
     RoadImpd_Layer=arcpy.mapping.Layer(Road_Impd)
     arcpy.mapping.AddLayer(df,RoadImpd_Layer,"BOTTOM")
 
-
+    # Process the trails which is similar to processing the roads.
     try:
         if gp.GetCount_management(Trails) == 0:
             arcpy.AddMessage("No Trails")
@@ -417,6 +441,7 @@ if __name__ == '__main__':
             arcpy.Buffer_analysis(Trails_Clipped, Trails_Buf, "15 Meters")
 
             # Process: Add Join for Trails
+            # The field MAINT_LVL in the trails layer is used to determine the impedance value based on the joining of the table.
             TrailBuf_Layer=arcpy.mapping.Layer(Trails_Buf)
             arcpy.mapping.AddLayer(df,TrailBuf_Layer,"BOTTOM")
             arcpy.AddJoin_management(Trails_Buf, "MAINT_LVL", TrailClass, "Trail_Class", "KEEP_ALL")
@@ -435,7 +460,9 @@ if __name__ == '__main__':
     TrailImpd_Layer=arcpy.mapping.Layer(Trail_Impd)
     arcpy.mapping.AddLayer(df,TrailImpd_Layer,"BOTTOM")
 
-
+    # Determine the impedance based on the streams.  If stream order is used a
+    # different impedance is given based on the determined stream size.  Otherwise
+    # a single impedance value is given for all streams
     try:
         if gp.GetCount_management(pStreams) == 0:
             arcpy.AddMessage("No Streams")
@@ -545,7 +572,9 @@ if __name__ == '__main__':
     pStreamsImpd_Layer=arcpy.mapping.Layer(pStream_Impd)
     arcpy.mapping.AddLayer(df,pStreamsImpd_Layer,"BOTTOM")
 
-
+    # Process Water-bodies.  Waterbodies are lakes, ponds, etc and it is assumed
+    # no one would be able to cross the waterbodies.  If you want to consider
+    # crossing a frozen waterbody then delete the feature from the layer.
     try:
         if gp.GetCount_management(Water) == 0:
             arcpy.AddMessage("No Water Polygons")
@@ -582,6 +611,7 @@ if __name__ == '__main__':
     WaterImpd_Layer=arcpy.mapping.Layer(Water_Impd)
     arcpy.mapping.AddLayer(df,WaterImpd_Layer,"BOTTOM")
 
+    # Process utility line right of ways.  These are given a single impedance value.
     arcpy.RefreshActiveView()
     try:
         if gp.GetCount_management(Electric) == 0:
@@ -618,6 +648,8 @@ if __name__ == '__main__':
     arcpy.mapping.AddLayer(df,UtilityImpd_Layer,"BOTTOM")
 
 
+    # Identify fences.  These can be real of virtual fences that would prevent
+    # someone from crossing into an area.  All fences create a line of 99.0 impedance (impassable).
     try:
         if gp.GetCount_management(Fence) == 0:
             arcpy.AddMessage("No Fence lines")
@@ -653,59 +685,61 @@ if __name__ == '__main__':
     arcpy.mapping.AddLayer(df,FenceImpd_Layer,"BOTTOM")
 
     arcpy.RefreshActiveView()
-#    try:
-    if not NLCD:
-        arcpy.AddMessage("No Land Cover Data")
-        arcpy.CopyRaster_management(ImpdConst,Veggie_Impd)
-    else:
-        # Process: Clip Raster NLCD
-        arcpy.AddMessage("Clip NLCD")
 
-    ############################################
-        arcpy.Clip_management(NLCD, "#", NLCD_Clip, IPP_dist, "", "ClippingGeometry")
-    ############################################
-
-
-        NLCDClip_Layer=arcpy.mapping.Layer(NLCD_Clip)
-        arcpy.mapping.AddLayer(df,NLCDClip_Layer,"BOTTOM")
-
-        # Process: Resample
-        arcpy.AddMessage("Resample NLCD if needed")
-
-        NLCDCel = arcpy.GetRasterProperties_management(NLCD_Clip,"CELLSIZEX")
-        NLCDCell = float(NLCDCel.getOutput(0))
-        NLCDCellSize = NLCDCell
-        if NLCDCellSize != CellSize:
-            arcpy.Resample_management(NLCD_Clip, NLCD_Resample2, CellSize, "NEAREST")
+    # Process land cover dataset.  Must be consistent with NLCD unless user has modified table.
+    try:
+        if not NLCD:
+            arcpy.AddMessage("No Land Cover Data")
+            arcpy.CopyRaster_management(ImpdConst,Veggie_Impd)
         else:
-            NLCD_Resample2 = NLCD_Clip
+            # Process: Clip Raster NLCD
+            arcpy.AddMessage("Clip NLCD")
 
-        NLCDResamp=arcpy.mapping.Layer(NLCD_Resample2)
-        arcpy.Delete_management(NLCD_Clip)
-        arcpy.mapping.AddLayer(df,NLCDResamp,"BOTTOM")
-        # Process: Add Join (3)
-        arcpy.AddMessage("Land Cover Impedance - Join Table w/ NLCD")
-        arcpy.AddJoin_management(NLCD_Resample2, "VALUE", LandCoverClass, "LCCC", "KEEP_ALL")
-        arcpy.AddMessage("Done")
-        #####################
+        ############################################
+            arcpy.Clip_management(NLCD, "#", NLCD_Clip, IPP_dist, "", "ClippingGeometry")
+        ############################################
 
-        # Process: Lookup
-        arcpy.AddMessage("Create Veggie Impedance Layer")
-##        arcpy.gp.Lookup_sa(NLCD_Resample2, "LandCover_Class.Snow_Impd", Veggie_Impd)
-        LCCImpd = "{0}.Walk_Impd".format(LCCWlkImpd)
-        arcpy.gp.Lookup_sa(NLCD_Resample2, LCCImpd, Veggie_Impd)
-        arcpy.RemoveJoin_management(NLCD_Resample2)
-        arcpy.mapping.RemoveLayer(df,NLCDResamp)
 
-##    except:
-##        arcpy.AddMessage("No NLCD Layer")
-##        arcpy.CopyRaster_management(ImpdConstA,Veggie_Impd)
+            NLCDClip_Layer=arcpy.mapping.Layer(NLCD_Clip)
+            arcpy.mapping.AddLayer(df,NLCDClip_Layer,"BOTTOM")
+
+            # resample land cover to match cell size of DEM.
+            arcpy.AddMessage("Resample NLCD if needed")
+
+            NLCDCel = arcpy.GetRasterProperties_management(NLCD_Clip,"CELLSIZEX")
+            NLCDCell = float(NLCDCel.getOutput(0))
+            NLCDCellSize = NLCDCell
+            if NLCDCellSize != CellSize:
+                arcpy.Resample_management(NLCD_Clip, NLCD_Resample2, CellSize, "NEAREST")
+            else:
+                NLCD_Resample2 = NLCD_Clip
+
+            NLCDResamp=arcpy.mapping.Layer(NLCD_Resample2)
+            arcpy.Delete_management(NLCD_Clip)
+            arcpy.mapping.AddLayer(df,NLCDResamp,"BOTTOM")
+            # Process: Add Join (3)
+            arcpy.AddMessage("Land Cover Impedance - Join Table w/ NLCD")
+            arcpy.AddJoin_management(NLCD_Resample2, "VALUE", LandCoverClass, "LCCC", "KEEP_ALL")
+            arcpy.AddMessage("Done")
+            #####################
+
+            # Use the lookup table to map land cover type to impedance.
+            arcpy.AddMessage("Create Veggie Impedance Layer")
+        ##        arcpy.gp.Lookup_sa(NLCD_Resample2, "LandCover_Class.Snow_Impd", Veggie_Impd)
+            LCCImpd = "{0}.Walk_Impd".format(LCCWlkImpd)
+            arcpy.gp.Lookup_sa(NLCD_Resample2, LCCImpd, Veggie_Impd)
+            arcpy.RemoveJoin_management(NLCD_Resample2)
+            arcpy.mapping.RemoveLayer(df,NLCDResamp)
+
+    except:
+        arcpy.AddMessage("No NLCD Layer")
+        arcpy.CopyRaster_management(ImpdConstA,Veggie_Impd)
 
     #arcpy.mapping.RemoveLayer(df,NLCDResamp)
     VeggieImpd_Layer=arcpy.mapping.Layer(Veggie_Impd)
     arcpy.mapping.AddLayer(df,VeggieImpd_Layer,"BOTTOM")
 
-
+    # Combine all the rasters into a single layer.  the order is important!
     # Process: Raster Calculator (9)
     arcpy.Compact_management(wrkspc)
     arcpy.AddMessage("Get Impedance layer")
@@ -725,6 +759,9 @@ if __name__ == '__main__':
 
     ###################################
     ## Add Feb 18, 2014 - Temporary for Search Speed Study -Tobler Hiking Function
+    # Calculate the Tobler hiking function based on slope only.  this layer is
+    # used to establish a baseline walking speed for the search speed script.
+    # It is not used in the theoretical search area determination.
     arcpy.AddMessage("Tobler Slope Speed")
     Div1 = 57.29578
     outDivide = Exp(-3.5*Abs(Tan(Raster(Sloper)/Div1)+0.05))*6.0
@@ -737,6 +774,7 @@ if __name__ == '__main__':
     del outDivide
     ##############################
 
+    # Delete all the temporary layers.
     fcList=[DEM_Clip,IPP_dist, Water_Impd,pStream_Impd,Trail_Impd,Road_Impd,\
             Utility_Impd, Fence_Impd, NLCD_Clip,  ImpdConst, ImpdConstA,\
             High_Slope, Sloper, NLCD_Resample2, Tobler_kph] #Veggie_Impd,

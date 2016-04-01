@@ -146,7 +146,6 @@ outRast = Con((Exp(0.0212*(Raster(Impedance))) > Exp(0.0212*98.0)),0.0,(Raster(w
 outRast.save(Travspd_kph)
 del outRast
 
-
 ##arcpy.Delete_management(wrkspc + '\\' + Impedance)
 ##arcpy.Delete_management(wrkspc + '\\' + walkspd_kph)
 
@@ -167,7 +166,6 @@ if "Mobility" in LyrName:
     refGroupLayer = arcpy.mapping.ListLayers(mxd,'Mobility',df)[0]
 else:
     refGroupLayer = arcpy.mapping.ListLayers(mxd,'*Incident_Analysis*',df)[0]
-
 
 arcpy.mapping.AddLayerToGroup(df,refGroupLayer,Travspd_Layer.getOutput(0),'TOP')
 arcpy.RefreshActiveView()
