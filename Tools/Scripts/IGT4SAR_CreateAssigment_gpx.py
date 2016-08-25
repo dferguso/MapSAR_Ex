@@ -166,7 +166,12 @@ def ifExist(fClass, mxd, df,TaskMap, fc, symbologyLayer, SegArea_KM, SearchTime)
                     SegArea_KM = (0.1**2) * 3.141592653589793 # Area of circle with radius = 100 m
                     SearchSpd = 2.5 #Assumed search speed for ground team in km per hour
                     SearchTime = SegArea_KM/0.01/SearchSpd
-                symbologyLayer = arcpy.mapping.ListLayers(mxd,fClass,df)[0]
+                # Check if fClass is a polygon - May 17, 2016 - DHF
+                geometryType = desc.shapeType
+                if geometryType == 'Polygon':
+                    symbologyLayer = symbologyLayer
+                else:
+                    symbologyLayer = arcpy.mapping.ListLayers(mxd,fClass,df)[0]
     return(fc, symbologyLayer, SegArea_KM, SearchTime)
 
 def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
@@ -175,6 +180,11 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
     TaskMap = Assign[10]
     TaskNo = Assign[0]
     PlanNo = Assign[1]
+    if Assign[16]:
+        PrepBy = Assign[16]
+        arcpy.AddMessage("Prepared by: " + PrepBy)
+    else:
+        PrepBy = " "
 
     arcpy.AddMessage("Creating task map for Assignment Number: " +str(AssNum))
 
@@ -322,6 +332,9 @@ def CreatingMap(fc, symbologyLayer, Assign, AssNum, mxd, df, MagDec, output):
         except:
             arcpy.AddMessage("Error: Update Magnetic Declination Manually\n")
 
+        if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PrepBy"):
+            PreparedBy=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "PrepBy")[0]
+            PreparedBy.text = "  " + PrepBy
         if TaskMap:
             if arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName"):
                 MapName=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MapName")[0]
@@ -495,8 +508,6 @@ if __name__ == '__main__':
         arcpy.AddMessage('\nUpdating Map Layout')
         IGT4SAR_UpdateLayout.updateMapLayout()
         arcpy.AddMessage("\n")
-
-    output = output.replace("'\'","/")
 
     if arcpy.Exists("QRT_Points"):
         fc5 = "QRT_Points"
@@ -848,9 +859,13 @@ if __name__ == '__main__':
             arcpy.AddMessage("Time estimates based on single searcher - divide by total number of searchers assigned")
 
         if sUppress205.upper() == 'FALSE':
-            arcpy.AddMessage('Creating Task Assignment Form for Assignment Number: {0}'.format(str(AssNum)))
-            CreateICS204 = "IGT4SAR_CreateICS204.{0}(Assign, Team, TeamMember, AssNum, incInfo, output, OpPd, ICS204Use)".format(ICS204Reg)
-            exec CreateICS204
+            if ICS204Use in listdir(output):
+                arcpy.AddMessage('Creating Task Assignment Form for Assignment Number: {0}'.format(str(AssNum)))
+                CreateICS204 = "IGT4SAR_CreateICS204.{0}(Assign, Team, TeamMember, AssNum, incInfo, output, OpPd, ICS204Use)".format(ICS204Reg)
+                exec CreateICS204
+            else:
+                arcpy.AddError('The Task Assignment Form: {0} is not in the output folder'.format(TAF2Use))
+                sys.exit()
         else:
             arcpy.AddMessage('No Task Assignment Form created for Assignment Number: {0}'.format(str(AssNum)))
 

@@ -255,16 +255,16 @@ arcpy.Dissolve_management(traveltime_hrs_poly, TravTimePoly_hrs, "HOURS;DateHrsT
 TravTime_Layer=arcpy.mapping.Layer(TravTimePoly_hrs)
 arcpy.mapping.AddLayerToGroup(df,refGroupLayer,TravTime_Layer,'TOP')
 
-##try:
-# Set layer that output symbology will be based on
-symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\MobilityModel.lyr"
+try:
+    # Set layer that output symbology will be based on
+    symbologyLayer = r"C:\MapSAR_Ex\Tools\Layers Files - Local\Layer Groups\MobilityModel.lyr"
 
-# Apply the symbology from the symbology layer to the input layer
-updateLayer = arcpy.mapping.ListLayers(mxd, TravTimePoly_hrs, df)[0]
-arcpy.ApplySymbologyFromLayer_management (updateLayer, symbologyLayer)
+    # Apply the symbology from the symbology layer to the input layer
+    updateLayer = arcpy.mapping.ListLayers(mxd, TravTimePoly_hrs, df)[0]
+    arcpy.ApplySymbologyFromLayer_management (updateLayer, symbologyLayer)
 
-##except:
-##    pass
+except:
+    pass
 
 arcpy.Delete_management(wrkspc + '\\' + PthDis_travsp)
 arcpy.Delete_management(wrkspc + '\\' + Travspd_spm)

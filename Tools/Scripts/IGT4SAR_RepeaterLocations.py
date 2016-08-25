@@ -137,7 +137,7 @@ def AddViewFields(obsvrPts, antHeight, rad2):
             ct=0
             for k in fName[1:9]:
                 if row.getValue(k) is None:
-                    row.setValue(k, obsvrDef[ct])
+                    row.setValue(k, int(obsvrDef[ct]))
                 ct+=1
             cursor.updateRow(row)
         del fieldnames, cursor, row, ct, cnt, compList, descp, field

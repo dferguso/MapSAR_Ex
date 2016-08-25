@@ -562,8 +562,12 @@ if __name__ == '__main__':
 
     arcpy.AddMessage('\n')
     for tower in cTower:
-        where_clause="DESCRIPTION = '%s'" % tower
-        cursor = arcpy.UpdateCursor(cellTower_Layer, where_clause)
+        try:
+            where_clause="DESCRIPTION = %s" % tower
+            cursor = arcpy.UpdateCursor(cellTower_Layer, where_clause)
+        except:
+            where_clause="DESCRIPTION = '%s'" % tower
+            cursor = arcpy.UpdateCursor(cellTower_Layer, where_clause)
         for row in cursor:
             descript01 =row.getValue('DESCRIPTION')
             descript = re.sub("[^\w-]","",descript01)

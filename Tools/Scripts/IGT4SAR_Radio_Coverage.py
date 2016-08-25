@@ -43,6 +43,9 @@ except NameError:
 #import arcgisscripting, os
 from arcpy import env
 from arcpy.sa import *
+from string import punctuation
+
+invalidChars = set(punctuation)
 
 
 # Create the Geoprocessor objects
@@ -252,9 +255,17 @@ if __name__ == '__main__':
 
     for aSstPt in astPts:
         NewPt = aSstPt.split("-")
-        astPt = int(NewPt[0])
-        descript=NewPt[1].strip()
-        where_clause="Asset_Type = {0}".format(astPt)
+        NewPt=[k.lstrip() for k in NewPt]
+        NewPt=[k.rstrip() for k in NewPt]
+        if len(NewPt) < 3:
+            where_clause = 'Asset_Type = {0}'.format(NewPt[0])
+            descript = 'NoDescription'
+        else:
+            descript = NewPt[2].replace(" ", "")
+            if any(char in invalidChars for char in descript):
+                sys.exit(arcpy.AddError("Special Characters are not allowed in the Description"))
+            where_clause = 'Asset_Type = {0} AND Description = \'{1}\''.format(NewPt[0],NewPt[2])
+
         arcpy.SelectLayerByAttribute_management(Asset_Layer, "NEW_SELECTION", where_clause)
         cursor = arcpy.SearchCursor(Asset_Layer, where_clause)
         for row in cursor:

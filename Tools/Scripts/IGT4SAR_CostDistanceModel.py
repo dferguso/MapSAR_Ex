@@ -154,7 +154,8 @@ if __name__ == '__main__':
 
     # Identify Tables that are used to map impedance values for roads, Trails
     # (Maintanence Level), Land Cover and Stream Order.
-    cfcc = "C:\MapSAR_Ex\Template\SAR_Default.gdb\cfcc"
+    #cfcc = "C:\MapSAR_Ex\Template\SAR_Default.gdb\cfcc"
+    cfcc = "cfcc"
     TrailClass = "C:\MapSAR_Ex\Template\SAR_Default.gdb\Trail_Class"
     ############################################
 ##    LCCWlkImpd = "NALandCover_Class"
@@ -288,6 +289,10 @@ if __name__ == '__main__':
     XCell = float(XCel.getOutput(0))
     CellSize = XCell
     BuffSize = str(CellSize * 1.5)
+    ## Added May 27, 2016 - To ensure the buffersize is not too small
+    if CellSize < 3.0:
+        BuffSize = str(3.0 * 1.5)
+    #########################
     Buff = '"'+ BuffSize + ' Meters"'
     arcpy.AddMessage("Cellsize is " + str(CellSize))
 
@@ -336,6 +341,7 @@ if __name__ == '__main__':
 
     # Work on the Roads layer if it exists.  if it doesn't exist use the
     # constant "0" raster defined above
+###############################################################################################################################
     try:
         if gp.GetCount_management(Roads) == 0:
             arcpy.AddMessage("No Roads")
@@ -371,30 +377,19 @@ if __name__ == '__main__':
             checkCfcc, cfccCount=findField(Roads_Buf, "CFCC")
             rdsCount = arcpy.GetCount_management(Roads_Buf)
 
-            if checkCfcc==False:
-                if checkMtfcc == False:
-                    arcpy.AddField_management(Roads_Buf, "MTFCC", TEXT)
+            if checkMtfcc == "True":
+                if mtfccCount == rdsCount:
+                    rTable="MTFCC"
+                else:
+                    rTable="MTFCC"
                     rows=arcpy.UpdateCursor(Roads_Buf)
                     for row in rows:
-                        row.MTFCC = "S1100"
+                        if not row.getValue(rTable):
+                            row.MTFCC = "S1100"
                         rows.updateRow(row)
                     del row
                     del rows
-                    rTable="MTFCC"
-                else:
-                    if mtfccCount == rdsCount:
-                        rTable="MTFCC"
-                    else:
-                        rTable="MTFCC"
-                        rows=arcpy.UpdateCursor(Roads_Buf)
-                        for row in rows:
-                            if not row.getValue(rTable):
-                                row.MTFCC = "S1100"
-                            rows.updateRow(row)
-                        del row
-                        del rows
-
-            else:
+            elif checkCfcc == "True":
                 if cfccCount == rdsCount:
                     rTable="CFCC"
                 else:
@@ -406,18 +401,35 @@ if __name__ == '__main__':
                         rows.updateRow(row)
                     del row
                     del rows
-
-
+            else:
+                arcpy.AddMessage("This is a mistake")
+                sys.exit()
+                arcpy.AddField_management(Roads_Buf, "MTFCC", "TEXT")
+                rows=arcpy.UpdateCursor(Roads_Buf)
+                for row in rows:
+                    row.MTFCC = "S1100"
+                    rows.updateRow(row)
+                del row
+                del rows
+                rTable="MTFCC"
 
             # Join the MTFCC/CFCC table to the buffered/clipped roads layer
+    ###################################################################################
+            checkImpd, ImpdCount=findField(Roads_Buf, "IMPD")
+            if checkImpd == "False":
+                arcpy.AddField_management(Roads_Buf, "IMPD", "SHORT")
             arcpy.AddJoin_management(Roads_Buf, rTable, cfcc, rTable, "KEEP_ALL")
+            arcpy.CalculateField_management(Roads_Buf,"Roads_Buffered.IMPD","!cfcc.Walk_Impd!","PYTHON_9.3")
+            arcpy.RemoveJoin_management(Roads_Buf)
+            arcpy.FeatureToRaster_conversion(Roads_Buf, "IMPD", Road_Impd, CellSize)
             #################
             # Feature to raster using the Road_Impd value to define the raster value.
-            arcpy.FeatureToRaster_conversion(Roads_Buf, "cfcc.Walk_Impd", Road_Impd, CellSize)
-            arcpy.RemoveJoin_management(Roads_Buf)
+    #        arcpy.AddJoin_management(Roads_Buf, rTable, cfcc, rTable, "KEEP_ALL")
+    #        arcpy.FeatureToRaster_conversion(Roads_Buf, "cfcc.Walk_Impd", Road_Impd, CellSize)
+    #        arcpy.RemoveJoin_management(Roads_Buf)
             arcpy.Delete_management(wrkspc + '\\' + Roads_Buf)
             arcpy.Delete_management(wrkspc + '\\' + Roads_Clipped)
-
+    ###############################################################################################################################
     except:
         arcpy.AddMessage("No Road Layer")
         arcpy.CopyRaster_management(ImpdConstA,Road_Impd)
@@ -505,7 +517,7 @@ if __name__ == '__main__':
                 # Set local variables
                 dataType = "FLOAT"
                 # Execute FlowDirection
-                arcpy.AddMessage("Calculate Stream Order - Flow Accumlation")
+                arcpy.AddMessage("Calculate Stream Order - Flow Accumulation")
                 ##May 07, 2013#########################
                 ##outFlowAccumulation = FlowAccumulation(pOutFlow, pStrImpd, dataType)
                 outFlowAccumulation = FlowAccumulation(pOutFlow, "", dataType)
@@ -525,7 +537,7 @@ if __name__ == '__main__':
                 outStreamOrder.save(pStrOrder)
 
                 # Set local variables
-                numberCells = 2
+                numberCells = 4 #2  Temperaray change with small cell size DEM
                 zoneValues = [1, 2, 3, 4, 5, 6, 7, 8, 9]
                 arcpy.AddMessage("Calculate Stream Order - Expand Strahler to 2x2 neighbors")
                 # Execute Expand
