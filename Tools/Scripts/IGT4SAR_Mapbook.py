@@ -170,15 +170,15 @@ def CreatingMap(fcOut, gRids, mxd, df, mapScale, output):
             row7 = rows7.next()
             try:
                 UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-                UTMZn.text = row7.getValue("GRID1MIL")
+            UTMZn.text = row7.getValue("GRID1MIL")
             except:
                 pass
             try:
                 USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
-                UtmZone=UTMZn.text
-                USNGZn.text = row7.getValue("GRID100K")
-                UsngGrid = USNGZn.text
-            except:
+            UtmZone=UTMZn.text
+            USNGZn.text = row7.getValue("GRID100K")
+            UsngGrid = USNGZn.text
+        except:
                 pass
         except:
             pass
@@ -186,7 +186,7 @@ def CreatingMap(fcOut, gRids, mxd, df, mapScale, output):
         MapName.text = key
         try:
             MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-            MagDeclin.text = gRids[key][2]
+        MagDeclin.text = gRids[key][2]
         except:
             pass
 
