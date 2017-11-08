@@ -33,6 +33,7 @@ from datetime import datetime
 import IGT4SAR_fdf
 
 def checkNoneType(variable, varName):
+    arcpy.AddMessage("variable Name: {}".format(variable))
     if type(variable) is NoneType:
         arcpy.AddWarning(varName + " is not defined")
         result = " "
@@ -63,21 +64,18 @@ if __name__ == '__main__':
         k+=1
         if type(row.getValue("Lead_Agency")) is NoneType:
             LeadAgency = " "
+            Phone=" "
+            email=" "
         else:
             LeadAgency = row.getValue("Lead_Agency")
-            where2 = '"Lead_Agency" = ' + "'" + LeadAgency + "'"
-            rows2 = arcpy.SearchCursor(fc2, where2)
-            row2 = rows2.next()
-
-            while row2:
-                # you need to insert correct field names in your getvalue function
+            where2="".join(['"Lead_Agency"=', "'", LeadAgency, "'"])
+            arcpy.AddMessage(where2)
+            rows2 = arcpy.SearchCursor(fc2,where2)
+            for row2 in rows2:
                 Phone = checkNoneType(row2.getValue("Lead_Phone"), '"Reporting Phone Number"')
                 email = checkNoneType(row2.getValue("E_Mail"), '"Reporting e-mail"')
-                row2 = rows2.next()
-            del rows2
-            del row2
-        Callback = "If you have information please call: " + str(LeadAgency) + " at phone: " + str(Phone) + " or e-mail:" + str(email)
 
+        Callback = ("If you have information please call: {} at phone: {} or e-mail: {}".format(str(LeadAgency), str(Phone), str(email)))
         row = rows.next()
     del rows
     del row
