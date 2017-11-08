@@ -150,10 +150,6 @@ def CreatingMap(fcOut, gRids, mxd, df, mapScale, output):
     except:
         pass
 
-    UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
-    USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
-    MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
-
     mkLyr=arcpy.mapping.ListLayers(mxd, fcOut,df)[0]
     for llyr in arcpy.mapping.ListLayers(mxd, "*",df):
             if str(llyr.name) == "MRGS_UTM_USNG":
@@ -172,16 +168,27 @@ def CreatingMap(fcOut, gRids, mxd, df, mapScale, output):
 
             rows7=arcpy.SearchCursor(mapLyr)
             row7 = rows7.next()
-            UTMZn.text = row7.getValue("GRID1MIL")
-            UtmZone=UTMZn.text
-            USNGZn.text = row7.getValue("GRID100K")
-            UsngGrid = USNGZn.text
+            try:
+                UTMZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "UTMZone")[0]
+                UTMZn.text = row7.getValue("GRID1MIL")
+            except:
+                pass
+            try:
+                USNGZn=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "USNGZone")[0]
+                UtmZone=UTMZn.text
+                USNGZn.text = row7.getValue("GRID100K")
+                UsngGrid = USNGZn.text
+            except:
+                pass
         except:
-            arcpy.AddMessage("No update to UTM Zone or USNG Grid")
             pass
 
         MapName.text = key
-        MagDeclin.text = gRids[key][2]
+        try:
+            MagDeclin=arcpy.mapping.ListLayoutElements(mxd, "TEXT_ELEMENT", "MagDecl")[0]
+            MagDeclin.text = gRids[key][2]
+        except:
+            pass
 
             ##arcpy.AddMessage("UTM Zone is " + UTMZn.text + " and USNG Grid is " + USNGZn.text)
 
