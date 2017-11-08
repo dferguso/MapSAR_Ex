@@ -36,6 +36,8 @@ IF EXIST "%_programs%\ArcGIS\Desktop10.1\License" CALL :install "%_programs%\Arc
 IF EXIST "%_programs%\ArcGIS\Desktop10.2\License" CALL :install "%_programs%\ArcGIS\Desktop10.2"
 IF EXIST "%_programs%\ArcGIS\Desktop10.3\License" CALL :install "%_programs%\ArcGIS\Desktop10.3"
 IF EXIST "%_programs%\ArcGIS\Desktop10.4\License" CALL :install "%_programs%\ArcGIS\Desktop10.4"
+IF EXIST "%_programs%\ArcGIS\Desktop10.5\License" CALL :install "%_programs%\ArcGIS\Desktop10.5"
+IF EXIST "%_programs%\ArcGIS\Desktop10.6\License" CALL :install "%_programs%\ArcGIS\Desktop10.6"
 
 set _config="%APPDATA%\ArcGIS4LocalGovernment\ConfigFiles"
 IF NOT EXIST %_config% (
