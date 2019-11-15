@@ -36,6 +36,7 @@ IF EXIST "%_programs%\ArcGIS\Desktop10.3\License" CALL :remove "%_programs%\ArcG
 IF EXIST "%_programs%\ArcGIS\Desktop10.4\License" CALL :remove "%_programs%\ArcGIS\Desktop10.4"
 IF EXIST "%_programs%\ArcGIS\Desktop10.5\License" CALL :remove "%_programs%\ArcGIS\Desktop10.5"
 IF EXIST "%_programs%\ArcGIS\Desktop10.6\License" CALL :remove "%_programs%\ArcGIS\Desktop10.6"
+IF EXIST "%_programs%\ArcGIS\Desktop10.7\License" CALL :remove "%_programs%\ArcGIS\Desktop10.7"
 
 del "%APPDATA%\ArcGIS4LocalGovernment\ConfigFiles\loaded.config"
 
