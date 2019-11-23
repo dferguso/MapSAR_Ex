@@ -341,11 +341,11 @@ def NMSAR(Assign, Team, TeamMember, AssNum, incidInfo, output, OpPeriod,TAF2Use)
                 fdfFields['Skill  Equipment1']=str(TeamMember[key][2]) # LeadSkill
                 kk+=1
             else:
-                memName = 'Name{0}'.format(k)
+                memName = 'Name{0}'.format(k+1)
                 fdfFields[memName]=str(key) # Member
-                resName ='Resource Name TL Comm Navigator{0}'.format(k)
+                resName ='Resource Name TL Comm Navigator{0}'.format(k+1)
                 fdfFields[resName]=str(TeamMember[key][3]) # Resource
-                skilEq = 'Skill Equipment{0}'.format(k)
+                skilEq = 'Skill Equipment{0}'.format(k+1)
                 fdfFields[skilEq] = str(TeamMember[key][2]) # Skill
                 k+=1
             if k>7:
